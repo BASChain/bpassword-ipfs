@@ -1,4 +1,4 @@
-package mobile
+package oneKeyLib
 
 import (
 	"errors"
@@ -18,5 +18,6 @@ func InitSDK(exi APPI, logLevel int8) error {
 		log := fmt.Sprintf(msg, args...)
 		exi.Log(log)
 	})
+	utils.LogInst().Debugf("bpassword ipfs version init sdk success, log level:%d", logLevel)
 	return nil
 }

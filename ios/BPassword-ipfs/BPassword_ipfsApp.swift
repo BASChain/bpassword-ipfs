@@ -10,23 +10,20 @@ import SwiftData
 
 @main
 struct BPassword_ipfsApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+        
+        init() {
+                initializeSdk()
         }
-    }()
-
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
+        
+        var body: some Scene {
+                WindowGroup {
+                        MainView()
+                }
         }
-        .modelContainer(sharedModelContainer)
-    }
+        
+        private func initializeSdk() {
+                print("Initializing SDK...")
+                SdkUtil.shared.initializeSDK(logLevel: LogLevel.debug)
+                print("SDK initialized.")
+        }
 }

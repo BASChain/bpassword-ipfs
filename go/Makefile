@@ -5,9 +5,9 @@ BINDIR=bin
 all: a i
 
 a:
-	gomobile bind -v -o $(BINDIR)/bpassword_ipfs.aar -target=android/arm,android/arm64 -ldflags=-s github.com/BASChain/bpassword-ipfs/go/mobile
+	gomobile bind -v -o $(BINDIR)/oneKeyLib.aar -target=android/arm,android/arm64 -ldflags=-s github.com/BASChain/bpassword-ipfs/go/mobile
 i:
-	gomobile bind -v -o $(BINDIR)/bpassword_ipfs.xcframework -target=ios -iosversion=13.0 -ldflags="-s -w" github.com/BASChain/bpassword-ipfs/go/mobile
+	gomobile bind -v -o $(BINDIR)/oneKeyLib.xcframework -target=ios -iosversion=16.0 -ldflags="-s -w" github.com/BASChain/bpassword-ipfs/go/mobile
 
 clean:
 	gomobile clean
