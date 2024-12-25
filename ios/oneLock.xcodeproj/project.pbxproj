@@ -7,8 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6932F7E22D1BEB1000C9D11E /* oneKeyLib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6932F7E12D1BEB1000C9D11E /* oneKeyLib.xcframework */; };
-		6932F7E32D1BEB1000C9D11E /* oneKeyLib.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 6932F7E12D1BEB1000C9D11E /* oneKeyLib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		6932F7E42D1BF7C900C9D11E /* oneKeyLib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6932F7E12D1BEB1000C9D11E /* oneKeyLib.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,41 +27,27 @@
 		};
 /* End PBXContainerItemProxy section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		6932F7DC2D1BE79800C9D11E /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				6932F7E32D1BEB1000C9D11E /* oneKeyLib.xcframework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
 		6932F7E12D1BEB1000C9D11E /* oneKeyLib.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = oneKeyLib.xcframework; path = ../go/bin/oneKeyLib.xcframework; sourceTree = "<group>"; };
-		69E13C782D1B9A970081BBA4 /* 1key.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = 1key.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		69E13C8A2D1B9A9A0081BBA4 /* 1keyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = 1keyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		69E13C942D1B9A9A0081BBA4 /* 1keyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = 1keyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		69E13C782D1B9A970081BBA4 /* oneLock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = oneLock.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		69E13C8A2D1B9A9A0081BBA4 /* oneLockTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = oneLockTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		69E13C942D1B9A9A0081BBA4 /* oneLockUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = oneLockUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		69E13C7A2D1B9A970081BBA4 /* BPassword-ipfs */ = {
+		69E13C7A2D1B9A970081BBA4 /* oneLock */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "BPassword-ipfs";
+			path = oneLock;
 			sourceTree = "<group>";
 		};
-		69E13C8D2D1B9A9A0081BBA4 /* BPassword-ipfsTests */ = {
+		69E13C8D2D1B9A9A0081BBA4 /* oneLockTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "BPassword-ipfsTests";
+			path = oneLockTests;
 			sourceTree = "<group>";
 		};
-		69E13C972D1B9A9A0081BBA4 /* BPassword-ipfsUITests */ = {
+		69E13C972D1B9A9A0081BBA4 /* oneLockUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "BPassword-ipfsUITests";
+			path = oneLockUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -72,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6932F7E22D1BEB1000C9D11E /* oneKeyLib.xcframework in Frameworks */,
+				6932F7E42D1BF7C900C9D11E /* oneKeyLib.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,9 +89,9 @@
 		69E13C6F2D1B9A970081BBA4 = {
 			isa = PBXGroup;
 			children = (
-				69E13C7A2D1B9A970081BBA4 /* BPassword-ipfs */,
-				69E13C8D2D1B9A9A0081BBA4 /* BPassword-ipfsTests */,
-				69E13C972D1B9A9A0081BBA4 /* BPassword-ipfsUITests */,
+				69E13C7A2D1B9A970081BBA4 /* oneLock */,
+				69E13C8D2D1B9A9A0081BBA4 /* oneLockTests */,
+				69E13C972D1B9A9A0081BBA4 /* oneLockUITests */,
 				694B42D32D1BBC4A001EE591 /* Frameworks */,
 				69E13C792D1B9A970081BBA4 /* Products */,
 			);
@@ -115,9 +100,9 @@
 		69E13C792D1B9A970081BBA4 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				69E13C782D1B9A970081BBA4 /* 1key.app */,
-				69E13C8A2D1B9A9A0081BBA4 /* 1keyTests.xctest */,
-				69E13C942D1B9A9A0081BBA4 /* 1keyUITests.xctest */,
+				69E13C782D1B9A970081BBA4 /* oneLock.app */,
+				69E13C8A2D1B9A9A0081BBA4 /* oneLockTests.xctest */,
+				69E13C942D1B9A9A0081BBA4 /* oneLockUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -125,32 +110,31 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		69E13C772D1B9A970081BBA4 /* 1key */ = {
+		69E13C772D1B9A970081BBA4 /* oneLock */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 69E13C9E2D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "1key" */;
+			buildConfigurationList = 69E13C9E2D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "oneLock" */;
 			buildPhases = (
 				69E13C742D1B9A970081BBA4 /* Sources */,
 				69E13C752D1B9A970081BBA4 /* Frameworks */,
 				69E13C762D1B9A970081BBA4 /* Resources */,
-				6932F7DC2D1BE79800C9D11E /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				69E13C7A2D1B9A970081BBA4 /* BPassword-ipfs */,
+				69E13C7A2D1B9A970081BBA4 /* oneLock */,
 			);
-			name = 1key;
+			name = oneLock;
 			packageProductDependencies = (
 			);
 			productName = "BPassword-ipfs";
-			productReference = 69E13C782D1B9A970081BBA4 /* 1key.app */;
+			productReference = 69E13C782D1B9A970081BBA4 /* oneLock.app */;
 			productType = "com.apple.product-type.application";
 		};
-		69E13C892D1B9A9A0081BBA4 /* 1keyTests */ = {
+		69E13C892D1B9A9A0081BBA4 /* oneLockTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 69E13CA12D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "1keyTests" */;
+			buildConfigurationList = 69E13CA12D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "oneLockTests" */;
 			buildPhases = (
 				69E13C862D1B9A9A0081BBA4 /* Sources */,
 				69E13C872D1B9A9A0081BBA4 /* Frameworks */,
@@ -162,18 +146,18 @@
 				69E13C8C2D1B9A9A0081BBA4 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				69E13C8D2D1B9A9A0081BBA4 /* BPassword-ipfsTests */,
+				69E13C8D2D1B9A9A0081BBA4 /* oneLockTests */,
 			);
-			name = 1keyTests;
+			name = oneLockTests;
 			packageProductDependencies = (
 			);
 			productName = "BPassword-ipfsTests";
-			productReference = 69E13C8A2D1B9A9A0081BBA4 /* 1keyTests.xctest */;
+			productReference = 69E13C8A2D1B9A9A0081BBA4 /* oneLockTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		69E13C932D1B9A9A0081BBA4 /* 1keyUITests */ = {
+		69E13C932D1B9A9A0081BBA4 /* oneLockUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 69E13CA42D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "1keyUITests" */;
+			buildConfigurationList = 69E13CA42D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "oneLockUITests" */;
 			buildPhases = (
 				69E13C902D1B9A9A0081BBA4 /* Sources */,
 				69E13C912D1B9A9A0081BBA4 /* Frameworks */,
@@ -185,13 +169,13 @@
 				69E13C962D1B9A9A0081BBA4 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				69E13C972D1B9A9A0081BBA4 /* BPassword-ipfsUITests */,
+				69E13C972D1B9A9A0081BBA4 /* oneLockUITests */,
 			);
-			name = 1keyUITests;
+			name = oneLockUITests;
 			packageProductDependencies = (
 			);
 			productName = "BPassword-ipfsUITests";
-			productReference = 69E13C942D1B9A9A0081BBA4 /* 1keyUITests.xctest */;
+			productReference = 69E13C942D1B9A9A0081BBA4 /* oneLockUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -217,7 +201,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 69E13C732D1B9A970081BBA4 /* Build configuration list for PBXProject "1key" */;
+			buildConfigurationList = 69E13C732D1B9A970081BBA4 /* Build configuration list for PBXProject "oneLock" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -231,9 +215,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				69E13C772D1B9A970081BBA4 /* 1key */,
-				69E13C892D1B9A9A0081BBA4 /* 1keyTests */,
-				69E13C932D1B9A9A0081BBA4 /* 1keyUITests */,
+				69E13C772D1B9A970081BBA4 /* oneLock */,
+				69E13C892D1B9A9A0081BBA4 /* oneLockTests */,
+				69E13C932D1B9A9A0081BBA4 /* oneLockUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -289,12 +273,12 @@
 /* Begin PBXTargetDependency section */
 		69E13C8C2D1B9A9A0081BBA4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 69E13C772D1B9A970081BBA4 /* 1key */;
+			target = 69E13C772D1B9A970081BBA4 /* oneLock */;
 			targetProxy = 69E13C8B2D1B9A9A0081BBA4 /* PBXContainerItemProxy */;
 		};
 		69E13C962D1B9A9A0081BBA4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 69E13C772D1B9A970081BBA4 /* 1key */;
+			target = 69E13C772D1B9A970081BBA4 /* oneLock */;
 			targetProxy = 69E13C952D1B9A9A0081BBA4 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -427,7 +411,8 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"BPassword-ipfs/Preview Content\"";
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_ASSET_PATHS = "\"oneLock/Preview Content\"";
 				DEVELOPMENT_TEAM = 2XYK8RBB6M;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/bin";
@@ -437,6 +422,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -447,6 +433,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.yushian.oneKey;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -461,7 +451,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"BPassword-ipfs/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"oneLock/Preview Content\"";
 				DEVELOPMENT_TEAM = 2XYK8RBB6M;
 				ENABLE_PREVIEWS = YES;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/bin";
@@ -471,6 +461,7 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -481,6 +472,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.yushian.oneKey;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -502,7 +497,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/1key.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/1key";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/oneLock.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/oneLock";
 			};
 			name = Debug;
 		};
@@ -521,7 +516,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/1key.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/1key";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/oneLock.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/oneLock";
 			};
 			name = Release;
 		};
@@ -562,7 +557,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		69E13C732D1B9A970081BBA4 /* Build configuration list for PBXProject "1key" */ = {
+		69E13C732D1B9A970081BBA4 /* Build configuration list for PBXProject "oneLock" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				69E13C9C2D1B9A9A0081BBA4 /* Debug */,
@@ -571,7 +566,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		69E13C9E2D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "1key" */ = {
+		69E13C9E2D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "oneLock" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				69E13C9F2D1B9A9A0081BBA4 /* Debug */,
@@ -580,7 +575,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		69E13CA12D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "1keyTests" */ = {
+		69E13CA12D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "oneLockTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				69E13CA22D1B9A9A0081BBA4 /* Debug */,
@@ -589,7 +584,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		69E13CA42D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "1keyUITests" */ = {
+		69E13CA42D1B9A9A0081BBA4 /* Build configuration list for PBXNativeTarget "oneLockUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				69E13CA52D1B9A9A0081BBA4 /* Debug */,
