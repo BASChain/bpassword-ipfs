@@ -154,6 +154,18 @@ class SdkUtil: NSObject {
                 return accountsMap
         }
         
+        func removeAccount(uuid: UUID) -> Bool {
+                var err: NSError? = nil
+                OneKeyLibRemoveAccount(uuid.uuidString, &err)
+                
+                if let e = err {
+                        print("Failed to remove account: \(e.localizedDescription)")
+                        return false
+                }
+                
+                print("Account successfully removed: \(uuid.uuidString)")
+                return true
+        }
 }
 
 // MARK: - 实现 Go 的 APPI 接口

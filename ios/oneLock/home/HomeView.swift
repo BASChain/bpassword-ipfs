@@ -1,7 +1,7 @@
 import SwiftUI
-
 struct HomeView: View {
         @State private var accounts: [UUID: Account] = [:]
+        @State private var hasLoaded = false // 防止重复加载
         
         var body: some View {
                 NavigationView {
@@ -12,7 +12,12 @@ struct HomeView: View {
                                                 .padding()
                                 } else {
                                         List(sortedAccounts(), id: \.id) { account in
-                                                NavigationLink(destination: AccountDetailView(account: account)) {
+                                                NavigationLink(
+                                                        destination: AccountDetailView(
+                                                                account: account,
+                                                                onAccountDeleted: { hasLoaded = false } // 设置 hasLoaded 为 false
+                                                        )
+                                                ) {
                                                         HStack {
                                                                 Text(account.platform)
                                                                         .font(.headline)
@@ -28,17 +33,26 @@ struct HomeView: View {
                         .navigationTitle("Account Manager")
                         .toolbar {
                                 ToolbarItem(placement: .navigationBarTrailing) {
-                                        NavigationLink(destination: AddAccountView(onSave: loadAccounts)) { // 传递刷新回调
+                                        NavigationLink(destination: AddAccountView(onSave: loadAccounts)) {
                                                 Image(systemName: "plus")
                                         }
                                 }
                         }
-                        .onAppear(perform: loadAccounts)
+                        .onAppear {
+                                loadAccountsIfNeeded()
+                        }
+                }
+        }
+        
+        private func loadAccountsIfNeeded() {
+                if !hasLoaded {
+                        loadAccounts()
                 }
         }
         
         private func loadAccounts() {
                 accounts = SdkUtil.shared.loadAccounts()
+                hasLoaded = true
         }
         
         private func sortedAccounts() -> [Account] {

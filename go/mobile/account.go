@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/syndtr/goleveldb/leveldb"
+	"strings"
 	"sync"
 	"time"
 )
@@ -87,7 +88,7 @@ func LoadAccountList() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println(accounts)
 	__accountManager.mu.Lock()
 	__accountManager.accounts = accounts
 	__accountManager.mu.Unlock()
@@ -99,7 +100,7 @@ func LoadAccountList() ([]byte, error) {
 func saveAccountList() error {
 	db, err := leveldb.OpenFile(__api.dbPath, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open database: %w", err)
 	}
 	defer db.Close()
 
@@ -107,9 +108,37 @@ func saveAccountList() error {
 	data, err := json.Marshal(__accountManager.accounts)
 	__accountManager.mu.Unlock()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to marshal accounts: %w", err)
 	}
 
 	err = db.Put([]byte(__db_key_accounts), data, nil)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to save accounts to database: %w", err)
+	}
+	return nil
+}
+
+// RemoveAccount 从内存和 LevelDB 中移除指定的账号
+func RemoveAccount(uuid string) error {
+	uuid = strings.ToLower(uuid)
+
+	__accountManager.mu.Lock()
+	_, exists := __accountManager.accounts[uuid]
+	if exists {
+		delete(__accountManager.accounts, uuid)
+		fmt.Printf("Account with UUID %s removed from memory.\n", uuid)
+	} else {
+		fmt.Printf("Account with UUID %s does not exist.\n", uuid)
+	}
+	__accountManager.mu.Unlock()
+
+	if !exists {
+		return fmt.Errorf("account with UUID %s not found", uuid)
+	}
+
+	err := saveAccountList()
+	if err != nil {
+		return fmt.Errorf("failed to save updated account list: %w", err)
+	}
+	return nil
 }
