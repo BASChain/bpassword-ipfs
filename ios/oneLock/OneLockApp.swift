@@ -24,11 +24,11 @@ struct OneLockApp: App {
                                         MainView().environmentObject(appState)
                                 } else {
                                         PasswordView().environmentObject(appState) // 改为环境对象注入
-                                                            .onAppear { checkWalletStatus() }
+                                                .onAppear { checkWalletStatus() }
                                 }
                         } else {
                                 WalletSetupView() .environmentObject(appState) // 改为环境对象注入
-                                                .onAppear { checkWalletStatus() }
+                                        .onAppear { checkWalletStatus() }
                         }
                 }
         }

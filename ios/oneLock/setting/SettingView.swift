@@ -9,10 +9,10 @@ import SwiftUICore
 import SwiftUI
 
 struct SettingView: View {
-    var body: some View {
-        NavigationView {
-            Text("Setting Tab Content")
-                .navigationTitle("Setting")
+        var body: some View {
+                NavigationView {
+                        Text("Setting Tab Content")
+                                .navigationTitle("Setting")
+                }
         }
-    }
 }

@@ -54,7 +54,7 @@ struct AddAccountView: View {
         private func saveAccount() {
                 let account = Account(platform: platform, username: username,
                                       password: password, lastUpdated: Int64(Date().timeIntervalSince1970))
-                     loadingManager.show(message: "Saving Account...") // 显示加载提示
+                loadingManager.show(message: "Saving Account...") // 显示加载提示
                 
                 DispatchQueue.global().async {
                         let success = SdkUtil.shared.addAccount(account: account)

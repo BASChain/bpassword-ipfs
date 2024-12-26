@@ -102,29 +102,29 @@ class SdkUtil: NSObject {
         }
         
         func addAccount(account: Account) -> Bool {
-            var err: NSError? = nil
-
-            // 将 Account 实例转换为 JSON 字符串
-            guard let jsonStr = account.jsonString() else {
-                print("Failed to serialize Account to JSON.")
+                var err: NSError? = nil
+                
+                // 将 Account 实例转换为 JSON 字符串
+                guard let jsonStr = account.jsonString() else {
+                        print("Failed to serialize Account to JSON.")
+                        return false
+                }
+                
+                // 调用 Go 的 OneKeyLibAddAccount 方法
+                OneKeyLibAddAccount(jsonStr, &err)
+                
+                // 检查错误
+                guard let e = err else {
+                        print("Account successfully saved.")
+                        return true
+                }
+                
+                // 打印详细错误信息
+                print("Failed to save account. Error: \(e.localizedDescription)")
+                print("Account JSON: \(jsonStr)")
                 return false
-            }
-
-            // 调用 Go 的 OneKeyLibAddAccount 方法
-            OneKeyLibAddAccount(jsonStr, &err)
-
-            // 检查错误
-            guard let e = err else {
-                print("Account successfully saved.")
-                return true
-            }
-
-            // 打印详细错误信息
-            print("Failed to save account. Error: \(e.localizedDescription)")
-            print("Account JSON: \(jsonStr)")
-            return false
         }
-
+        
 }
 
 // MARK: - 实现 Go 的 APPI 接口
