@@ -2,8 +2,8 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var accounts: [Account] = [
-        Account(platform: "Google", username: "user@gmail.com", password: "password123", lastUpdated: "2024-12-25"),
-        Account(platform: "Facebook", username: "user@facebook.com", password: "facebook123", lastUpdated: "2024-12-24")
+        Account(platform: "Google", username: "user@gmail.com", password: "password123"),
+        Account(platform: "Facebook", username: "user@facebook.com", password: "facebook123")
     ]
 
     var body: some View {
@@ -20,7 +20,7 @@ struct HomeView: View {
                                 Text(account.platform)
                                     .font(.headline)
                                 Spacer()
-                                Text(account.lastUpdated)
+                                Text(account.formattedLastUpdated())
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                             }
