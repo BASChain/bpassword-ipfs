@@ -13,7 +13,6 @@ struct CreateWalletView: View {
         @State private var mnemonic: String? = nil
         @EnvironmentObject var appState: AppState // 添加环境对象引用
         var body: some View {
-                Text("Has Wallet: \(appState.hasWallet ? "Yes" : "No")")
                 VStack {
                         if let mnemonicPhrase = mnemonic {
                                 MnemonicView(mnemonic: mnemonicPhrase, password: password).environmentObject(appState)
