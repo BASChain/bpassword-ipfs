@@ -6,6 +6,7 @@ import (
 	"crypto/sha512"
 	"errors"
 	"fmt"
+	"github.com/BASChain/bpassword-ipfs/go/utils"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/google/uuid"
@@ -13,9 +14,17 @@ import (
 	"github.com/tyler-smith/go-bip39"
 )
 
+type WalletManager struct {
+	dbPath     string
+	privateKey *ecdsa.PrivateKey
+	address    string
+}
+
+var __walletManager = &WalletManager{}
+
 func CheckWallet() ([]byte, error) {
 	// 打开 LevelDB 数据库
-	db, err := leveldb.OpenFile(databasePathString, nil)
+	db, err := leveldb.OpenFile(__walletManager.dbPath, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -92,21 +101,22 @@ func GenerateWallet(mnemonic, password string) error {
 
 // deriveKey 实现HD钱包路径衍生
 func deriveKey(seed []byte, path []uint32) (*ecdsa.PrivateKey, error) {
-	// Master key derivation using HMAC-SHA512
+	if len(seed) == 0 {
+		return nil, errors.New("empty seed provided")
+	}
+
 	hmac512 := hmac.New(sha512.New, []byte("Bitcoin seed"))
 	hmac512.Write(seed)
 	masterKey := hmac512.Sum(nil)
 
-	// 分离出主私钥和链码
 	privateKey := masterKey[:32]
 	chainCode := masterKey[32:]
 
-	// 逐步推导子私钥
 	for _, index := range path {
 		hmac512 := hmac.New(sha512.New, chainCode)
 
 		data := make([]byte, 37)
-		data[0] = 0x00 // 前缀
+		data[0] = 0x00
 		copy(data[1:33], privateKey)
 		data[33] = byte(index >> 24)
 		data[34] = byte(index >> 16)
@@ -120,7 +130,6 @@ func deriveKey(seed []byte, path []uint32) (*ecdsa.PrivateKey, error) {
 		chainCode = derived[32:]
 	}
 
-	// 将生成的私钥转换为ECDSA格式
 	return crypto.ToECDSA(privateKey)
 }
 
@@ -143,20 +152,56 @@ func generateKeystore(privateKey *ecdsa.PrivateKey, password string) (string, er
 }
 
 func storeKeystoreInLevelDB(keystoreString string) error {
-	db, err := leveldb.OpenFile(databasePathString, nil)
+	db, err := leveldb.OpenFile(__walletManager.dbPath, nil)
 	if err != nil {
-		fmt.Printf("Error opening LevelDB: %s\n", err.Error())
-		return fmt.Errorf("failed to open leveldb: %w", err)
+		utils.LogInst().Errorf("Error opening LevelDB at path %s: %s", __walletManager.dbPath, err.Error())
+		return fmt.Errorf("failed to open LevelDB: %w", err)
 	}
 	defer db.Close()
 
-	fmt.Println("Storing keystore in LevelDB...")
+	utils.LogInst().Infof("Storing keystore in LevelDB...")
 	err = db.Put([]byte(__db_key_wallet_), []byte(keystoreString), nil)
 	if err != nil {
-		fmt.Printf("Error storing keystore: %s\n", err.Error())
+		utils.LogInst().Errorf("Error storing keystore: %s", err.Error())
 		return fmt.Errorf("failed to store keystore: %w", err)
 	}
 
-	fmt.Println("Keystore successfully stored in LevelDB.")
+	utils.LogInst().Infof("Keystore successfully stored in LevelDB.")
 	return nil
+}
+
+// OpenWallet 从 LevelDB 中读取钱包并解密
+func OpenWallet(password string) error {
+	// 打开 LevelDB 数据库
+	db, err := leveldb.OpenFile(__walletManager.dbPath, nil)
+	if err != nil {
+		return fmt.Errorf("failed to open LevelDB: %w", err)
+	}
+	defer db.Close()
+
+	// 从 LevelDB 中读取钱包 JSON 数据
+	keystoreJSON, err := db.Get([]byte(__db_key_wallet_), nil)
+	if err != nil {
+		if errors.Is(err, leveldb.ErrNotFound) {
+			return errors.New("wallet not found in database")
+		}
+		return fmt.Errorf("failed to read wallet from LevelDB: %w", err)
+	}
+
+	// 解密 Keystore JSON
+	key, err := keystore.DecryptKey(keystoreJSON, password)
+	if err != nil {
+		return fmt.Errorf("failed to decrypt wallet: %w", err)
+	}
+
+	// 保存私钥和地址到 WalletManager
+	__walletManager.privateKey = key.PrivateKey
+	__walletManager.address = key.Address.Hex()
+
+	utils.LogInst().Infof("Wallet successfully opened. Address: %s\n", __walletManager.address)
+	return nil
+}
+
+func WalletAddress() string {
+	return __walletManager.address
 }

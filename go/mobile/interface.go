@@ -26,7 +26,8 @@ func InitSDK(exi APPI, dbPath string, logLevel int8) error {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
 	db.Close()
-	databasePathString = dbPath
 	utils.LogInst().Debugf("bpassword ipfs version init sdk success, log level:%d", logLevel)
+
+	__walletManager = &WalletManager{dbPath: dbPath}
 	return nil
 }

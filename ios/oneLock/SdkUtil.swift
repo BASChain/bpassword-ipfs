@@ -86,6 +86,20 @@ class SdkUtil: NSObject {
                 print("Failed to create wallet\(e.localizedDescription).")
                 return false
         }
+        
+        func openWallet(password:String)->Bool{
+                var err: NSError? = nil
+                OneKeyLibOpenWallet(password,&err)
+                guard let e = err else{
+                        return true
+                }
+                print("Failed to open wallet\(e.localizedDescription).")
+                return false
+        }
+        
+        func walletAddress()->String{
+                return OneKeyLibWalletAddress()
+        }
 }
 
 // MARK: - 实现 Go 的 APPI 接口
