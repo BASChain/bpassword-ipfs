@@ -10,6 +10,11 @@ import (
 type APPI interface {
 	Log(s string)
 }
+type API struct {
+	dbPath string
+}
+
+var __api = &API{}
 
 func InitSDK(exi APPI, dbPath string, logLevel int8) error {
 	if exi == nil {
@@ -28,6 +33,6 @@ func InitSDK(exi APPI, dbPath string, logLevel int8) error {
 	db.Close()
 	utils.LogInst().Debugf("bpassword ipfs version init sdk success, log level:%d", logLevel)
 
-	__walletManager = &WalletManager{dbPath: dbPath}
+	__api = &API{dbPath: dbPath}
 	return nil
 }

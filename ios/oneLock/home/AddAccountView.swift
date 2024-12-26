@@ -11,8 +11,10 @@ struct AddAccountView: View {
         @State private var platform: String = ""
         @State private var username: String = ""
         @State private var password: String = ""
-        @State private var isPasswordVisible: Bool = false // 控制密码可见性
-        @StateObject private var loadingManager = LoadingManager() // 添加 LoadingManager
+        @State private var isPasswordVisible: Bool = false
+        @StateObject private var loadingManager = LoadingManager()
+        
+        var onSave: (() -> Void)? // 回调通知 HomeView 刷新
         
         var body: some View {
                 ZStack {
@@ -33,7 +35,7 @@ struct AddAccountView: View {
                                                                 .textFieldStyle(.roundedBorder)
                                                 }
                                                 Button(action: {
-                                                        isPasswordVisible.toggle() // 切换密码可见性
+                                                        isPasswordVisible.toggle()
                                                 }) {
                                                         Image(systemName: isPasswordVisible ? "eye" : "eye.slash")
                                                                 .foregroundColor(.gray)
@@ -41,12 +43,11 @@ struct AddAccountView: View {
                                         }
                                 }
                                 Button("Save") {
-                                        saveAccount() // 调用保存逻辑
+                                        saveAccount()
                                 }
                         }
                         .navigationTitle("Add Account")
                         
-                        // 显示加载提示
                         LoadingView(isVisible: $loadingManager.isVisible, message: $loadingManager.message)
                 }
         }
@@ -54,14 +55,15 @@ struct AddAccountView: View {
         private func saveAccount() {
                 let account = Account(platform: platform, username: username,
                                       password: password, lastUpdated: Int64(Date().timeIntervalSince1970))
-                loadingManager.show(message: "Saving Account...") // 显示加载提示
+                loadingManager.show(message: "Saving Account...")
                 
                 DispatchQueue.global().async {
                         let success = SdkUtil.shared.addAccount(account: account)
                         
                         DispatchQueue.main.async {
-                                loadingManager.hide() // 隐藏加载提示
+                                loadingManager.hide()
                                 if success {
+                                        onSave?() // 通知 HomeView 刷新
                                         presentationMode.wrappedValue.dismiss()
                                 } else {
                                         print("Failed to save account")

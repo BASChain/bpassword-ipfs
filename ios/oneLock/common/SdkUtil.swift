@@ -125,6 +125,35 @@ class SdkUtil: NSObject {
                 return false
         }
         
+        func loadAccounts() -> [UUID: Account] {
+                var accountsMap = [UUID: Account]()
+                
+                // 调用 Go 的 LoadAccountList 函数
+                var err: NSError? = nil
+                guard let jsonData = OneKeyLibLoadAccountList(&err) else {
+                        if let e = err {
+                                print("Failed to load accounts: \(e.localizedDescription)")
+                        }
+                        return accountsMap
+                }
+                
+                // 将返回的 JSON 数据解析为 [UUID: Account]
+                do {
+                        let decoder = JSONDecoder()
+                        let decodedAccounts = try decoder.decode([String: Account].self, from: jsonData)
+                        // 转换为 [UUID: Account] 格式
+                        for (key, account) in decodedAccounts {
+                                if let uuid = UUID(uuidString: key) {
+                                        accountsMap[uuid] = account
+                                }
+                        }
+                } catch {
+                        print("Failed to decode accounts JSON: \(error.localizedDescription)")
+                }
+                
+                return accountsMap
+        }
+        
 }
 
 // MARK: - 实现 Go 的 APPI 接口

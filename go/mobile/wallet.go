@@ -15,7 +15,6 @@ import (
 )
 
 type WalletManager struct {
-	dbPath     string
 	privateKey *ecdsa.PrivateKey
 	address    string
 }
@@ -24,7 +23,7 @@ var __walletManager = &WalletManager{}
 
 func CheckWallet() ([]byte, error) {
 	// 打开 LevelDB 数据库
-	db, err := leveldb.OpenFile(__walletManager.dbPath, nil)
+	db, err := leveldb.OpenFile(__api.dbPath, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -152,9 +151,9 @@ func generateKeystore(privateKey *ecdsa.PrivateKey, password string) (string, er
 }
 
 func storeKeystoreInLevelDB(keystoreString string) error {
-	db, err := leveldb.OpenFile(__walletManager.dbPath, nil)
+	db, err := leveldb.OpenFile(__api.dbPath, nil)
 	if err != nil {
-		utils.LogInst().Errorf("Error opening LevelDB at path %s: %s", __walletManager.dbPath, err.Error())
+		utils.LogInst().Errorf("Error opening LevelDB at path %s: %s", __api.dbPath, err.Error())
 		return fmt.Errorf("failed to open LevelDB: %w", err)
 	}
 	defer db.Close()
@@ -173,7 +172,7 @@ func storeKeystoreInLevelDB(keystoreString string) error {
 // OpenWallet 从 LevelDB 中读取钱包并解密
 func OpenWallet(password string) error {
 	// 打开 LevelDB 数据库
-	db, err := leveldb.OpenFile(__walletManager.dbPath, nil)
+	db, err := leveldb.OpenFile(__api.dbPath, nil)
 	if err != nil {
 		return fmt.Errorf("failed to open LevelDB: %w", err)
 	}
@@ -204,4 +203,13 @@ func OpenWallet(password string) error {
 
 func WalletAddress() string {
 	return __walletManager.address
+}
+
+func CloseWallet() {
+	__walletManager.address = ""
+	__walletManager.privateKey = nil
+}
+
+func WalletIsOpen() bool {
+	return len(__walletManager.address) > 0 && __walletManager.privateKey != nil
 }

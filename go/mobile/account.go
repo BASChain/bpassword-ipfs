@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"time"
-
 	"github.com/google/uuid"
+	"github.com/syndtr/goleveldb/leveldb"
+	"sync"
+	"time"
 )
 
 // Account 结构体，与 Swift 的 Account 对应
@@ -17,14 +18,23 @@ type Account struct {
 	Username    string    `json:"username"`
 	Password    string    `json:"password"`
 	LastUpdated int64     `json:"lastUpdated"` // 修改为 Unix 时间戳
+	OnIpfs      bool      `json:"onIpfs"`
 }
 
-func AddAccount(accJsonStr string) error {
+type AccountManager struct {
+	accounts map[string]*Account
+	mu       sync.Mutex // 线程安全
+}
+
+var __accountManager = &AccountManager{accounts: make(map[string]*Account)}
+
+// parseAccount 解析 JSON 字符串为 Account
+func parseAccount(jsonStr string) (*Account, error) {
 	var account Account
 
-	err := json.Unmarshal([]byte(accJsonStr), &account)
+	err := json.Unmarshal([]byte(jsonStr), &account)
 	if err != nil {
-		return fmt.Errorf("failed to parse account JSON: %w", err)
+		return nil, fmt.Errorf("failed to parse account JSON: %w", err)
 	}
 
 	if account.ID == uuid.Nil {
@@ -32,14 +42,74 @@ func AddAccount(accJsonStr string) error {
 	}
 
 	if account.LastUpdated == 0 {
-		account.LastUpdated = time.Now().Unix() // 如果未提供时间戳，使用当前时间
+		account.LastUpdated = time.Now().Unix()
 	}
 
 	if account.Platform == "" || account.Username == "" || account.Password == "" {
-		return errors.New("invalid account: platform, username, and password are required")
+		return nil, errors.New("invalid account: platform, username, and password are required")
 	}
 
-	fmt.Printf("Account added successfully: %+v\n", account)
+	return &account, nil
+}
 
-	return nil
+// AddAccount 添加账号并保存
+func AddAccount(accJsonStr string) error {
+	account, err := parseAccount(accJsonStr)
+	if err != nil {
+		return err
+	}
+
+	__accountManager.mu.Lock()
+	__accountManager.accounts[account.ID.String()] = account
+	__accountManager.mu.Unlock()
+
+	return saveAccountList()
+}
+
+// LoadAccountList 从 LevelDB 加载账号列表
+func LoadAccountList() ([]byte, error) {
+	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	data, err := db.Get([]byte(__db_key_accounts), nil)
+	if err != nil {
+		if errors.Is(err, leveldb.ErrNotFound) {
+			return nil, nil // 如果未找到数据，返回空
+		}
+		return nil, err
+	}
+
+	var accounts map[string]*Account
+	err = json.Unmarshal(data, &accounts)
+	if err != nil {
+		return nil, err
+	}
+
+	__accountManager.mu.Lock()
+	__accountManager.accounts = accounts
+	__accountManager.mu.Unlock()
+
+	return data, nil
+}
+
+// saveAccountList 将账号列表保存到 LevelDB
+func saveAccountList() error {
+	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	__accountManager.mu.Lock()
+	data, err := json.Marshal(__accountManager.accounts)
+	__accountManager.mu.Unlock()
+	if err != nil {
+		return err
+	}
+
+	err = db.Put([]byte(__db_key_accounts), data, nil)
+	return err
 }
