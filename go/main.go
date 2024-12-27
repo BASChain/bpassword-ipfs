@@ -4,19 +4,41 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net/http"
 
 	shell "github.com/ipfs/go-ipfs-api"
 )
 
+type transportWithAuth struct {
+	transport http.RoundTripper
+	token     string
+}
+
+func (t *transportWithAuth) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Add("Authorization", t.token)
+	return t.transport.RoundTrip(req)
+}
+
+func newShell(url string) *shell.Shell {
+	c := &http.Client{
+		Transport: &transportWithAuth{
+			transport: http.DefaultTransport,
+			token:     "", // 替换为实际的 Token
+		},
+	}
+
+	return shell.NewShellWithClient(url, c)
+}
+
 func main() {
 	// 本地 IPFS 节点地址
-	localNode := "http://127.0.0.1:5001"
+	localNode := "https://bc.simplenets.org:5001"
 
 	// 创建 IPFS 客户端
-	sh := shell.NewShell(localNode)
+	sh := newShell(localNode)
 
 	// 测试上传内容
-	content := "Hello, IPFS! This is a test."
+	content := "Bpassword ipfs===>"
 	cid, err := uploadToIPFS(sh, content)
 	if err != nil {
 		log.Fatalf("Failed to upload content: %v\n", err)
