@@ -83,6 +83,8 @@ func LoadAccountList() ([]byte, error) {
 		return nil, err
 	}
 
+	//fmt.Println("cache content size:", len(data), string(data))
+
 	var accounts map[string]*Account
 	err = json.Unmarshal(data, &accounts)
 	if err != nil {
