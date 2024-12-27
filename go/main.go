@@ -82,112 +82,12 @@ func newDb() *DbManager {
 
 // UpdateRequest 更新数据的请求体结构
 type UpdateRequest struct {
-	WalletAddr  string `json:"wallet_addr" firestore:"wallet_addr" validate:"required,alphanum"`
-	EncodeValue string `json:"encode_value"  firestore:"encode_value" validate:"required"`
+	WalletAddr  string `json:"wallet_addr" firestore:"wallet_addr"`
+	EncodeValue string `json:"encode_value"  firestore:"encode_value"`
 }
 
-// QueryRequest 查询数据的请求体结构
-type QueryRequest struct {
-	WalletAddr string `json:"wallet_addr" firestore:"wallet_addr" validate:"required,alphanum"`
-}
-
-// updateData 更新数据的处理函数，将数据保存到 Firestore 并返回 UpdateRequest 实例
-func updateData(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
-
-	var updateReq UpdateRequest
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&updateReq)
-	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		log.Println("JSON decode error:", err)
-		return
-	}
-
-	// 输入验证
-	if err := validateUpdateRequest(updateReq); err != nil {
-		http.Error(w, "Validation error: "+err.Error(), http.StatusBadRequest)
-		log.Println("Validation error:", err)
-		return
-	}
-
-	ctx := r.Context()
-	collection := DbInst().fileCli.Collection(BPasswordTable)
-	_, err = collection.Doc(updateReq.WalletAddr).Set(ctx, map[string]interface{}{
-		"wallet_addr":  updateReq.WalletAddr,
-		"encode_value": updateReq.EncodeValue,
-	})
-	if err != nil {
-		http.Error(w, "Failed to update data", http.StatusInternalServerError)
-		log.Println("Firestore update error:", err)
-		return
-	}
-
-	// 返回 UpdateRequest 作为响应
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(updateReq); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		log.Println("Response encoding error:", err)
-	}
-}
-
-// queryData 查询数据的处理函数，从 Firestore 获取数据并返回 UpdateRequest 实例
-func queryData(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
-
-	var queryReq QueryRequest
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&queryReq)
-	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		log.Println("JSON decode error:", err)
-		return
-	}
-
-	// 输入验证
-	if err := validateQueryRequest(queryReq); err != nil {
-		http.Error(w, "Validation error: "+err.Error(), http.StatusBadRequest)
-		log.Println("Validation error:", err)
-		return
-	}
-
-	ctx := r.Context()
-	doc, err := DbInst().fileCli.Collection(BPasswordTable).Doc(queryReq.WalletAddr).Get(ctx)
-	if err != nil {
-		// 使用 status.Code 和 codes.NotFound 检查错误类型
-		if status.Code(err) == codes.NotFound {
-			http.Error(w, "Data not found", http.StatusNotFound)
-			return
-		}
-		http.Error(w, "Failed to query data", http.StatusInternalServerError)
-		log.Println("Firestore query error:", err)
-		return
-	}
-
-	var data UpdateRequest
-	if err := doc.DataTo(&data); err != nil {
-		http.Error(w, "Failed to parse data", http.StatusInternalServerError)
-		log.Println("Data parsing error:", err)
-		return
-	}
-
-	// 返回 UpdateRequest 作为响应
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		log.Println("Response encoding error:", err)
-	}
-}
-
-// validateUpdateRequest 验证 UpdateRequest 的有效性
-func validateUpdateRequest(req UpdateRequest) error {
+// Validate 验证 UpdateRequest 的有效性
+func (req *UpdateRequest) Validate() error {
 	if req.WalletAddr == "" {
 		return fmt.Errorf("wallet_addr is required")
 	}
@@ -198,13 +98,140 @@ func validateUpdateRequest(req UpdateRequest) error {
 	return nil
 }
 
-// validateQueryRequest 验证 QueryRequest 的有效性
-func validateQueryRequest(req QueryRequest) error {
+// QueryRequest 查询数据的请求体结构
+type QueryRequest struct {
+	WalletAddr string `json:"wallet_addr" firestore:"wallet_addr"`
+}
+
+// Validate 验证 QueryRequest 的有效性
+func (req *QueryRequest) Validate() error {
 	if req.WalletAddr == "" {
 		return fmt.Errorf("wallet_addr is required")
 	}
 	// 添加更多验证规则，如正则表达式匹配等
 	return nil
+}
+
+// Firestore操作函数
+
+// CreateOrUpdateAccount 将UpdateRequest保存到Firestore
+func CreateOrUpdateAccount(ctx context.Context, updateReq UpdateRequest) error {
+	collection := DbInst().fileCli.Collection(BPasswordTable)
+	_, err := collection.Doc(updateReq.WalletAddr).Set(ctx, map[string]interface{}{
+		"wallet_addr":  updateReq.WalletAddr,
+		"encode_value": updateReq.EncodeValue,
+	})
+	return err
+}
+
+// GetAccount 从Firestore获取UpdateRequest
+func GetAccount(ctx context.Context, walletAddr string) (UpdateRequest, error) {
+	doc, err := DbInst().fileCli.Collection(BPasswordTable).Doc(walletAddr).Get(ctx)
+	if err != nil {
+		return UpdateRequest{}, err
+	}
+
+	var data UpdateRequest
+	if err := doc.DataTo(&data); err != nil {
+		return UpdateRequest{}, err
+	}
+
+	return data, nil
+}
+
+// 公共函数
+
+// decodeJSON 解析JSON请求体
+func decodeJSON(r *http.Request, v interface{}) error {
+	if r.Method != http.MethodPost {
+		return fmt.Errorf("invalid request method")
+	}
+	decoder := json.NewDecoder(r.Body)
+	return decoder.Decode(v)
+}
+
+// writeJSONResponse 写入JSON响应
+func writeJSONResponse(w http.ResponseWriter, statusCode int, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Failed to encode response")
+		log.Println("Response encoding error:", err)
+	}
+}
+
+// writeErrorResponse 写入错误响应
+func writeErrorResponse(w http.ResponseWriter, statusCode int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	resp := map[string]string{
+		"error": message,
+	}
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Println("Failed to write error response:", err)
+	}
+}
+
+// 处理函数
+
+// updateData 更新数据的处理函数，将数据保存到 Firestore 并返回 UpdateRequest 实例
+func updateData(w http.ResponseWriter, r *http.Request) {
+	var updateReq UpdateRequest
+	if err := decodeJSON(r, &updateReq); err != nil {
+		writeErrorResponse(w, http.StatusBadRequest, "Invalid request body:"+err.Error())
+		log.Println("JSON decode error:", err)
+		return
+	}
+
+	// 输入验证
+	if err := updateReq.Validate(); err != nil {
+		writeErrorResponse(w, http.StatusBadRequest, "Validation error: "+err.Error())
+		log.Println("Validation error:", err)
+		return
+	}
+
+	// Firestore操作
+	if err := CreateOrUpdateAccount(r.Context(), updateReq); err != nil {
+		writeErrorResponse(w, http.StatusInternalServerError, "Failed to update data")
+		log.Println("Firestore update error:", err)
+		return
+	}
+
+	// 返回 UpdateRequest 作为响应
+	writeJSONResponse(w, http.StatusOK, updateReq)
+}
+
+// queryData 查询数据的处理函数，从 Firestore 获取数据并返回 UpdateRequest 实例
+func queryData(w http.ResponseWriter, r *http.Request) {
+
+	var queryReq QueryRequest
+	if err := decodeJSON(r, &queryReq); err != nil {
+		writeErrorResponse(w, http.StatusBadRequest, "Invalid request body:"+err.Error())
+		log.Println("JSON decode error:", err)
+		return
+	}
+
+	// 输入验证
+	if err := queryReq.Validate(); err != nil {
+		writeErrorResponse(w, http.StatusBadRequest, "Validation error: "+err.Error())
+		log.Println("Validation error:", err)
+		return
+	}
+
+	// Firestore操作
+	data, err := GetAccount(r.Context(), queryReq.WalletAddr)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			writeErrorResponse(w, http.StatusNotFound, "Data not found")
+			return
+		}
+		writeErrorResponse(w, http.StatusInternalServerError, "Failed to query data")
+		log.Println("Firestore query error:", err)
+		return
+	}
+
+	// 返回 UpdateRequest 作为响应
+	writeJSONResponse(w, http.StatusOK, data)
 }
 
 func main() {
