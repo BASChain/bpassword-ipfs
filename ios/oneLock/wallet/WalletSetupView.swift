@@ -23,8 +23,12 @@ struct WalletSetupView: View {
                                                 .cornerRadius(8)
                                 }
                                 .padding()
-                                Button("Import Wallet") {
-                                        // Navigate to import wallet
+                                NavigationLink(destination: ImportWalletView().environmentObject(appState)) {
+                                        Text("Import Wallet")
+                                                .padding()
+                                                .background(Color.green)
+                                                .foregroundColor(.white)
+                                                .cornerRadius(8)
                                 }
                                 .padding()
                         }

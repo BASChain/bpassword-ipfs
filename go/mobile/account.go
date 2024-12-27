@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/BASChain/bpassword-ipfs/go/utils"
 	"github.com/google/uuid"
 	"github.com/syndtr/goleveldb/leveldb"
 	"strings"
@@ -19,7 +20,6 @@ type Account struct {
 	Username    string    `json:"username"`
 	Password    string    `json:"password"`
 	LastUpdated int64     `json:"lastUpdated"` // 修改为 Unix 时间戳
-	OnIpfs      bool      `json:"onIpfs"`
 }
 
 type AccountManager struct {
@@ -126,9 +126,9 @@ func RemoveAccount(uuid string) error {
 	_, exists := __accountManager.accounts[uuid]
 	if exists {
 		delete(__accountManager.accounts, uuid)
-		fmt.Printf("Account with UUID %s removed from memory.\n", uuid)
+		utils.LogInst().Debugf("Account with UUID %s removed from memory.\n", uuid)
 	} else {
-		fmt.Printf("Account with UUID %s does not exist.\n", uuid)
+		utils.LogInst().Debugf("Account with UUID %s does not exist.\n", uuid)
 	}
 	__accountManager.mu.Unlock()
 

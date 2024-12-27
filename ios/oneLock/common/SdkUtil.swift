@@ -19,6 +19,9 @@ enum LogLevel: Int8 {
 class SdkUtil: NSObject {
         // MARK: - 单例模式
         static let shared = SdkUtil()
+        private let ipfs_url = "https://bc.simplenets.org:5001"
+        private let ipfs_token = "ac8ad031c9905e3ead2454d1a1f6c110"
+        private let ipns_key = "k2k4r8jk9168fiqv1p9hibur6zmsbyj03y6jg5fnyxb3fadyrktzi46b"
         
         private override init() {
                 super.init()
@@ -59,7 +62,7 @@ class SdkUtil: NSObject {
                 return nil
         }
         
-        func generateMnemonic(password: String) -> String? {
+        func generateMnemonic() -> String? {
                 var err: NSError? = nil
                 
                 // 调用 Go 侧 API 生成助记词数据
@@ -166,6 +169,11 @@ class SdkUtil: NSObject {
                 print("Account successfully removed: \(uuid.uuidString)")
                 return true
         }
+        
+        func InitIpfsShell(){
+                OneKeyLibInitShell(ipfs_url, ipfs_token, ipns_key)
+        }
+        
 }
 
 // MARK: - 实现 Go 的 APPI 接口

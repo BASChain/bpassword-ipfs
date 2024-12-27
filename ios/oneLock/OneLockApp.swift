@@ -12,8 +12,10 @@ import SwiftData
 struct OneLockApp: App {
         
         @StateObject private var appState = AppState()
+        @Environment(\.scenePhase) private var scenePhase
         
         init() {
+                initializeIPFS()
                 initializeSdk()
         }
         
@@ -31,12 +33,27 @@ struct OneLockApp: App {
                                         .onAppear { checkWalletStatus() }
                         }
                 }
+                .onChange(of: scenePhase) { newPhase in
+                    if newPhase == .active {
+                        print("App moved to the foreground.")
+                        // 重新初始化 IPFS Shell（如需要）
+                        initializeIPFS()
+                    } else if newPhase == .background {
+                        print("App moved to the background.")
+                    }
+                }
         }
         
         private func initializeSdk() {
                 print("Initializing SDK...")
                 SdkUtil.shared.initializeSDK(logLevel: LogLevel.debug)
                 print("SDK initialized.")
+        }
+        
+        private func initializeIPFS() {
+                print("Initializing IPFS Shell...")
+                SdkUtil.shared.InitIpfsShell() // 调用 Go 的 InitShell 函数
+                print("IPFS Shell initialized.")
         }
         
         private func checkWalletStatus() {
