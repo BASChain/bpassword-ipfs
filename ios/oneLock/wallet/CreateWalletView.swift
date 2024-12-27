@@ -53,7 +53,7 @@ struct CreateWalletView: View {
                 }
                 
                 // 调用 SdkUtil 来生成助记词
-                if let generatedMnemonic = SdkUtil.shared.generateMnemonic(password:password) {
+                if let generatedMnemonic = SdkUtil.shared.generateMnemonic() {
                         mnemonic = generatedMnemonic
                         errorMessage = nil
                 } else {
