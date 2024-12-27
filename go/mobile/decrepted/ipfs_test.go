@@ -1,4 +1,4 @@
-package oneKeyLib
+package decrepted
 
 import (
 	"flag"

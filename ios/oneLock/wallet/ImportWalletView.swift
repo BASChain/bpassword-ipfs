@@ -1,12 +1,9 @@
-//
-//  ImportWalletView.swift
-//  oneLock
-//
-//  Created by wesley on 2024/12/27.
-//
 import SwiftUI
+
 struct ImportWalletView: View {
         @EnvironmentObject var appState: AppState
+        @Environment(\.presentationMode) var presentationMode // 添加 presentationMode
+        
         @State private var mnemonic: String = ""
         @State private var password: String = ""
         @State private var confirmPassword: String = ""
@@ -14,43 +11,48 @@ struct ImportWalletView: View {
         @StateObject private var loadingManager = LoadingManager() // 添加 LoadingManager 实例
         
         var body: some View {
-                VStack {
-                        Text("Import Wallet")
-                                .font(.largeTitle)
-                                .padding()
-                        
-                        TextEditor(text: $mnemonic)
-                                .font(.body)
-                                .padding()
-                                .frame(maxWidth: .infinity, minHeight: 150, alignment: .leading)
-                                .background(Color(UIColor.systemGray6))
-                                .cornerRadius(8)
-                        
-                        VStack(alignment: .leading, spacing: 10) {
-                                SecureField("Enter Password", text: $password)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                
-                                SecureField("Confirm Password", text: $confirmPassword)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        }
-                        .padding()
-                        
-                        if let errorMessage = errorMessage {
-                                Text(errorMessage)
-                                        .foregroundColor(.red)
+                ZStack {
+                        VStack {
+                                Text("Import Wallet")
+                                        .font(.largeTitle)
                                         .padding()
-                        }
-                        
-                        Button("Import") {
-                                importWallet()
+                                
+                                TextEditor(text: $mnemonic)
+                                        .font(.body)
+                                        .padding()
+                                        .frame(maxWidth: .infinity, minHeight: 150, alignment: .leading)
+                                        .background(Color(UIColor.systemGray6))
+                                        .cornerRadius(8)
+                                
+                                VStack(alignment: .leading, spacing: 10) {
+                                        SecureField("Enter Password", text: $password)
+                                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                        
+                                        SecureField("Confirm Password", text: $confirmPassword)
+                                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                }
+                                .padding()
+                                
+                                if let errorMessage = errorMessage {
+                                        Text(errorMessage)
+                                                .foregroundColor(.red)
+                                                .padding()
+                                }
+                                
+                                Button("Import") {
+                                        importWallet()
+                                }
+                                .padding()
+                                .background(Color.blue)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
                         }
                         .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+                        .navigationTitle("Import Wallet")
+                        
+                        // 显示加载提示
+                        LoadingView(isVisible: $loadingManager.isVisible, message: $loadingManager.message)
                 }
-                .padding()
-                .navigationTitle("Import Wallet")
         }
         
         private func importWallet() {
@@ -72,12 +74,12 @@ struct ImportWalletView: View {
                                         
                                         if success {
                                                 appState.hasWallet = true
+                                                presentationMode.wrappedValue.dismiss() // 成功后关闭视图
                                         } else {
                                                 errorMessage = "Failed to create wallet. Please try again."
                                         }
                                 }
                         }
-                        
                 }
         }
 }

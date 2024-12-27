@@ -1,4 +1,4 @@
-package oneKeyLib
+package decrepted
 
 import (
 	"bytes"
@@ -55,7 +55,7 @@ func checkShellInitialized() error {
 	defer sharedIpfs.mu.Unlock()
 
 	if sharedIpfs.shell == nil {
-		return fmt.Errorf("IPFS shell is not initialized. Call InitShell first.")
+		return fmt.Errorf("IPFS shell is not initialized. Call InitShell first")
 	}
 	return nil
 }

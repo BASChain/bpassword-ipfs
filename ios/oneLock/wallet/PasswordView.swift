@@ -5,7 +5,6 @@
 //  Created by wesley on 2024/12/25.
 //
 import SwiftUI
-import SwiftData
 
 struct PasswordView: View {
         @EnvironmentObject var appState: AppState
@@ -14,31 +13,39 @@ struct PasswordView: View {
         @StateObject private var loadingManager = LoadingManager() // 添加 LoadingManager 实例
         
         var body: some View {
-                ZStack {
-                        VStack {
-                                Text("Enter Password for Wallet")
-                                        .font(.title)
-                                        .padding()
-                                
-                                SecureField("Password", text: $password)
-                                        .textFieldStyle(.roundedBorder)
-                                        .padding()
-                                
-                                if let error = errorMessage {
-                                        Text(error)
-                                                .foregroundColor(.red)
+                NavigationView { // 添加 NavigationView
+                        ZStack {
+                                VStack {
+                                        Text("Enter Password for Wallet")
+                                                .font(.title)
                                                 .padding()
-                                }
-                                
-                                Button("Validate") {
-                                        validatePassword()
+                                        
+                                        SecureField("Password", text: $password)
+                                                .textFieldStyle(.roundedBorder)
+                                                .padding()
+                                        
+                                        if let error = errorMessage {
+                                                Text(error)
+                                                        .foregroundColor(.red)
+                                                        .padding()
+                                        }
+                                        
+                                        Button("Open Wallet") {
+                                                validatePassword()
+                                        }
+                                        .padding()
+                                        
+                                        NavigationLink(destination: ImportWalletView().environmentObject(appState)) {
+                                                Text("Forget Password")
+                                                        .foregroundColor(.blue)
+                                        }
+                                        .padding()
                                 }
                                 .padding()
+                                
+                                // 显示加载提示
+                                LoadingView(isVisible: $loadingManager.isVisible, message: $loadingManager.message)
                         }
-                        .padding()
-                        
-                        // 显示加载提示
-                        LoadingView(isVisible: $loadingManager.isVisible, message: $loadingManager.message)
                 }
         }
         
