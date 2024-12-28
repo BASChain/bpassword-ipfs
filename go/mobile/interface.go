@@ -1,4 +1,4 @@
-package oneKeyLib
+package LockLib
 
 import (
 	"errors"
@@ -7,16 +7,18 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
-type APPI interface {
+type AppI interface {
 	Log(s string)
 }
 type API struct {
 	dbPath string
+	srvUrl string
+	token  string
 }
 
 var __api = &API{}
 
-func InitSDK(exi APPI, dbPath string, logLevel int8) error {
+func InitSDK(exi AppI, dbPath, url, token string, logLevel int8) error {
 	if exi == nil {
 		return errors.New("invalid application interface")
 	}
@@ -33,6 +35,6 @@ func InitSDK(exi APPI, dbPath string, logLevel int8) error {
 	db.Close()
 	utils.LogInst().Debugf("bpassword ipfs version init sdk success, log level:%d", logLevel)
 
-	__api = &API{dbPath: dbPath}
+	__api = &API{dbPath: dbPath, srvUrl: url, token: token}
 	return nil
 }

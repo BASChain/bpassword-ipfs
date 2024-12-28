@@ -1,4 +1,4 @@
-package oneKeyLib
+package LockLib
 
 import (
 	"encoding/json"
@@ -90,7 +90,7 @@ func LoadAccountList() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(accounts)
+
 	__accountManager.mu.Lock()
 	__accountManager.accounts = accounts
 	__accountManager.mu.Unlock()

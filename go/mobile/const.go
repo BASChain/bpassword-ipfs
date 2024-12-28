@@ -1,4 +1,4 @@
-package oneKeyLib
+package LockLib
 
 const (
 	HardenedOffset    = 0x80000000 // 用于生成硬化路径

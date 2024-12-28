@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import OneKeyLib
+import LockLib
 
 enum LogLevel: Int8 {
         case debug = 0
@@ -19,8 +19,9 @@ enum LogLevel: Int8 {
 class SdkUtil: NSObject {
         // MARK: - 单例模式
         static let shared = SdkUtil()
-        private let ipfs_url = "https://bc.simplenets.org:5001"
-        private let ipfs_token = "ac8ad031c9905e3ead2454d1a1f6c110"
+        //        private let server_url = "https://bc.simplenets.org:5001"
+        private let server_url = "http://127.0.0.1:5002"
+        private let server_token = "ac8ad031c9905e3ead2454d1a1f6c110"
         
         private override init() {
                 super.init()
@@ -37,7 +38,7 @@ class SdkUtil: NSObject {
                 // 调用 Go 库中的 InitSDK 方法
                 let dbPath = getDatabasePath()
                 var err:NSError? = nil
-                OneKeyLibInitSDK(self, dbPath, logLevel.rawValue, &err)
+                LockLibInitSDK(self, dbPath,server_url, server_token, logLevel.rawValue, &err)
                 
                 if let error = err {
                         print("Failed to initialize SDK: \(error.localizedDescription)")
@@ -48,7 +49,7 @@ class SdkUtil: NSObject {
                 
                 // 调用 Go 的 CheckWallet 方法
                 var err:NSError? = nil
-                if let walletData =  OneKeyLibCheckWallet(&err) {
+                if let walletData = LockLibCheckWallet(&err) {
                         if let walletString = String(data: walletData as Data, encoding: .utf8) {
                                 return walletString
                         } else {
@@ -65,7 +66,7 @@ class SdkUtil: NSObject {
                 var err: NSError? = nil
                 
                 // 调用 Go 侧 API 生成助记词数据
-                guard let mnemonicData = OneKeyLibGenerateMnemonic(&err) else {
+                guard let mnemonicData = LockLibGenerateMnemonic(&err) else {
                         print("Error generating mnemonic: \(err?.localizedDescription ?? "Unknown error").")
                         return nil
                 }
@@ -81,7 +82,7 @@ class SdkUtil: NSObject {
         
         func createWallet(mnemonic: String,password:String)->Bool {
                 var err: NSError? = nil
-                OneKeyLibGenerateWallet(mnemonic,password, &err)
+                LockLibGenerateWallet(mnemonic,password, &err)
                 guard let e = err else{
                         return true
                 }
@@ -91,7 +92,7 @@ class SdkUtil: NSObject {
         
         func openWallet(password:String)->Bool{
                 var err: NSError? = nil
-                OneKeyLibOpenWallet(password,&err)
+                LockLibOpenWallet(password,&err)
                 guard let e = err else{
                         return true
                 }
@@ -100,7 +101,7 @@ class SdkUtil: NSObject {
         }
         
         func walletAddress()->String{
-                return OneKeyLibWalletAddress()
+                return LockLibWalletAddress()
         }
         
         func addAccount(account: Account) -> Bool {
@@ -113,7 +114,7 @@ class SdkUtil: NSObject {
                 }
                 
                 // 调用 Go 的 OneKeyLibAddAccount 方法
-                OneKeyLibAddAccount(jsonStr, &err)
+                LockLibAddAccount(jsonStr, &err)
                 
                 // 检查错误
                 guard let e = err else {
@@ -132,7 +133,7 @@ class SdkUtil: NSObject {
                 
                 // 调用 Go 的 LoadAccountList 函数
                 var err: NSError? = nil
-                guard let jsonData = OneKeyLibLoadAccountList(&err) else {
+                guard let jsonData = LockLibLoadAccountList(&err) else {
                         if let e = err {
                                 print("Failed to load accounts: \(e.localizedDescription)")
                         }
@@ -158,7 +159,7 @@ class SdkUtil: NSObject {
         
         func removeAccount(uuid: UUID) -> Bool {
                 var err: NSError? = nil
-                OneKeyLibRemoveAccount(uuid.uuidString, &err)
+                LockLibRemoveAccount(uuid.uuidString, &err)
                 
                 if let e = err {
                         print("Failed to remove account: \(e.localizedDescription)")
@@ -167,12 +168,12 @@ class SdkUtil: NSObject {
                 
                 print("Account successfully removed: \(uuid.uuidString)")
                 return true
-        }        
+        }
 }
 
 // MARK: - 实现 Go 的 APPI 接口
-extension SdkUtil: OneKeyLibAPPIProtocol {
-        func log(_ s: String?) {
+extension SdkUtil: LockLibAppIProtocol {
+        @objc func log(_ s: String?) {
                 // 处理从 Go 库传回的日志
                 print("[GoSDK] \(s ?? "")")
         }

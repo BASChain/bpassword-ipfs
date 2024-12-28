@@ -1,4 +1,4 @@
-package oneKeyLib
+package LockLib
 
 import (
 	"crypto/ecdsa"

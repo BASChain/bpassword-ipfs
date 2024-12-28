@@ -32,9 +32,11 @@ func UpdateData(w http.ResponseWriter, r *http.Request) {
 		log.Info("Firestore update error:", err)
 		return
 	}
-
+	resp := map[string]bool{
+		"success": true,
+	}
 	// 返回 UpdateRequest 作为响应
-	writeJSONResponse(w, http.StatusOK, updateReq)
+	writeJSONResponse(w, http.StatusOK, resp)
 }
 
 // QueryData 查询数据的处理函数，从 Firestore 获取数据并返回 UpdateRequest 实例
@@ -99,7 +101,7 @@ func writeErrorResponse(w http.ResponseWriter, statusCode int, message string) {
 
 func apiKeyAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		apiKey := r.Header.Get("X-API-Key")
+		apiKey := r.Header.Get("Authorization")
 		expectedKey := getEnv("API_KEY", "default_api_key")
 
 		if apiKey != expectedKey {

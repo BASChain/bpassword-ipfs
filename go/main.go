@@ -28,12 +28,11 @@ func main() {
 	srv := service.NewServer()
 	// 启动服务器
 	go func() {
-		log.Info("Starting server on", service.GetAddr())
+		log.Info("Starting server on ", service.GetAddr())
 		serverErrors <- srv.ListenAndServe()
 	}()
 
 	waitSignal(serverErrors)
-
 	shutDown(srv)
 }
 
@@ -49,7 +48,6 @@ func waitSignal(serverErrors chan error) {
 	case <-sigint:
 		log.Info("Shutdown signal received")
 	}
-
 }
 
 // 创建带超时的上下文进行优雅关闭

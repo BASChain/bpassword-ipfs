@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6932F7E42D1BF7C900C9D11E /* oneKeyLib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6932F7E12D1BEB1000C9D11E /* oneKeyLib.xcframework */; };
+		2B94CB272D1FF10C00C484B0 /* LockLib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B94CB262D1FF10C00C484B0 /* LockLib.xcframework */; };
+		2B94CB282D1FF10C00C484B0 /* LockLib.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2B94CB262D1FF10C00C484B0 /* LockLib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,8 +28,22 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		2B94CB252D1FEF9200C484B0 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				2B94CB282D1FF10C00C484B0 /* LockLib.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		6932F7E12D1BEB1000C9D11E /* oneKeyLib.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = oneKeyLib.xcframework; path = ../go/bin/oneKeyLib.xcframework; sourceTree = "<group>"; };
+		2B94CB262D1FF10C00C484B0 /* LockLib.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = LockLib.xcframework; path = ../go/bin/LockLib.xcframework; sourceTree = "<group>"; };
 		69E13C782D1B9A970081BBA4 /* oneLock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = oneLock.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		69E13C8A2D1B9A9A0081BBA4 /* oneLockTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = oneLockTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		69E13C942D1B9A9A0081BBA4 /* oneLockUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = oneLockUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -57,7 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6932F7E42D1BF7C900C9D11E /* oneKeyLib.xcframework in Frameworks */,
+				2B94CB272D1FF10C00C484B0 /* LockLib.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -81,7 +96,7 @@
 		694B42D32D1BBC4A001EE591 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				6932F7E12D1BEB1000C9D11E /* oneKeyLib.xcframework */,
+				2B94CB262D1FF10C00C484B0 /* LockLib.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -117,6 +132,7 @@
 				69E13C742D1B9A970081BBA4 /* Sources */,
 				69E13C752D1B9A970081BBA4 /* Frameworks */,
 				69E13C762D1B9A970081BBA4 /* Resources */,
+				2B94CB252D1FEF9200C484B0 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

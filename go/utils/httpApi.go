@@ -8,9 +8,7 @@ import (
 	"net/http"
 )
 
-func SendPostRequest(baseURL, api, token string, param any) ([]byte, error) {
-
-	url := baseURL + api
+func SendPostRequest(url, token string, param any) ([]byte, error) {
 
 	jsonData, err := json.Marshal(param)
 
