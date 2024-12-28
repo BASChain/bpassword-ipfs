@@ -5,7 +5,6 @@ import (
 	"github.com/BASChain/bpassword-ipfs/go/service"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
