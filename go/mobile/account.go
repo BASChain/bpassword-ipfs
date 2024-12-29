@@ -25,10 +25,57 @@ type Account struct {
 type AccountManager struct {
 	Accounts map[string]*Account `json:"accounts"`
 	Version  int64               `json:"version"`
-	mu       sync.Mutex          // 线程安全
+	mu       sync.RWMutex
 }
 
 var __accountManager = &AccountManager{Accounts: make(map[string]*Account)}
+
+func fillAccountData(data []byte) error {
+	var am AccountManager //map[string]*Account
+
+	var err = json.Unmarshal(data, &am)
+	if err != nil {
+		return err
+	}
+	__accountManager = &am
+	if am.Accounts == nil {
+		am.Accounts = make(map[string]*Account)
+	}
+	return nil
+}
+
+func (am *AccountManager) AddAccount(acc *Account) {
+	am.mu.Lock()
+	am.Accounts[acc.ID.String()] = acc
+	am.Version = time.Now().UnixNano()
+	am.mu.Unlock()
+}
+
+func (am *AccountManager) RawData() []byte {
+	am.mu.RLock()
+	defer am.mu.RUnlock()
+	bts, _ := json.Marshal(am)
+	return bts
+}
+
+func (am *AccountManager) AccountData() []byte {
+	am.mu.RLock()
+	defer am.mu.RUnlock()
+	bts, _ := json.Marshal(am.Accounts)
+	return bts
+}
+
+func (am *AccountManager) DelAccount(uuid string) bool {
+	am.mu.Lock()
+	defer am.mu.Unlock()
+	_, exists := am.Accounts[uuid]
+	if !exists {
+		return false
+	}
+	delete(am.Accounts, uuid)
+	utils.LogInst().Debugf("Account with UUID %s removed from memory.\n", uuid)
+	return true
+}
 
 // parseAccount 解析 JSON 字符串为 Account
 func parseAccount(jsonStr string) (*Account, error) {
@@ -60,11 +107,7 @@ func AddAccount(accJsonStr string) error {
 	if err != nil {
 		return err
 	}
-
-	__accountManager.mu.Lock()
-	__accountManager.Accounts[account.ID.String()] = account
-	__accountManager.mu.Unlock()
-
+	__accountManager.AddAccount(account)
 	_, err = encryptSave()
 	return err
 }
@@ -75,18 +118,8 @@ func ReadLocalData() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	var accounts map[string]*Account
-	err = json.Unmarshal(data, &accounts)
-	if err != nil {
-		return nil, err
-	}
-
-	__accountManager.mu.Lock()
-	__accountManager.Accounts = accounts
-	__accountManager.mu.Unlock()
-
-	return data, nil
+	err = fillAccountData(data)
+	return __accountManager.AccountData(), nil
 }
 
 func decryptRead() ([]byte, error) {
@@ -124,13 +157,7 @@ func encryptSave() ([]byte, error) {
 	}
 	defer db.Close()
 
-	__accountManager.mu.Lock()
-	data, err := json.Marshal(__accountManager.Accounts)
-	__accountManager.mu.Unlock()
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal Accounts: %w", err)
-	}
-
+	data := __accountManager.RawData()
 	encodeData, err := Encode(data, &__walletManager.privateKey.PublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode Accounts: %w", err)
@@ -146,24 +173,15 @@ func encryptSave() ([]byte, error) {
 // RemoveAccount 从内存和 LevelDB 中移除指定的账号
 func RemoveAccount(uuid string) error {
 	uuid = strings.ToLower(uuid)
-
-	__accountManager.mu.Lock()
-	_, exists := __accountManager.Accounts[uuid]
-	if exists {
-		delete(__accountManager.Accounts, uuid)
-		utils.LogInst().Debugf("Account with UUID %s removed from memory.\n", uuid)
-	} else {
-		utils.LogInst().Debugf("Account with UUID %s does not exist.\n", uuid)
-	}
-	__accountManager.mu.Unlock()
-
-	if !exists {
-		return fmt.Errorf("account with UUID %s not found", uuid)
+	success := __accountManager.DelAccount(uuid)
+	if !success {
+		return nil
 	}
 
 	_, err := encryptSave()
 	if err != nil {
 		return fmt.Errorf("failed to save updated account list: %w", err)
 	}
+
 	return nil
 }
