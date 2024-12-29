@@ -23,11 +23,12 @@ type Account struct {
 }
 
 type AccountManager struct {
-	accounts map[string]*Account
-	mu       sync.Mutex // 线程安全
+	Accounts map[string]*Account `json:"accounts"`
+	Version  int64               `json:"version"`
+	mu       sync.Mutex          // 线程安全
 }
 
-var __accountManager = &AccountManager{accounts: make(map[string]*Account)}
+var __accountManager = &AccountManager{Accounts: make(map[string]*Account)}
 
 // parseAccount 解析 JSON 字符串为 Account
 func parseAccount(jsonStr string) (*Account, error) {
@@ -61,14 +62,38 @@ func AddAccount(accJsonStr string) error {
 	}
 
 	__accountManager.mu.Lock()
-	__accountManager.accounts[account.ID.String()] = account
+	__accountManager.Accounts[account.ID.String()] = account
 	__accountManager.mu.Unlock()
 
-	return saveAccountList()
+	_, err = encryptSave()
+	return err
 }
 
-// LoadAccountList 从 LevelDB 加载账号列表
-func LoadAccountList() ([]byte, error) {
+// ReadLocalData 从 LevelDB 加载账号列表
+func ReadLocalData() ([]byte, error) {
+	data, err := decryptRead()
+	if err != nil {
+		return nil, err
+	}
+
+	var accounts map[string]*Account
+	err = json.Unmarshal(data, &accounts)
+	if err != nil {
+		return nil, err
+	}
+
+	__accountManager.mu.Lock()
+	__accountManager.Accounts = accounts
+	__accountManager.mu.Unlock()
+
+	return data, nil
+}
+
+func decryptRead() ([]byte, error) {
+	if __walletManager.privateKey == nil {
+		return nil, fmt.Errorf("private key is required")
+	}
+
 	db, err := leveldb.OpenFile(__api.dbPath, nil)
 	if err != nil {
 		return nil, err
@@ -83,41 +108,39 @@ func LoadAccountList() ([]byte, error) {
 		return nil, err
 	}
 
-	//fmt.Println("cache content size:", len(data), string(data))
-
-	var accounts map[string]*Account
-	err = json.Unmarshal(data, &accounts)
-	if err != nil {
-		return nil, err
-	}
-
-	__accountManager.mu.Lock()
-	__accountManager.accounts = accounts
-	__accountManager.mu.Unlock()
-
-	return data, nil
+	return Decode(data, __walletManager.privateKey)
 }
 
-// saveAccountList 将账号列表保存到 LevelDB
-func saveAccountList() error {
+// encryptSave 将账号列表保存到 LevelDB
+func encryptSave() ([]byte, error) {
+
+	if __walletManager.privateKey == nil {
+		return nil, fmt.Errorf("private key is required")
+	}
+
 	db, err := leveldb.OpenFile(__api.dbPath, nil)
 	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 	defer db.Close()
 
 	__accountManager.mu.Lock()
-	data, err := json.Marshal(__accountManager.accounts)
+	data, err := json.Marshal(__accountManager.Accounts)
 	__accountManager.mu.Unlock()
 	if err != nil {
-		return fmt.Errorf("failed to marshal accounts: %w", err)
+		return nil, fmt.Errorf("failed to marshal Accounts: %w", err)
 	}
 
-	err = db.Put([]byte(__db_key_accounts), data, nil)
+	encodeData, err := Encode(data, &__walletManager.privateKey.PublicKey)
 	if err != nil {
-		return fmt.Errorf("failed to save accounts to database: %w", err)
+		return nil, fmt.Errorf("failed to encode Accounts: %w", err)
 	}
-	return nil
+
+	err = db.Put([]byte(__db_key_accounts), encodeData, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to save Accounts to database: %w", err)
+	}
+	return encodeData, nil
 }
 
 // RemoveAccount 从内存和 LevelDB 中移除指定的账号
@@ -125,9 +148,9 @@ func RemoveAccount(uuid string) error {
 	uuid = strings.ToLower(uuid)
 
 	__accountManager.mu.Lock()
-	_, exists := __accountManager.accounts[uuid]
+	_, exists := __accountManager.Accounts[uuid]
 	if exists {
-		delete(__accountManager.accounts, uuid)
+		delete(__accountManager.Accounts, uuid)
 		utils.LogInst().Debugf("Account with UUID %s removed from memory.\n", uuid)
 	} else {
 		utils.LogInst().Debugf("Account with UUID %s does not exist.\n", uuid)
@@ -138,7 +161,7 @@ func RemoveAccount(uuid string) error {
 		return fmt.Errorf("account with UUID %s not found", uuid)
 	}
 
-	err := saveAccountList()
+	_, err := encryptSave()
 	if err != nil {
 		return fmt.Errorf("failed to save updated account list: %w", err)
 	}

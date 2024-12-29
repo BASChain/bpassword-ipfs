@@ -133,7 +133,7 @@ class SdkUtil: NSObject {
                 
                 // 调用 Go 的 LoadAccountList 函数
                 var err: NSError? = nil
-                guard let jsonData = LockLibLoadAccountList(&err) else {
+                guard let jsonData = LockLibReadLocalData(&err) else {
                         if let e = err {
                                 print("Failed to load accounts: \(e.localizedDescription)")
                         }

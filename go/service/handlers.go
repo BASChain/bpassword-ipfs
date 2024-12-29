@@ -108,7 +108,6 @@ func apiKeyAuth(next http.Handler) http.Handler {
 			writeErrorResponse(w, http.StatusUnauthorized, "Invalid API Key")
 			return
 		}
-
 		next.ServeHTTP(w, r)
 	})
 }
@@ -127,5 +126,4 @@ func NewServer() *http.Server {
 		Handler: r,
 	}
 	return srv
-
 }

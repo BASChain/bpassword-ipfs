@@ -72,7 +72,7 @@ func decodeData(encodedData []byte) map[string]*Account {
 
 func encodeData() []byte {
 	__accountManager.mu.Lock()
-	data, _ := json.Marshal(__accountManager.accounts)
+	data, _ := json.Marshal(__accountManager.Accounts)
 	__accountManager.mu.Unlock()
 	//encode
 	return data
@@ -81,11 +81,12 @@ func encodeData() []byte {
 func mergeAccounts(onlineData map[string]*Account) error {
 	__accountManager.mu.Lock()
 	for uuid, account := range onlineData {
-		__accountManager.accounts[uuid] = account
+		__accountManager.Accounts[uuid] = account
 	}
 	__accountManager.mu.Unlock()
 
-	return saveAccountList()
+	_, err := encryptSave()
+	return err
 }
 
 func uploadLocalData() error {
