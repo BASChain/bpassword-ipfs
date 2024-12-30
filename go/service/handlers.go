@@ -5,12 +5,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"net/http"
 )
 
-// UpdateData 更新数据的处理函数，将数据保存到 Firestore 并返回 UpdateRequest 实例
+// UpdateData 更新数据的处理函数，将数据保存到 Firestore 并返回 EncodedData 实例
 func UpdateData(w http.ResponseWriter, r *http.Request) {
 	var updateReq UpdateRequest
 	if err := decodeJSON(r, &updateReq); err != nil {
@@ -27,7 +25,7 @@ func UpdateData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Firestore操作
-	if err := DbInst().CreateOrUpdateAccount(r.Context(), updateReq); err != nil {
+	if err := DbInst().CreateOrUpdateAccount(r.Context(), updateReq.EncodedData); err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, "Failed to update data")
 		log.Info("Firestore update error:", err)
 		return
@@ -35,11 +33,11 @@ func UpdateData(w http.ResponseWriter, r *http.Request) {
 	resp := map[string]bool{
 		"success": true,
 	}
-	// 返回 UpdateRequest 作为响应
+	// 返回 EncodedData 作为响应
 	writeJSONResponse(w, http.StatusOK, resp)
 }
 
-// QueryData 查询数据的处理函数，从 Firestore 获取数据并返回 UpdateRequest 实例
+// QueryData 查询数据的处理函数，从 Firestore 获取数据并返回 EncodedData 实例
 func QueryData(w http.ResponseWriter, r *http.Request) {
 	var queryReq QueryRequest
 	if err := decodeJSON(r, &queryReq); err != nil {
@@ -56,18 +54,14 @@ func QueryData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Firestore操作
-	data, err := DbInst().GetAccount(r.Context(), queryReq.WalletAddr)
+	data, err := DbInst().GetByAccount(r.Context(), queryReq.WalletAddr)
 	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			writeErrorResponse(w, http.StatusNotFound, "Data not found")
-			return
-		}
 		writeErrorResponse(w, http.StatusInternalServerError, "Failed to query data")
 		log.Info("Firestore query error:", err)
 		return
 	}
 
-	// 返回 UpdateRequest 作为响应
+	// 返回 EncodedData 作为响应
 	writeJSONResponse(w, http.StatusOK, data)
 }
 

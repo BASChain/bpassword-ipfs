@@ -35,12 +35,13 @@ func signMessage(message []byte, privateKey *ecdsa.PrivateKey) (string, error) {
 	return hex.EncodeToString(signature), nil
 }
 
-func syncLatestData() ([]byte, error) {
+func syncDataFromSrv() (*service.EncodedData, error) {
 	var queryReq = service.QueryRequest{
-		WalletAddr:  __walletManager.address,
-		CurrentTime: time.Now().Unix(),
+		WalletAddr: __walletManager.address,
+		QueryTime:  time.Now().Unix(),
 	}
-	message := []byte(fmt.Sprintf("%d", queryReq.CurrentTime))
+
+	message := queryReq.DataToSign()
 	sig, err := signMessage(message, __walletManager.privateKey)
 	if err != nil {
 		return nil, err
@@ -54,63 +55,45 @@ func syncLatestData() ([]byte, error) {
 		return nil, err
 	}
 
-	var request service.UpdateRequest //make(map[string]*Account)
+	var request service.EncodedData //make(map[string]*Account)
 	err = json.Unmarshal(data, &request)
 	if err != nil {
 		utils.LogInst().Errorf("SyncLatestData error %s", err.Error())
 		return nil, err
 	}
 
-	return hex.DecodeString(request.EncodeValue)
+	return &request, nil
 }
 
-func decodeData(encodedData []byte) map[string]*Account {
-
-	//
-	return nil
-}
-
-func encodeData() []byte {
-	__accountManager.mu.Lock()
-	data, _ := json.Marshal(__accountManager.Accounts)
-	__accountManager.mu.Unlock()
-	//encode
-	return data
-}
-
-func mergeAccounts(onlineData map[string]*Account) error {
-	__accountManager.mu.Lock()
-	for uuid, account := range onlineData {
-		__accountManager.Accounts[uuid] = account
-	}
-	__accountManager.mu.Unlock()
-
-	_, err := encryptSave()
-	return err
-}
-
-func uploadLocalData() error {
-	var updateReq = &service.UpdateRequest{
+// TODO:: upload data ,increase version ,update local version
+func uploadLocalData(encodedData []byte) (*service.UpdateResult, error) {
+	var updateReq = &service.EncodedData{
 		WalletAddr: __walletManager.address,
 	}
 
-	var data = encodeData()
-	if data == nil {
-		return fmt.Errorf("invalid data")
+	if encodedData == nil {
+		return nil, fmt.Errorf("invalid data")
 	}
-	sig, err := signMessage(data, __walletManager.privateKey)
+	sig, err := signMessage(encodedData, __walletManager.privateKey)
 	if err != nil {
 		utils.LogInst().Errorf("sign message error %s", err.Error())
-		return err
+		return nil, err
 	}
 	updateReq.Signature = sig
-	updateReq.EncodeValue = hex.EncodeToString(data)
+	updateReq.EncodeValue = hex.EncodeToString(encodedData)
 
 	var url = __api.srvUrl + queryDataAPi
-	_, err = utils.SendPostRequest(url, __api.token, updateReq)
+	data, err := utils.SendPostRequest(url, __api.token, updateReq)
 	if err != nil {
 		utils.LogInst().Errorf("SyncLatestData error %s", err.Error())
-		return err
+		return nil, err
 	}
-	return nil
+
+	var res service.UpdateResult
+	err = json.Unmarshal(data, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return &res, nil
 }

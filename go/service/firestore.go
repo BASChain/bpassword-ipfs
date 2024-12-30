@@ -5,15 +5,17 @@ import (
 	"context"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"sync"
 )
 
 const (
-	BPasswordTable = "AccountData"
+	BPasswordTable = "accountData"
 )
 
 // CreateOrUpdateAccount 将UpdateRequest保存到Firestore
-func (dm *DbManager) CreateOrUpdateAccount(ctx context.Context, updateReq UpdateRequest) error {
+func (dm *DbManager) CreateOrUpdateAccount(ctx context.Context, updateReq *EncodedData) error {
 	collection := dm.fileCli.Collection(BPasswordTable)
 	_, err := collection.Doc(updateReq.WalletAddr).Set(ctx, map[string]interface{}{
 		"wallet_addr":  updateReq.WalletAddr,
@@ -22,19 +24,26 @@ func (dm *DbManager) CreateOrUpdateAccount(ctx context.Context, updateReq Update
 	return err
 }
 
-// GetAccount 从Firestore获取UpdateRequest
-func (dm *DbManager) GetAccount(ctx context.Context, walletAddr string) (UpdateRequest, error) {
+// GetByAccount 从Firestore获取UpdateRequest
+func (dm *DbManager) GetByAccount(ctx context.Context, walletAddr string) (*EncodedData, error) {
 	doc, err := dm.fileCli.Collection(BPasswordTable).Doc(walletAddr).Get(ctx)
 	if err != nil {
-		return UpdateRequest{}, err
+		return nil, err
 	}
 
-	var data UpdateRequest
+	var data EncodedData
 	if err := doc.DataTo(&data); err != nil {
-		return UpdateRequest{}, err
+		if status.Code(err) != codes.NotFound {
+			return &EncodedData{
+				WalletAddr:  walletAddr,
+				EncodeValue: "",
+				Version:     -1,
+			}, nil
+		}
+		return nil, err
 	}
 
-	return data, nil
+	return &data, nil
 }
 
 // DbManager 管理 Firestore 客户端

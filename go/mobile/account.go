@@ -13,7 +13,6 @@ import (
 )
 
 // Account 结构体，与 Swift 的 Account 对应
-
 type Account struct {
 	ID          uuid.UUID `json:"id"`
 	Platform    string    `json:"platform"`
@@ -23,49 +22,72 @@ type Account struct {
 }
 
 type AccountManager struct {
-	Accounts map[string]*Account `json:"accounts"`
-	Version  int64               `json:"version"`
-	mu       sync.RWMutex
+	Accounts     map[string]*Account `json:"accounts"`
+	LocalVersion int64               `json:"local_version"`
+	SrvVersion   int64               `json:"srv_version"`
+	mu           sync.RWMutex
 }
 
-var __accountManager = &AccountManager{Accounts: make(map[string]*Account)}
+var __accountManager = &AccountManager{
+	Accounts:   make(map[string]*Account),
+	SrvVersion: -1,
+}
 
-func fillAccountData(data []byte) error {
-	var am AccountManager //map[string]*Account
-
-	var err = json.Unmarshal(data, &am)
+func initCachedAccountData(db *leveldb.DB) error {
+	if __walletManager.privateKey == nil {
+		return fmt.Errorf("open wallet first")
+	}
+	data, err := db.Get([]byte(__db_key_accounts), nil)
 	if err != nil {
+		if errors.Is(err, leveldb.ErrNotFound) {
+			utils.LogInst().Infof("no local data found")
+			return nil
+		}
 		return err
 	}
-	__accountManager = &am
-	if am.Accounts == nil {
-		am.Accounts = make(map[string]*Account)
+
+	rawData, err := Decode(data, __walletManager.privateKey)
+	if err != nil {
+		utils.LogInst().Errorf("decode local data failed:%s", err.Error())
+		return err
+	}
+
+	err = json.Unmarshal(rawData, &__accountManager)
+	if err != nil {
+		utils.LogInst().Errorf("unmarshal local data failed:%s", err.Error())
+		return err
+	}
+
+	if __accountManager.Accounts == nil {
+		__accountManager.Accounts = make(map[string]*Account)
+		__accountManager.LocalVersion = 0
+		__accountManager.SrvVersion = -1
 	}
 	return nil
 }
 
-func (am *AccountManager) AddAccount(acc *Account) {
+func (am *AccountManager) addOrUpdateAccount(acc *Account) {
 	am.mu.Lock()
 	am.Accounts[acc.ID.String()] = acc
-	am.Version = time.Now().UnixNano()
+	am.LocalVersion += 1
 	am.mu.Unlock()
 }
 
-func (am *AccountManager) RawData() []byte {
+func (am *AccountManager) mustSigData() []byte {
 	am.mu.RLock()
 	defer am.mu.RUnlock()
 	bts, _ := json.Marshal(am)
 	return bts
 }
 
-func (am *AccountManager) AccountData() []byte {
+func (am *AccountManager) accountData() []byte {
 	am.mu.RLock()
 	defer am.mu.RUnlock()
 	bts, _ := json.Marshal(am.Accounts)
 	return bts
 }
 
-func (am *AccountManager) DelAccount(uuid string) bool {
+func (am *AccountManager) delAccount(uuid string) bool {
 	am.mu.Lock()
 	defer am.mu.Unlock()
 	_, exists := am.Accounts[uuid]
@@ -73,6 +95,7 @@ func (am *AccountManager) DelAccount(uuid string) bool {
 		return false
 	}
 	delete(am.Accounts, uuid)
+	am.LocalVersion += 1
 	utils.LogInst().Debugf("Account with UUID %s removed from memory.\n", uuid)
 	return true
 }
@@ -101,51 +124,8 @@ func parseAccount(jsonStr string) (*Account, error) {
 	return &account, nil
 }
 
-// AddAccount 添加账号并保存
-func AddAccount(accJsonStr string) error {
-	account, err := parseAccount(accJsonStr)
-	if err != nil {
-		return err
-	}
-	__accountManager.AddAccount(account)
-	_, err = encryptSave()
-	return err
-}
-
-// ReadLocalData 从 LevelDB 加载账号列表
-func ReadLocalData() ([]byte, error) {
-	data, err := decryptRead()
-	if err != nil {
-		return nil, err
-	}
-	err = fillAccountData(data)
-	return __accountManager.AccountData(), nil
-}
-
-func decryptRead() ([]byte, error) {
-	if __walletManager.privateKey == nil {
-		return nil, fmt.Errorf("private key is required")
-	}
-
-	db, err := leveldb.OpenFile(__api.dbPath, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	data, err := db.Get([]byte(__db_key_accounts), nil)
-	if err != nil {
-		if errors.Is(err, leveldb.ErrNotFound) {
-			return nil, nil // 如果未找到数据，返回空
-		}
-		return nil, err
-	}
-
-	return Decode(data, __walletManager.privateKey)
-}
-
-// encryptSave 将账号列表保存到 LevelDB
-func encryptSave() ([]byte, error) {
+// localDbSave 将账号列表保存到 LevelDB
+func localDbSave() ([]byte, error) {
 
 	if __walletManager.privateKey == nil {
 		return nil, fmt.Errorf("private key is required")
@@ -157,7 +137,7 @@ func encryptSave() ([]byte, error) {
 	}
 	defer db.Close()
 
-	data := __accountManager.RawData()
+	data := __accountManager.mustSigData()
 	encodeData, err := Encode(data, &__walletManager.privateKey.PublicKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode Accounts: %w", err)
@@ -170,18 +150,32 @@ func encryptSave() ([]byte, error) {
 	return encodeData, nil
 }
 
+// AddOrUpdateAccount 添加或者账号并保存
+func AddOrUpdateAccount(accJsonStr string) error {
+	account, err := parseAccount(accJsonStr)
+	if err != nil {
+		return err
+	}
+	__accountManager.addOrUpdateAccount(account)
+	_, err = localDbSave()
+	return err
+}
+
+// LocalCachedData sync data from local or server
+func LocalCachedData() []byte {
+	return __accountManager.accountData()
+}
+
 // RemoveAccount 从内存和 LevelDB 中移除指定的账号
 func RemoveAccount(uuid string) error {
 	uuid = strings.ToLower(uuid)
-	success := __accountManager.DelAccount(uuid)
+	success := __accountManager.delAccount(uuid)
 	if !success {
 		return nil
 	}
-
-	_, err := encryptSave()
+	_, err := localDbSave()
 	if err != nil {
 		return fmt.Errorf("failed to save updated account list: %w", err)
 	}
-
 	return nil
 }
