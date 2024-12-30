@@ -67,8 +67,10 @@ func syncDataFromSrv() (*service.EncodedData, error) {
 
 // TODO:: upload data ,increase version ,update local version
 func uploadLocalData(encodedData []byte) (*service.UpdateResult, error) {
-	var updateReq = &service.EncodedData{
-		WalletAddr: __walletManager.address,
+	var updateReq = &service.UpdateRequest{
+		EncodedData: &service.EncodedData{
+			WalletAddr: __walletManager.address,
+		},
 	}
 
 	if encodedData == nil {
