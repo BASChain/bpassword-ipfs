@@ -23,6 +23,8 @@ class SdkUtil: NSObject {
         private let server_url = "http://127.0.0.1:5002"
         private let server_token = "ac8ad031c9905e3ead2454d1a1f6c110"
         
+        var toastManager: ToastManager? // 引用 ToastManager
+        
         private override init() {
                 super.init()
         }
@@ -94,9 +96,11 @@ class SdkUtil: NSObject {
                 var err: NSError? = nil
                 LockLibOpenWallet(password,&err)
                 guard let e = err else{
+                        LockLibInitLocalData()
                         return true
                 }
                 print("Failed to open wallet\(e.localizedDescription).")
+                
                 return false
         }
         
@@ -113,8 +117,7 @@ class SdkUtil: NSObject {
                         return false
                 }
                 
-                // 调用 Go 的 OneKeyLibAddAccount 方法
-                LockLibAddAccount(jsonStr, &err)
+                LockLibAddOrUpdateAccount(jsonStr, &err)
                 
                 // 检查错误
                 guard let e = err else {
@@ -131,12 +134,7 @@ class SdkUtil: NSObject {
         func loadAccounts() -> [UUID: Account] {
                 var accountsMap = [UUID: Account]()
                 
-                // 调用 Go 的 LoadAccountList 函数
-                var err: NSError? = nil
-                guard let jsonData = LockLibReadLocalData(&err) else {
-                        if let e = err {
-                                print("Failed to load accounts: \(e.localizedDescription)")
-                        }
+                guard let jsonData = LockLibLocalCachedData() else {
                         return accountsMap
                 }
                 
@@ -173,6 +171,16 @@ class SdkUtil: NSObject {
 
 // MARK: - 实现 Go 的 APPI 接口
 extension SdkUtil: LockLibAppIProtocol {
+        func dataUpdated(_ data: Data?, err: (any Error)?) {
+                DispatchQueue.main.async {
+                        if let error = err {
+                                self.toastManager?.showToast(message: "Data update failed: \(error.localizedDescription)", isSuccess: false)
+                        } else {
+                                self.toastManager?.showToast(message: "Data updated successfully!", isSuccess: true)
+                        }
+                }
+        }
+        
         @objc func log(_ s: String?) {
                 // 处理从 Go 库传回的日志
                 print("[GoSDK] \(s ?? "")")

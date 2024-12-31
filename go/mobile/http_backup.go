@@ -52,14 +52,14 @@ func syncDataFromSrv() (*service.EncodedData, error) {
 	var url = __api.srvUrl + queryDataAPi
 	data, err := utils.SendPostRequest(url, __api.token, queryReq)
 	if err != nil {
-		utils.LogInst().Errorf("SyncLatestData error %s", err.Error())
+		utils.LogInst().Errorf("------>>>SyncLatestData error %s", err.Error())
 		return nil, err
 	}
 
 	var request service.EncodedData //make(map[string]*Account)
 	err = json.Unmarshal(data, &request)
 	if err != nil {
-		utils.LogInst().Errorf("SyncLatestData error %s", err.Error())
+		utils.LogInst().Errorf("------>>>SyncLatestData error %s", err.Error())
 		return nil, err
 	}
 

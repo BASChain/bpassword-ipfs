@@ -13,7 +13,7 @@ func SendPostRequest(url, token string, param any) ([]byte, error) {
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		LogInst().Fatalf("创建请求失败: %v", err)
+		LogInst().Errorf("------>>>创建请求失败: %v", err)
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -24,7 +24,7 @@ func SendPostRequest(url, token string, param any) ([]byte, error) {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		LogInst().Fatalf("发送请求失败: %v", err)
+		LogInst().Errorf("------>>>发送请求失败: %v", err)
 		return nil, err
 	}
 

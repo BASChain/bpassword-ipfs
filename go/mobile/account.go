@@ -33,29 +33,44 @@ var __accountManager = &AccountManager{
 	SrvVersion: -1,
 }
 
-func initCachedAccountData(db *leveldb.DB) error {
+func InitLocalData() {
+	initCachedAccountData()
+	go AsyncDataSyncing()
+	go AsyncCheckLocalAndSrv()
+}
+
+func initCachedAccountData() {
 	if __walletManager.privateKey == nil {
-		return fmt.Errorf("open wallet first")
+		utils.LogInst().Errorf("----->>>open wallet first")
+		return
 	}
+	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	if err != nil {
+		utils.LogInst().Errorf("----->>>open %s failed:%s", __api.dbPath, err.Error())
+		return
+	}
+	defer db.Close()
+
 	data, err := db.Get([]byte(__db_key_accounts), nil)
 	if err != nil {
 		if errors.Is(err, leveldb.ErrNotFound) {
-			utils.LogInst().Infof("no local data found")
-			return nil
+			utils.LogInst().Infof("----->>>no local data found")
+			return
 		}
-		return err
+		utils.LogInst().Errorf("----->>>database get failed:%s", err.Error())
+		return
 	}
 
 	rawData, err := Decode(data, __walletManager.privateKey)
 	if err != nil {
-		utils.LogInst().Errorf("decode local data failed:%s", err.Error())
-		return err
+		utils.LogInst().Errorf("----->>>decode local data failed:%s", err.Error())
+		return
 	}
 
 	err = json.Unmarshal(rawData, &__accountManager)
 	if err != nil {
-		utils.LogInst().Errorf("unmarshal local data failed:%s", err.Error())
-		return err
+		utils.LogInst().Errorf("----->>>unmarshal local data failed:%s", err.Error())
+		return
 	}
 
 	if __accountManager.Accounts == nil {
@@ -63,7 +78,7 @@ func initCachedAccountData(db *leveldb.DB) error {
 		__accountManager.LocalVersion = 0
 		__accountManager.SrvVersion = -1
 	}
-	return nil
+	utils.LogInst().Infof("------>>> init local data success")
 }
 
 func (am *AccountManager) addOrUpdateAccount(acc *Account) {

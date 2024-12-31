@@ -41,14 +41,7 @@ func InitSDK(exi AppI, dbPath, url, token string, logLevel int8) error {
 
 	__api = &API{dbPath: dbPath, srvUrl: url, token: token, callback: exi}
 
-	err = initCachedAccountData(db)
-
-	if err != nil {
-		utils.LogInst().Errorf("init local cached data failed:%s", err.Error())
-		return err
-	}
-	go AsyncDataSyncing()
-	go AsyncCheckLocalAndSrv()
+	utils.LogInst().Debugf("------>>>init sdk success")
 	return nil
 }
 func queryAndDecodeSrvData() (map[string]*Account, int64, error) {
@@ -64,14 +57,14 @@ func queryAndDecodeSrvData() (map[string]*Account, int64, error) {
 	}
 	rawData, err := Decode(cipheredData, __walletManager.privateKey)
 	if err != nil {
-		utils.LogInst().Errorf("decode srvDataWithVer failed:%s", err.Error())
+		utils.LogInst().Errorf("------>>>decode srvDataWithVer failed:%s", err.Error())
 		return nil, -1, err
 
 	}
 	var onlineData = make(map[string]*Account)
 	err = json.Unmarshal(rawData, &onlineData)
 	if err != nil {
-		utils.LogInst().Errorf("unmarshal raw srvDataWithVer failed:%s", err.Error())
+		utils.LogInst().Errorf("------>>>unmarshal raw srvDataWithVer failed:%s", err.Error())
 		return nil, -1, err
 	}
 
@@ -96,9 +89,10 @@ func writeEncodedDataToSrv() error {
 }
 
 func AsyncDataSyncing() {
-
+	utils.LogInst().Debugf("------>>>start syncing data from server")
 	onlineData, onlineVer, err := queryAndDecodeSrvData()
 	if err != nil {
+		fmt.Println("------------------->>>>callback:", __api.callback, err)
 		__api.callback.DataUpdated(nil, err)
 		return
 	}
@@ -144,6 +138,7 @@ func mergeSrvData(onlineData map[string]*Account, onlineVer int64) error {
 }
 
 func AsyncCheckLocalAndSrv() {
+	utils.LogInst().Debugf("------>>>start pushing data to server")
 	__accountManager.mu.RLock()
 	if __accountManager.LocalVersion == __accountManager.SrvVersion {
 		utils.LogInst().Debugf("local version and server version are same")

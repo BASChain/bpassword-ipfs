@@ -197,7 +197,7 @@ func OpenWallet(password string) error {
 	__walletManager.privateKey = key.PrivateKey
 	__walletManager.address = key.Address.Hex()
 
-	utils.LogInst().Infof("Wallet successfully opened. Address: %s\n", __walletManager.address)
+	utils.LogInst().Infof("------>>>Wallet successfully opened. Address: %s\n", __walletManager.address)
 	return nil
 }
 
