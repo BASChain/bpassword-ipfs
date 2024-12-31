@@ -3,6 +3,7 @@ package service
 import (
 	"cloud.google.com/go/firestore"
 	"context"
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc/codes"
@@ -14,14 +15,58 @@ const (
 	BPasswordTable = "accountData"
 )
 
-// CreateOrUpdateAccount 将UpdateRequest保存到Firestore
-func (dm *DbManager) CreateOrUpdateAccount(ctx context.Context, updateReq *EncodedData) error {
+func (dm *DbManager) CreateOrUpdateAccount(ctx context.Context, updateReq *EncodedData) (*UpdateResult, error) {
 	collection := dm.fileCli.Collection(BPasswordTable)
-	_, err := collection.Doc(updateReq.WalletAddr).Set(ctx, map[string]interface{}{
+
+	// 尝试读取现有文档
+	docRef := collection.Doc(updateReq.WalletAddr)
+	docSnap, err := docRef.Get(ctx)
+	var result = &UpdateResult{}
+	if err != nil {
+		if status.Code(err) != codes.NotFound {
+			return nil, fmt.Errorf("failed to retrieve document: %w", err)
+		}
+		updateReq.Version = 1                // 设置初始版本
+		_, err := docRef.Set(ctx, updateReq) // 存储新的文档
+		if err != nil {
+			return nil, fmt.Errorf("failed to create new document: %w", err)
+		}
+		result.LatestVer = 1
+		result.ResultCode = 1
+		return result, nil
+	}
+
+	var existingData EncodedData
+	if err := docSnap.DataTo(&existingData); err != nil {
+		return nil, fmt.Errorf("failed to parse existing document: %w", err)
+	}
+
+	if updateReq.Version > existingData.Version {
+		updateReq.Version += 1
+		_, err := docRef.Set(ctx, updateReq) // 存储新的文档
+		if err != nil {
+			return nil, fmt.Errorf("failed to create new document: %w", err)
+		}
+
+		result.LatestVer = updateReq.Version
+		result.ResultCode = 2
+		return result, nil
+	}
+
+	updateReq.Version = existingData.Version + 1 // 版本递增
+	_, err = docRef.Set(ctx, map[string]interface{}{
 		"wallet_addr":  updateReq.WalletAddr,
 		"encode_value": updateReq.EncodeValue,
+		"version":      updateReq.Version,
 	})
-	return err
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to update document: %w", err)
+	}
+
+	result.LatestVer = updateReq.Version
+	result.ResultCode = 3
+	return result, nil
 }
 
 // GetByAccount 从Firestore获取UpdateRequest

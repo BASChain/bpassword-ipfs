@@ -52,7 +52,8 @@ func (req *UpdateRequest) DataToSign() []byte {
 }
 
 type UpdateResult struct {
-	ResultCode int `json:"result_code"`
+	ResultCode int   `json:"result_code"`
+	LatestVer  int64 `json:"latest_ver"`
 }
 
 // QueryRequest 查询数据的请求体结构

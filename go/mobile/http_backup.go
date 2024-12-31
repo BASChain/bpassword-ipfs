@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	queryDataAPi = "/queryData"
+	queryDataAPi  = "/queryData"
+	updateDataAPi = "/updateData"
 )
 
 func signMessage(message []byte, privateKey *ecdsa.PrivateKey) (string, error) {
@@ -66,25 +67,31 @@ func syncDataFromSrv() (*service.EncodedData, error) {
 }
 
 // TODO:: upload data ,increase version ,update local version
-func uploadLocalData(encodedData []byte) (*service.UpdateResult, error) {
-	var updateReq = &service.UpdateRequest{
-		EncodedData: &service.EncodedData{
-			WalletAddr: __walletManager.address,
-		},
-	}
+func uploadLocalData(encodedData []byte, srvVer int64) (*service.UpdateResult, error) {
 
 	if encodedData == nil {
 		return nil, fmt.Errorf("invalid data")
 	}
-	sig, err := signMessage(encodedData, __walletManager.privateKey)
+
+	var updateReq = &service.UpdateRequest{
+		EncodedData: &service.EncodedData{
+			WalletAddr:  __walletManager.address,
+			Version:     srvVer,
+			EncodeValue: hex.EncodeToString(encodedData),
+		},
+		RequestTime: time.Now().Unix(),
+	}
+
+	dataToSign := updateReq.DataToSign()
+
+	sig, err := signMessage(dataToSign, __walletManager.privateKey)
 	if err != nil {
 		utils.LogInst().Errorf("sign message error %s", err.Error())
 		return nil, err
 	}
 	updateReq.Signature = sig
-	updateReq.EncodeValue = hex.EncodeToString(encodedData)
 
-	var url = __api.srvUrl + queryDataAPi
+	var url = __api.srvUrl + updateDataAPi
 	data, err := utils.SendPostRequest(url, __api.token, updateReq)
 	if err != nil {
 		utils.LogInst().Errorf("SyncLatestData error %s", err.Error())

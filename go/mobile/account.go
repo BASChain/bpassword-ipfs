@@ -87,6 +87,13 @@ func (am *AccountManager) accountData() []byte {
 	return bts
 }
 
+func (am *AccountManager) UpdateLatestVersion(srvVer int64) {
+	am.mu.RLock()
+	defer am.mu.RUnlock()
+	am.SrvVersion = srvVer
+	am.LocalVersion = srvVer
+}
+
 func (am *AccountManager) delAccount(uuid string) bool {
 	am.mu.Lock()
 	defer am.mu.Unlock()
@@ -125,29 +132,29 @@ func parseAccount(jsonStr string) (*Account, error) {
 }
 
 // localDbSave 将账号列表保存到 LevelDB
-func localDbSave() ([]byte, error) {
+func localDbSave() error {
 
 	if __walletManager.privateKey == nil {
-		return nil, fmt.Errorf("private key is required")
+		return fmt.Errorf("private key is required")
 	}
 
 	db, err := leveldb.OpenFile(__api.dbPath, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w", err)
+		return fmt.Errorf("failed to open database: %w", err)
 	}
 	defer db.Close()
 
 	data := __accountManager.mustSigData()
 	encodeData, err := Encode(data, &__walletManager.privateKey.PublicKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encode Accounts: %w", err)
+		return fmt.Errorf("failed to encode Accounts: %w", err)
 	}
 
 	err = db.Put([]byte(__db_key_accounts), encodeData, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to save Accounts to database: %w", err)
+		return fmt.Errorf("failed to save Accounts to database: %w", err)
 	}
-	return encodeData, nil
+	return nil
 }
 
 // AddOrUpdateAccount 添加或者账号并保存
@@ -157,8 +164,13 @@ func AddOrUpdateAccount(accJsonStr string) error {
 		return err
 	}
 	__accountManager.addOrUpdateAccount(account)
-	_, err = localDbSave()
-	return err
+	err = localDbSave()
+	if err != nil {
+		return err
+	}
+
+	go AsyncCheckLocalAndSrv()
+	return nil
 }
 
 // LocalCachedData sync data from local or server
@@ -169,13 +181,14 @@ func LocalCachedData() []byte {
 // RemoveAccount 从内存和 LevelDB 中移除指定的账号
 func RemoveAccount(uuid string) error {
 	uuid = strings.ToLower(uuid)
-	success := __accountManager.delAccount(uuid)
-	if !success {
+	needUpdate := __accountManager.delAccount(uuid)
+	if !needUpdate {
 		return nil
 	}
-	_, err := localDbSave()
+	err := localDbSave()
 	if err != nil {
-		return fmt.Errorf("failed to save updated account list: %w", err)
+		return err
 	}
+	go AsyncCheckLocalAndSrv()
 	return nil
 }

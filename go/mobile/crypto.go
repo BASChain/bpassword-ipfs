@@ -65,6 +65,9 @@ func decryptData(symmetricKey, ciphertext, nonce []byte) ([]byte, error) {
 }
 
 func Encode(data []byte, publicKey *ecdsa.PublicKey) ([]byte, error) {
+	if publicKey == nil {
+		return nil, fmt.Errorf("invalid public key")
+	}
 	symmetricKey := make([]byte, 32) // AES-256
 	if _, err := rand.Read(symmetricKey); err != nil {
 		return nil, err

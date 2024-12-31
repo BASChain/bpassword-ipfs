@@ -25,14 +25,13 @@ func UpdateData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Firestore操作
-	if err := DbInst().CreateOrUpdateAccount(r.Context(), updateReq.EncodedData); err != nil {
+	resp, err := DbInst().CreateOrUpdateAccount(r.Context(), updateReq.EncodedData)
+	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, "Failed to update data")
 		log.Info("Firestore update error:", err)
 		return
 	}
-	resp := map[string]bool{
-		"success": true,
-	}
+
 	// 返回 EncodedData 作为响应
 	writeJSONResponse(w, http.StatusOK, resp)
 }
