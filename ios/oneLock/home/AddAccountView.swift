@@ -14,6 +14,8 @@ struct AddAccountView: View {
         @State private var isPasswordVisible: Bool = false
         @StateObject private var loadingManager = LoadingManager()
         
+        @EnvironmentObject var toastManager: ToastManager
+        
         var onSave: (() -> Void)? // 回调通知 HomeView 刷新
         
         var body: some View {
@@ -44,6 +46,7 @@ struct AddAccountView: View {
                                 }
                                 Button("Save") {
                                         saveAccount()
+                                        toastManager.showToast(message: "Operation failed", isSuccess: false)
                                 }
                         }
                         .navigationTitle("Add Account")
