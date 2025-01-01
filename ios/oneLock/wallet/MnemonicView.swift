@@ -1,10 +1,3 @@
-//
-//  MnemonicView.swift
-//  oneLock
-//
-//  Created by wesley on 2024/12/25.
-//
-
 import SwiftUI
 
 struct MnemonicView: View {
@@ -67,6 +60,13 @@ struct MnemonicView: View {
                                 .foregroundColor(.white)
                                 .cornerRadius(10)
                                 
+                                Button(action: copyMnemonic) {
+                                        Text("Copy Mnemonic")
+                                }
+                                .background(Color.green)
+                                .foregroundColor(.white)
+                                .cornerRadius(10)
+                                
                                 Button(action: createWallet) {
                                         Text("I have backed up my mnemonic")
                                 }
@@ -84,7 +84,13 @@ struct MnemonicView: View {
                         
                         // 显示加载提示
                         LoadingView(isVisible: $loadingManager.isVisible, message: $loadingManager.message)
+                        
                 }
+        }
+        
+        private func copyMnemonic() {
+                UIPasteboard.general.string = mnemonic
+                SdkUtil.shared.toastManager?.showToast(message: "Mnemonic copied!", isSuccess: true)
         }
         
         private func createWallet() {
