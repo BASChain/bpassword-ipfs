@@ -20,7 +20,7 @@ class SdkUtil: NSObject {
         // MARK: - 单例模式
         static let shared = SdkUtil()
         //        private let server_url = "https://bc.simplenets.org:5001"
-        private let server_url = "http://127.0.0.1:5002"
+        private let server_url = "http://127.0.0.1:5004"
         private let server_token = "ac8ad031c9905e3ead2454d1a1f6c110"
         
         var toastManager: ToastManager? // 引用 ToastManager
@@ -96,12 +96,16 @@ class SdkUtil: NSObject {
                 var err: NSError? = nil
                 LockLibOpenWallet(password,&err)
                 guard let e = err else{
-                        LockLibInitLocalData()
+                        syncLocalData()
                         return true
                 }
                 print("Failed to open wallet\(e.localizedDescription).")
                 
                 return false
+        }
+        
+        func syncLocalData(){
+                LockLibInitLocalData()
         }
         
         func walletAddress()->String{
@@ -182,7 +186,6 @@ extension SdkUtil: LockLibAppIProtocol {
         }
         
         @objc func log(_ s: String?) {
-                // 处理从 Go 库传回的日志
                 print("[GoSDK] \(s ?? "")")
         }
 }

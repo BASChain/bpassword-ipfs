@@ -62,7 +62,6 @@ func syncDataFromSrv() (*service.EncodedData, error) {
 		utils.LogInst().Errorf("------>>>SyncLatestData error %s", err.Error())
 		return nil, err
 	}
-
 	return &request, nil
 }
 

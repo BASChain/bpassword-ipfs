@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"time"
 )
 
 // UpdateData 更新数据的处理函数，将数据保存到 Firestore 并返回 EncodedData 实例
@@ -95,9 +96,9 @@ func writeErrorResponse(w http.ResponseWriter, statusCode int, message string) {
 func apiKeyAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		apiKey := r.Header.Get("Authorization")
-		expectedKey := getEnv("API_KEY", "default_api_key")
-
+		expectedKey := getEnv("BPASSWORD_API_KEY", "")
 		if apiKey != expectedKey {
+			log.Errorf("Invalid API key: %s", apiKey)
 			writeErrorResponse(w, http.StatusUnauthorized, "Invalid API Key")
 			return
 		}
@@ -105,9 +106,15 @@ func apiKeyAuth(next http.Handler) http.Handler {
 	})
 }
 
+func TimeoutMiddleware(next http.Handler) http.Handler {
+	return http.TimeoutHandler(next, 20*time.Second, "Request timeout")
+}
+
 func NewServer() *http.Server {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(TimeoutMiddleware)
 
 	r.Use(apiKeyAuth) // 应用认证中间件
 	r.Post("/updateData", UpdateData)

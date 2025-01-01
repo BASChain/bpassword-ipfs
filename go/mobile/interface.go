@@ -44,10 +44,15 @@ func InitSDK(exi AppI, dbPath, url, token string, logLevel int8) error {
 	utils.LogInst().Debugf("------>>>init sdk success")
 	return nil
 }
+
 func queryAndDecodeSrvData() (map[string]*Account, int64, error) {
 	srvDataWithVer, err := syncDataFromSrv()
 	if err != nil {
 		return nil, -1, err
+	}
+	if len(srvDataWithVer.EncodeValue) == 0 || srvDataWithVer.Version == -1 {
+		utils.LogInst().Debugf("------>>>no data on server:%v", srvDataWithVer.Version)
+		return nil, -1, nil
 	}
 
 	cipheredData, err := hex.DecodeString(srvDataWithVer.EncodeValue)
@@ -78,10 +83,12 @@ func writeEncodedDataToSrv() error {
 	}
 	data, err := Encode(rawData, &__walletManager.privateKey.PublicKey)
 	if err != nil {
+		utils.LogInst().Errorf("------>>>encode rawData failed:%s", err.Error())
 		return err
 	}
 	result, err := uploadLocalData(data, __accountManager.SrvVersion)
 	if err != nil {
+		utils.LogInst().Errorf("------>>>upload data failed:%s", err.Error())
 		return err
 	}
 	__accountManager.UpdateLatestVersion(result.LatestVer)
@@ -92,17 +99,20 @@ func AsyncDataSyncing() {
 	utils.LogInst().Debugf("------>>>start syncing data from server")
 	onlineData, onlineVer, err := queryAndDecodeSrvData()
 	if err != nil {
-		fmt.Println("------------------->>>>callback:", __api.callback, err)
 		__api.callback.DataUpdated(nil, err)
 		return
 	}
+	if onlineData == nil {
+		return
+	}
+
 	if onlineVer == __accountManager.SrvVersion {
-		utils.LogInst().Infof("local srvDataWithVer is same as server's")
+		utils.LogInst().Infof("proc sync result:local srvDataWithVer is same as server's")
 		return
 	}
 
 	if onlineVer < __accountManager.SrvVersion {
-		utils.LogInst().Debugf("local srvDataWithVer is newer than server's")
+		utils.LogInst().Debugf("proc sync result:local srvDataWithVer is newer than server's")
 		err = writeEncodedDataToSrv()
 		if err != nil {
 			__api.callback.DataUpdated(nil, err)
@@ -111,7 +121,7 @@ func AsyncDataSyncing() {
 		return
 	}
 
-	utils.LogInst().Debugf("server srvDataWithVer is newer than local's")
+	utils.LogInst().Debugf("proc sync result: server srvDataWithVer is newer than local's")
 	err = mergeSrvData(onlineData, onlineVer)
 	if err != nil {
 		__api.callback.DataUpdated(nil, err)
@@ -140,13 +150,13 @@ func mergeSrvData(onlineData map[string]*Account, onlineVer int64) error {
 func AsyncCheckLocalAndSrv() {
 	utils.LogInst().Debugf("------>>>start pushing data to server")
 	__accountManager.mu.RLock()
-	if __accountManager.LocalVersion == __accountManager.SrvVersion {
+	if __accountManager.LocalVersion == __accountManager.SrvVersion || __accountManager.LocalVersion == 0 {
 		utils.LogInst().Debugf("local version and server version are same")
 		__accountManager.mu.RUnlock()
 		return
 	}
 	__accountManager.mu.RUnlock()
-
+	utils.LogInst().Debugf("local version and server version are not save ,prepare to push data")
 	var err = writeEncodedDataToSrv()
 	if err != nil {
 		__api.callback.DataUpdated(nil, err)

@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -29,6 +30,15 @@ func SendPostRequest(url, token string, param any) ([]byte, error) {
 	}
 
 	defer resp.Body.Close()
+
+	// 检查状态码
+	if resp.StatusCode == http.StatusUnauthorized {
+		LogInst().Errorf("------>>>请求未授权，状态码: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unauthorized request, status code: %d", resp.StatusCode)
+	} else if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		LogInst().Errorf("------>>>请求失败，状态码: %d", resp.StatusCode)
+		return nil, fmt.Errorf("request failed, status code: %d", resp.StatusCode)
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

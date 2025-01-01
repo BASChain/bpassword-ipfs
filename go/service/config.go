@@ -1,6 +1,8 @@
 package service
 
-import "os"
+import (
+	"os"
+)
 
 // Config 存储应用程序的配置
 type Config struct {
@@ -18,13 +20,17 @@ func getEnv(key, defaultVal string) string {
 	return defaultVal
 }
 
-var _conf = &Config{
-	Addr:       getEnv("ADDR", "127.0.0.1:5002"),
-	ProjectID:  getEnv("PROJECT_ID", "dessage"),
-	DatabaseID: getEnv("DATABASE_ID", "bpassword"),
-	KeyFile:    getEnv("KEY_FILE", "dessage-c3b5c95267fb.json"),
-}
+var _conf *Config
 
 func GetAddr() string {
 	return _conf.Addr
+}
+
+func InitConfig() {
+	_conf = &Config{
+		Addr:       getEnv("BPASSWORD_ADDR", "127.0.0.1:5002"),
+		ProjectID:  getEnv("BPASSWORD_PROJECT_ID", "dessage"),
+		DatabaseID: getEnv("BPASSWORD_DATABASE_ID", "bpassword"),
+		KeyFile:    getEnv("BPASSWORD_KEY_FILE", "dessage-c3b5c95267fb.json"),
+	}
 }

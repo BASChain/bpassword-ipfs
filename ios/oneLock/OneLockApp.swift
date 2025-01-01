@@ -33,9 +33,10 @@ struct OneLockApp: App {
                 }
                 .onChange(of: scenePhase) { newPhase in
                         if newPhase == .active {
-                                print("App moved to the foreground.")
+                                print("++++++>>>App moved to the foreground.")
+                                SdkUtil.shared.syncLocalData()
                         } else if newPhase == .background {
-                                print("App moved to the background.")
+                                print("++++++>>>App moved to the background.")
                         }
                 }
         } 

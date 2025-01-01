@@ -71,20 +71,21 @@ func (dm *DbManager) CreateOrUpdateAccount(ctx context.Context, updateReq *Encod
 
 // GetByAccount 从Firestore获取UpdateRequest
 func (dm *DbManager) GetByAccount(ctx context.Context, walletAddr string) (*EncodedData, error) {
+
 	doc, err := dm.fileCli.Collection(BPasswordTable).Doc(walletAddr).Get(ctx)
 	if err != nil {
-		return nil, err
-	}
-
-	var data EncodedData
-	if err := doc.DataTo(&data); err != nil {
-		if status.Code(err) != codes.NotFound {
+		if status.Code(err) == codes.NotFound {
 			return &EncodedData{
 				WalletAddr:  walletAddr,
 				EncodeValue: "",
 				Version:     -1,
 			}, nil
 		}
+		return nil, err
+	}
+
+	var data EncodedData
+	if err := doc.DataTo(&data); err != nil {
 		return nil, err
 	}
 

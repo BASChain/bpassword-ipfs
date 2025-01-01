@@ -29,8 +29,7 @@ type AccountManager struct {
 }
 
 var __accountManager = &AccountManager{
-	Accounts:   make(map[string]*Account),
-	SrvVersion: -1,
+	Accounts: make(map[string]*Account),
 }
 
 func InitLocalData() {
@@ -41,7 +40,7 @@ func InitLocalData() {
 
 func initCachedAccountData() {
 	if __walletManager.privateKey == nil {
-		utils.LogInst().Errorf("----->>>open wallet first")
+		utils.LogInst().Errorf("----->>>wallet not open")
 		return
 	}
 	db, err := leveldb.OpenFile(__api.dbPath, nil)

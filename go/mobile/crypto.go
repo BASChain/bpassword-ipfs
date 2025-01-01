@@ -97,6 +97,9 @@ func Decode(ciphertext []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
 	if privateKey == nil {
 		return nil, fmt.Errorf("nil private key")
 	}
+	if len(ciphertext) < 32 {
+		return nil, fmt.Errorf("ciphertext too short:%d", len(ciphertext))
+	}
 	// 读取 encryptedKey 长度
 	var receivedEncryptedKeyLength uint16
 	reader := bytes.NewReader(ciphertext)

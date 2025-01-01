@@ -24,6 +24,7 @@ func init() {
 }
 
 func main() {
+	service.InitConfig()
 	serverErrors := make(chan error, 1)
 	srv := service.NewServer()
 	// 启动服务器
@@ -31,7 +32,6 @@ func main() {
 		log.Info("Starting server on ", service.GetAddr())
 		serverErrors <- srv.ListenAndServe()
 	}()
-
 	waitSignal(serverErrors)
 	shutDown(srv)
 }
