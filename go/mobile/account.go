@@ -90,7 +90,7 @@ func (am *AccountManager) addOrUpdateAccount(acc *Account) {
 	am.mu.Unlock()
 }
 
-func (am *AccountManager) mustSigData() []byte {
+func (am *AccountManager) fullData() []byte {
 	am.mu.RLock()
 	defer am.mu.RUnlock()
 	bts, _ := json.Marshal(am)
@@ -161,7 +161,7 @@ func localDbSave() error {
 	}
 	defer db.Close()
 
-	data := __accountManager.mustSigData()
+	data := __accountManager.fullData()
 	encodeData, err := Encode(data, &__walletManager.privateKey.PublicKey)
 	if err != nil {
 		return fmt.Errorf("failed to encode Accounts: %w", err)

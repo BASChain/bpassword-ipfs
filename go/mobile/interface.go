@@ -69,7 +69,7 @@ func queryAndDecodeSrvData() (map[string]*Account, int64, error) {
 	var onlineData = make(map[string]*Account)
 	err = json.Unmarshal(rawData, &onlineData)
 	if err != nil {
-		utils.LogInst().Errorf("------>>>unmarshal raw srvDataWithVer failed:%s", err.Error())
+		utils.LogInst().Errorf("------>>>unmarshal raw online data failed:%s content:%s", err.Error(), string(rawData))
 		return nil, -1, err
 	}
 
@@ -77,7 +77,7 @@ func queryAndDecodeSrvData() (map[string]*Account, int64, error) {
 }
 
 func writeEncodedDataToSrv() error {
-	rawData := __accountManager.mustSigData()
+	rawData := __accountManager.accountData()
 	if __walletManager.privateKey == nil {
 		return fmt.Errorf("invalid private key")
 	}

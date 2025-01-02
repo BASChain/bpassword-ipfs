@@ -18,19 +18,28 @@ const (
 type EncodedData struct {
 	WalletAddr  string `json:"wallet_addr" firestore:"wallet_addr" validate:"required,alphanum"`
 	EncodeValue string `json:"encode_value" firestore:"encode_value" validate:"required"`
-	Version     int64  `json:"version" firestore:"version" validate:"required"`
+	Version     int64  `json:"version" firestore:"version" validate:"gte=0"`
 }
 
 type UpdateRequest struct {
-	*EncodedData
-	RequestTime int64  `json:"request_time" firestore:"_" validate:"required"`
-	Signature   string `json:"signature" firestore:"_" validate:"required"`
+	*EncodedData `validate:"required"`
+	RequestTime  int64  `json:"request_time" firestore:"_" validate:"required"`
+	Signature    string `json:"signature" firestore:"_" validate:"required"`
 }
 
 // Validate 使用validator库验证 EncodedData
 func (req *UpdateRequest) Validate() error {
 	if err := validate.Struct(req); err != nil {
 		return err
+	}
+
+	// 验证嵌套的 EncodedData
+	if req.EncodedData != nil {
+		if err := validate.Struct(req.EncodedData); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("encoded_data is required")
 	}
 
 	message := req.DataToSign()

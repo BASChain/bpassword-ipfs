@@ -9,25 +9,28 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"sync"
+	"time"
 )
 
 const (
-	BPasswordTable = "accountData"
+	DefaultDBTimeOut = 15 * time.Second
+	BPasswordTable   = "table_account_data"
 )
 
-func (dm *DbManager) CreateOrUpdateAccount(ctx context.Context, updateReq *EncodedData) (*UpdateResult, error) {
+func (dm *DbManager) CreateOrUpdateAccount(updateReq *EncodedData) (*UpdateResult, error) {
 	collection := dm.fileCli.Collection(BPasswordTable)
-
+	opCtx, cancel := context.WithTimeout(dm.ctx, DefaultDBTimeOut)
+	defer cancel()
 	// 尝试读取现有文档
 	docRef := collection.Doc(updateReq.WalletAddr)
-	docSnap, err := docRef.Get(ctx)
+	docSnap, err := docRef.Get(opCtx)
 	var result = &UpdateResult{}
 	if err != nil {
 		if status.Code(err) != codes.NotFound {
 			return nil, fmt.Errorf("failed to retrieve document: %w", err)
 		}
-		updateReq.Version = 1                // 设置初始版本
-		_, err := docRef.Set(ctx, updateReq) // 存储新的文档
+		updateReq.Version = 1                  // 设置初始版本
+		_, err := docRef.Set(opCtx, updateReq) // 存储新的文档
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new document: %w", err)
 		}
@@ -43,7 +46,7 @@ func (dm *DbManager) CreateOrUpdateAccount(ctx context.Context, updateReq *Encod
 
 	if updateReq.Version > existingData.Version {
 		updateReq.Version += 1
-		_, err := docRef.Set(ctx, updateReq) // 存储新的文档
+		_, err := docRef.Set(opCtx, updateReq) // 存储新的文档
 		if err != nil {
 			return nil, fmt.Errorf("failed to create new document: %w", err)
 		}
@@ -54,7 +57,7 @@ func (dm *DbManager) CreateOrUpdateAccount(ctx context.Context, updateReq *Encod
 	}
 
 	updateReq.Version = existingData.Version + 1 // 版本递增
-	_, err = docRef.Set(ctx, map[string]interface{}{
+	_, err = docRef.Set(opCtx, map[string]interface{}{
 		"wallet_addr":  updateReq.WalletAddr,
 		"encode_value": updateReq.EncodeValue,
 		"version":      updateReq.Version,
@@ -70,9 +73,10 @@ func (dm *DbManager) CreateOrUpdateAccount(ctx context.Context, updateReq *Encod
 }
 
 // GetByAccount 从Firestore获取UpdateRequest
-func (dm *DbManager) GetByAccount(ctx context.Context, walletAddr string) (*EncodedData, error) {
-
-	doc, err := dm.fileCli.Collection(BPasswordTable).Doc(walletAddr).Get(ctx)
+func (dm *DbManager) GetByAccount(walletAddr string) (*EncodedData, error) {
+	opCtx, cancel := context.WithTimeout(dm.ctx, DefaultDBTimeOut)
+	defer cancel()
+	doc, err := dm.fileCli.Collection(BPasswordTable).Doc(walletAddr).Get(opCtx)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			return &EncodedData{
@@ -108,7 +112,8 @@ var (
 func DbInst() *DbManager {
 	databaseOnce.Do(func() {
 		ctx, cancel := context.WithCancel(context.Background())
-		client, err := firestore.NewClient(ctx, _conf.ProjectID, option.WithCredentialsFile(_conf.KeyFile))
+		client, err := firestore.NewClientWithDatabase(ctx, _conf.ProjectID,
+			_conf.DatabaseID, option.WithCredentialsFile(_conf.KeyFile))
 		if err != nil {
 			panic(err)
 		}

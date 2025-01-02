@@ -26,7 +26,7 @@ func UpdateData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Firestore操作
-	resp, err := DbInst().CreateOrUpdateAccount(r.Context(), updateReq.EncodedData)
+	resp, err := DbInst().CreateOrUpdateAccount(updateReq.EncodedData)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, "Failed to update data")
 		log.Info("Firestore update error:", err)
@@ -54,7 +54,7 @@ func QueryData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Firestore操作
-	data, err := DbInst().GetByAccount(r.Context(), queryReq.WalletAddr)
+	data, err := DbInst().GetByAccount(queryReq.WalletAddr)
 	if err != nil {
 		writeErrorResponse(w, http.StatusInternalServerError, "Failed to query data")
 		log.Info("Firestore query error:", err)

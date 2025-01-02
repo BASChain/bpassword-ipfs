@@ -131,7 +131,6 @@ class SdkUtil: NSObject {
                 
                 // 打印详细错误信息
                 print("Failed to save account. Error: \(e.localizedDescription)")
-                print("Account JSON: \(jsonStr)")
                 return false
         }
         

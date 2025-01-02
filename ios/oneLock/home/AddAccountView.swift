@@ -13,8 +13,7 @@ struct AddAccountView: View {
         @State private var password: String = ""
         @State private var isPasswordVisible: Bool = false
         @StateObject private var loadingManager = LoadingManager()
-        
-        @EnvironmentObject var toastManager: ToastManager
+ 
         
         var onSave: (() -> Void)? // 回调通知 HomeView 刷新
         
@@ -46,7 +45,6 @@ struct AddAccountView: View {
                                 }
                                 Button("Save") {
                                         saveAccount()
-                                        toastManager.showToast(message: "Operation failed", isSuccess: false)
                                 }
                         }
                         .navigationTitle("Add Account")
@@ -70,6 +68,7 @@ struct AddAccountView: View {
                                         presentationMode.wrappedValue.dismiss()
                                 } else {
                                         print("Failed to save account")
+                                        SdkUtil.shared.toastManager?.showToast(message: "Operation failed", isSuccess: false)
                                 }
                         }
                 }
