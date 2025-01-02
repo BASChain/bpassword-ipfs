@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/hmac"
 	"crypto/sha512"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"github.com/BASChain/bpassword-ipfs/go/utils"
@@ -12,14 +13,24 @@ import (
 	"github.com/google/uuid"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/tyler-smith/go-bip39"
+	"time"
 )
 
 type WalletManager struct {
-	privateKey *ecdsa.PrivateKey
-	address    string
+	priKey        *ecdsa.PrivateKey
+	address       string
+	timer         *time.Ticker
+	lastTouchTime int64
 }
 
-var __walletManager = &WalletManager{}
+var __walletMng = &WalletManager{}
+
+func (wm *WalletManager) getPriKey(useKey bool) *ecdsa.PrivateKey {
+	if useKey {
+		__walletMng.lastTouchTime = time.Now().Unix()
+	}
+	return wm.priKey
+}
 
 func CheckWallet() ([]byte, error) {
 	// 打开 LevelDB 数据库
@@ -194,22 +205,137 @@ func OpenWallet(password string) error {
 	}
 
 	// 保存私钥和地址到 WalletManager
-	__walletManager.privateKey = key.PrivateKey
-	__walletManager.address = key.Address.Hex()
+	__walletMng.priKey = key.PrivateKey
+	__walletMng.address = key.Address.Hex()
+	__walletMng.lastTouchTime = time.Now().Unix()
 
-	utils.LogInst().Infof("------>>>Wallet successfully opened. Address: %s\n", __walletManager.address)
+	utils.LogInst().Infof("------>>>Wallet successfully opened. Address: %s\n", __walletMng.address)
+	go WalletClock()
+
 	return nil
 }
 
 func WalletAddress() string {
-	return __walletManager.address
+	return __walletMng.address
 }
 
 func CloseWallet() {
-	__walletManager.address = ""
-	__walletManager.privateKey = nil
+	__walletMng.address = ""
+	__walletMng.priKey = nil
 }
 
 func WalletIsOpen() bool {
-	return len(__walletManager.address) > 0 && __walletManager.privateKey != nil
+	return len(__walletMng.address) > 0 && __walletMng.getPriKey(false) != nil
+}
+
+func ChangePassword(old, new string) error {
+	// 打开 LevelDB 数据库
+	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	if err != nil {
+		return fmt.Errorf("failed to open LevelDB: %w", err)
+	}
+	defer db.Close()
+
+	// 从 LevelDB 中读取钱包 JSON 数据
+	keystoreJSON, err := db.Get([]byte(__db_key_wallet_), nil)
+	if err != nil {
+		if errors.Is(err, leveldb.ErrNotFound) {
+			return errors.New("wallet not found in database")
+		}
+		return fmt.Errorf("failed to read wallet from LevelDB: %w", err)
+	}
+
+	// 使用旧密码解密 Keystore JSON
+	key, err := keystore.DecryptKey(keystoreJSON, old)
+	if err != nil {
+		return fmt.Errorf("failed to decrypt wallet with old password: %w", err)
+	}
+
+	// 使用新密码加密 Keystore JSON
+	newKeystoreJSON, err := keystore.EncryptKey(key, new, keystore.StandardScryptN, keystore.StandardScryptP)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt wallet with new password: %w", err)
+	}
+
+	// 保存新 Keystore JSON 到 LevelDB
+	err = db.Put([]byte(__db_key_wallet_), newKeystoreJSON, nil)
+	if err != nil {
+		return fmt.Errorf("failed to save updated wallet to LevelDB: %w", err)
+	}
+
+	utils.LogInst().Infof("------>>>Wallet password successfully changed.")
+	return nil
+}
+
+// KeyExpireTime 读取存储的 clock time 值
+func KeyExpireTime() int {
+	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	if err != nil {
+		fmt.Printf("failed to open LevelDB: %v\n", err)
+		return DefaultClockTimeInMinutes // 返回默认值
+	}
+	defer db.Close()
+
+	value, err := db.Get([]byte(__db_key_clock_time_), nil)
+	if err != nil {
+		if errors.Is(err, leveldb.ErrNotFound) {
+			return 5 // 如果键不存在，返回默认值
+		}
+		fmt.Printf("failed to read clock time: %v\n", err)
+		return DefaultClockTimeInMinutes
+	}
+
+	// 将存储的字节数据解码为整数
+	if len(value) != 4 {
+		fmt.Println("invalid clock time format")
+		return DefaultClockTimeInMinutes
+	}
+	return int(binary.BigEndian.Uint32(value))
+}
+
+func SaveExpireTime(clockTime int) error {
+	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	if err != nil {
+		return fmt.Errorf("failed to open LevelDB: %w", err)
+	}
+	defer db.Close()
+
+	// 将整数值编码为字节数据
+	value := make([]byte, 4)
+	binary.BigEndian.PutUint32(value, uint32(clockTime))
+
+	// 将编码后的字节数据写入数据库
+	err = db.Put([]byte(__db_key_clock_time_), value, nil)
+	if err != nil {
+		return fmt.Errorf("failed to save clock time: %w", err)
+	}
+
+	return nil
+}
+
+// WalletClock 启动定时器，基于 KeyExpireTime 设置的时间间隔执行任务
+func WalletClock() {
+	__walletMng.timer = time.NewTicker(CTimeInSeconds * time.Second)
+	defer __walletMng.timer.Stop()
+	fmt.Println("------>>>starting wallet timer.")
+
+	for {
+
+		select {
+		case <-__walletMng.timer.C:
+			if __walletMng.getPriKey(false) == nil {
+				continue
+			}
+			timeOutInMinutes := KeyExpireTime()
+			utils.LogInst().Debugf("------>>>Timer Wallet checking expire at:%d", timeOutInMinutes)
+			if (time.Now().Unix() - __walletMng.lastTouchTime) < int64(timeOutInMinutes*60) {
+				continue
+			}
+
+			utils.LogInst().Debugf("------>>>closing wallet.")
+			CloseWallet()
+			__api.callback.CloseWallet()
+			return
+		}
+	}
 }

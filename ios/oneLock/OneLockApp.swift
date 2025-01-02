@@ -11,7 +11,7 @@ import SwiftUI
 struct OneLockApp: App {
         
         @StateObject private var appState = AppState()
-        @StateObject private var toastManager = ToastManager() // 全局 Toast 管理器
+        @StateObject private var toastManager = ToastManager()
         @Environment(\.scenePhase) private var scenePhase
         
         init() {
@@ -44,10 +44,10 @@ struct OneLockApp: App {
                                 message: toastManager.message,
                                 isSuccess: toastManager.isSuccess,
                                 duration: toastManager.duration
-                        )
+                        ).loadingView()
                         .onAppear {
-                                // 将 ToastManager 注入到 SdkUtil
                                 SdkUtil.shared.toastManager = toastManager
+                                SdkUtil.shared.appState = appState // 在视图生命周期内设置
                         }
                 }
                 .onChange(of: scenePhase) { newPhase in

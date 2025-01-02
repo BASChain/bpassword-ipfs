@@ -38,12 +38,12 @@ func signMessage(message []byte, privateKey *ecdsa.PrivateKey) (string, error) {
 
 func syncDataFromSrv() (*service.EncodedData, error) {
 	var queryReq = service.QueryRequest{
-		WalletAddr: __walletManager.address,
+		WalletAddr: __walletMng.address,
 		QueryTime:  time.Now().Unix(),
 	}
 
 	message := queryReq.DataToSign()
-	sig, err := signMessage(message, __walletManager.privateKey)
+	sig, err := signMessage(message, __walletMng.getPriKey(true))
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func uploadLocalData(encodedData []byte, srvVer int64) (*service.UpdateResult, e
 
 	var updateReq = &service.UpdateRequest{
 		EncodedData: &service.EncodedData{
-			WalletAddr:  __walletManager.address,
+			WalletAddr:  __walletMng.address,
 			Version:     srvVer,
 			EncodeValue: hex.EncodeToString(encodedData),
 		},
@@ -83,7 +83,7 @@ func uploadLocalData(encodedData []byte, srvVer int64) (*service.UpdateResult, e
 
 	dataToSign := updateReq.DataToSign()
 
-	sig, err := signMessage(dataToSign, __walletManager.privateKey)
+	sig, err := signMessage(dataToSign, __walletMng.getPriKey(true))
 	if err != nil {
 		utils.LogInst().Errorf("sign message error %s", err.Error())
 		return nil, err

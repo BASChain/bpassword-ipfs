@@ -11,7 +11,6 @@ struct AccountDetailView: View {
         @Binding var account: Account // 使用 @Binding 从父视图传递进来
         @State private var isPasswordVisible: Bool = false
         @State private var showAlert: Bool = false
-        @State private var showLoading: Bool = false
         @State private var showEditView: Bool = false // 控制跳转到编辑界面
         @Environment(\.presentationMode) var presentationMode
         var onAccountDeleted: (() -> Void)?
@@ -91,9 +90,6 @@ struct AccountDetailView: View {
                                 }
                         )
                         
-                        if showLoading {
-                                LoadingView(isVisible: $showLoading, message: .constant("Deleting Account..."))
-                        }
                 }
                 .sheet(isPresented: $showEditView) {
                         EditAccountView(account: account) { updatedAccount in
@@ -106,13 +102,11 @@ struct AccountDetailView: View {
         
         private func deleteAccount() {
                 showAlert = false
-                showLoading = true
-                
+                LoadingManager.shared.show(message: "Deleting Account...")
                 DispatchQueue.global().async {
                         let success = SdkUtil.shared.removeAccount(uuid: account.id)
-                        
                         DispatchQueue.main.async {
-                                showLoading = false
+                                LoadingManager.shared.hide()
                                 if success {
                                         onAccountDeleted?()
                                         presentationMode.wrappedValue.dismiss()

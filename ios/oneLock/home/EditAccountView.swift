@@ -12,7 +12,6 @@ struct EditAccountView: View {
         @State private var isPasswordVisible: Bool = false
         var onUpdate: (Account) -> Void // 更新回调
         @Environment(\.presentationMode) var presentationMode // 控制视图返回
-        @StateObject private var loadingManager = LoadingManager()
         
         init(account: Account, onUpdate: @escaping (Account) -> Void) {
                 self._account = State(initialValue: account) // 直接将 account 赋值为本地状态
@@ -67,12 +66,12 @@ struct EditAccountView: View {
         private func updateAccount() {
                 
                 account.lastUpdated = Int64(Date().timeIntervalSince1970)
-                loadingManager.show(message: "Updating Account...")
+                LoadingManager.shared.show(message: "Updating Account...")
                 
                 DispatchQueue.global().async {
                         let success = SdkUtil.shared.addAccount(account: self.account)
                         DispatchQueue.main.async {
-                                loadingManager.hide()
+                                LoadingManager.shared.hide()
                                 if success {
                                         onUpdate(account)
                                         presentationMode.wrappedValue.dismiss()

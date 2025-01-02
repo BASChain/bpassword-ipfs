@@ -33,7 +33,7 @@ var __accountManager = &AccountManager{
 }
 
 func InitLocalData() {
-	if __walletManager.privateKey == nil {
+	if __walletMng.getPriKey(false) == nil {
 		return
 	}
 	initCachedAccountData()
@@ -42,7 +42,7 @@ func InitLocalData() {
 }
 
 func initCachedAccountData() {
-	if __walletManager.privateKey == nil {
+	if __walletMng.getPriKey(false) == nil {
 		utils.LogInst().Errorf("----->>>wallet not open")
 		return
 	}
@@ -63,7 +63,7 @@ func initCachedAccountData() {
 		return
 	}
 
-	rawData, err := Decode(data, __walletManager.privateKey)
+	rawData, err := Decode(data, __walletMng.getPriKey(true))
 	if err != nil {
 		utils.LogInst().Errorf("----->>>decode local data failed:%s", err.Error())
 		return
@@ -151,7 +151,8 @@ func parseAccount(jsonStr string) (*Account, error) {
 // localDbSave 将账号列表保存到 LevelDB
 func localDbSave() error {
 
-	if __walletManager.privateKey == nil {
+	priKey := __walletMng.getPriKey(true)
+	if priKey == nil {
 		return fmt.Errorf("private key is required")
 	}
 
@@ -162,7 +163,7 @@ func localDbSave() error {
 	defer db.Close()
 
 	data := __accountManager.fullData()
-	encodeData, err := Encode(data, &__walletManager.privateKey.PublicKey)
+	encodeData, err := Encode(data, &priKey.PublicKey)
 	if err != nil {
 		return fmt.Errorf("failed to encode Accounts: %w", err)
 	}

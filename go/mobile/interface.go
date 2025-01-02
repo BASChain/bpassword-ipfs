@@ -12,6 +12,7 @@ import (
 type AppI interface {
 	Log(s string)
 	DataUpdated(data []byte, err error)
+	CloseWallet()
 }
 type API struct {
 	dbPath   string
@@ -60,7 +61,7 @@ func queryAndDecodeSrvData() (map[string]*Account, int64, error) {
 		return nil, -1, err
 
 	}
-	rawData, err := Decode(cipheredData, __walletManager.privateKey)
+	rawData, err := Decode(cipheredData, __walletMng.getPriKey(true))
 	if err != nil {
 		utils.LogInst().Errorf("------>>>decode srvDataWithVer failed:%s", err.Error())
 		return nil, -1, err
@@ -78,10 +79,11 @@ func queryAndDecodeSrvData() (map[string]*Account, int64, error) {
 
 func writeEncodedDataToSrv() error {
 	rawData := __accountManager.accountData()
-	if __walletManager.privateKey == nil {
+	priKey := __walletMng.getPriKey(true)
+	if priKey == nil {
 		return fmt.Errorf("invalid private key")
 	}
-	data, err := Encode(rawData, &__walletManager.privateKey.PublicKey)
+	data, err := Encode(rawData, &priKey.PublicKey)
 	if err != nil {
 		utils.LogInst().Errorf("------>>>encode rawData failed:%s", err.Error())
 		return err

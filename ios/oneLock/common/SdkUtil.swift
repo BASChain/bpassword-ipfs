@@ -22,9 +22,10 @@ class SdkUtil: NSObject {
         //        private let server_url = "https://bc.simplenets.org:5001"
         private let server_url = "http://192.168.18.51:5004"
         private let server_token = "ac8ad031c9905e3ead2454d1a1f6c110"
+        static let AppUrl = "https://apps.apple.com/us/app/onelock/id6739830100"
         
         var toastManager: ToastManager? // 引用 ToastManager
-        
+        var appState: AppState?
         private override init() {
                 super.init()
         }
@@ -170,10 +171,49 @@ class SdkUtil: NSObject {
                 print("Account successfully removed: \(uuid.uuidString)")
                 return true
         }
+        
+        func changePassword(oldPassword:String, newPassword:String)->String?{
+                var err: NSError? = nil
+                LockLibChangePassword(oldPassword,newPassword, &err)
+                
+                if let e = err {
+                        return e.localizedDescription
+                }
+                return nil
+        }
+        
+        func getVersion() -> String {
+                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown Version"
+                let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown Build"
+                return "Version \(version) (Build \(build))"
+        }
+        
+        func getAutoCloseDuration()->Int{
+                return LockLibKeyExpireTime()
+        }
+        
+        func setAutoCloseDuration(_ clockTime:Int)->Bool{
+                var err: NSError? = nil
+                LockLibSaveExpireTime(clockTime, &err)
+                if let e = err {
+                        print("Failed to Saved Wallet Clock Time: \(e.localizedDescription)")
+                        return false
+                }
+                
+                print("Wallet Clock Time Saved Success: \(clockTime)")
+                return true
+        }
 }
 
 // MARK: - 实现 Go 的 APPI 接口
 extension SdkUtil: LockLibAppIProtocol {
+        
+        func closeWallet() {
+                DispatchQueue.main.async {
+                        self.appState?.isPasswordValidated = false
+                }
+        }
+        
         func dataUpdated(_ data: Data?, err: (any Error)?) {
                 DispatchQueue.main.async {
                         if let error = err {
