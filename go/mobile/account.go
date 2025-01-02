@@ -33,6 +33,9 @@ var __accountManager = &AccountManager{
 }
 
 func InitLocalData() {
+	if __walletManager.privateKey == nil {
+		return
+	}
 	initCachedAccountData()
 	go AsyncDataSyncing()
 	go AsyncCheckLocalAndSrv()

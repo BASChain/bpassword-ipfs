@@ -11,24 +11,43 @@ import SwiftUI
 struct OneLockApp: App {
         
         @StateObject private var appState = AppState()
+        @StateObject private var toastManager = ToastManager() // 全局 Toast 管理器
         @Environment(\.scenePhase) private var scenePhase
         
         init() {
                 initializeSdk()
         }
         
+        
         var body: some Scene {
+                
                 WindowGroup {
-                        if appState.hasWallet {
-                                if appState.isPasswordValidated {
-                                        MainView().environmentObject(appState)
+                        ZStack {
+                                // 根据 App 状态加载相应视图
+                                if appState.hasWallet {
+                                        if appState.isPasswordValidated {
+                                                MainView()
+                                                        .environmentObject(appState)
+                                        } else {
+                                                PasswordView()
+                                                        .environmentObject(appState)
+                                                        .onAppear { checkWalletStatus() }
+                                        }
                                 } else {
-                                        PasswordView().environmentObject(appState) // 改为环境对象注入
+                                        WalletSetupView()
+                                                .environmentObject(appState)
                                                 .onAppear { checkWalletStatus() }
                                 }
-                        } else {
-                                WalletSetupView() .environmentObject(appState) // 改为环境对象注入
-                                        .onAppear { checkWalletStatus() }
+                        }
+                        .toast(
+                                isVisible: $toastManager.isVisible,
+                                message: toastManager.message,
+                                isSuccess: toastManager.isSuccess,
+                                duration: toastManager.duration
+                        )
+                        .onAppear {
+                                // 将 ToastManager 注入到 SdkUtil
+                                SdkUtil.shared.toastManager = toastManager
                         }
                 }
                 .onChange(of: scenePhase) { newPhase in
@@ -39,14 +58,14 @@ struct OneLockApp: App {
                                 print("++++++>>>App moved to the background.")
                         }
                 }
-        } 
+        }
+        
         
         private func initializeSdk() {
                 print("Initializing SDK...")
                 SdkUtil.shared.initializeSDK(logLevel: LogLevel.debug)
                 print("SDK initialized.")
         }
-        
         
         private func checkWalletStatus() {
                 DispatchQueue.global().async {
@@ -65,7 +84,7 @@ struct OneLockApp: App {
 }
 
 class AppState: ObservableObject {
-        @Published var hasWallet: Bool = false
+        @Published var hasWallet: Bool = true
         @Published var isPasswordValidated: Bool = false
         @Published var walletData: String? = nil
 }
