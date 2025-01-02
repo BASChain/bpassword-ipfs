@@ -8,11 +8,11 @@ import SwiftUI
 import Foundation
 
 struct Account: Identifiable, Codable {
-        var id: UUID // 允许解码时覆盖
-        let platform: String
-        let username: String
-        let password: String
-        let lastUpdated: Int64 // 修改为 Unix 时间戳
+        let id: UUID // 允许解码时覆盖
+        var platform: String
+        var username: String
+        var password: String
+        var lastUpdated: Int64 // 修改为 Unix 时间戳
         
         init(id: UUID = UUID(), platform: String, username: String, password: String, lastUpdated: Int64 = Int64(Date().timeIntervalSince1970)) {
                 self.id = id

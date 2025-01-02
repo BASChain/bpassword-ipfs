@@ -4,15 +4,17 @@
 //
 //  Created by wesley on 2024/12/26.
 //
+
 import SwiftUI
 
 struct AccountDetailView: View {
-        let account: Account
+        @Binding var account: Account // 使用 @Binding 从父视图传递进来
         @State private var isPasswordVisible: Bool = false
-        @State private var showAlert: Bool = false // 控制 GenericAlertView 的显示
-        @State private var showLoading: Bool = false // 控制 LoadingView 的显示
+        @State private var showAlert: Bool = false
+        @State private var showLoading: Bool = false
+        @State private var showEditView: Bool = false // 控制跳转到编辑界面
         @Environment(\.presentationMode) var presentationMode
-        var onAccountDeleted: (() -> Void)? // 回调通知 HomeView 刷新
+        var onAccountDeleted: (() -> Void)?
         
         var body: some View {
                 ZStack {
@@ -25,7 +27,7 @@ struct AccountDetailView: View {
                                         Text(account.password)
                                                 .font(.headline)
                                                 .foregroundColor(.red)
-                                                .opacity(isPasswordVisible ? 1.0 : 0.0) // 密码默认隐藏
+                                                .opacity(isPasswordVisible ? 1.0 : 0.0)
                                         
                                         if !isPasswordVisible {
                                                 Color.black.opacity(0.7)
@@ -53,7 +55,7 @@ struct AccountDetailView: View {
                                 }) {}
                                 
                                 Button(action: {
-                                        showAlert = true // 显示删除确认弹框
+                                        showAlert = true
                                 }) {
                                         Text("Delete Account")
                                                 .padding()
@@ -63,41 +65,57 @@ struct AccountDetailView: View {
                                                 .cornerRadius(10)
                                 }
                                 
+                                Button(action: {
+                                        showEditView = true // 跳转到编辑界面
+                                }) {
+                                        Text("Edit Account")
+                                                .padding()
+                                                .frame(maxWidth: .infinity)
+                                                .background(Color.green)
+                                                .foregroundColor(.white)
+                                                .cornerRadius(10)
+                                }
+                                
                                 Spacer()
                         }
                         .padding()
                         .navigationTitle("Account Details")
                         
-                        // GenericAlertView 用于确认删除
                         GenericAlertView(
                                 isPresented: $showAlert,
                                 title: "Confirm Deletion",
                                 message: "Are you sure you want to delete this account?",
                                 onConfirm: deleteAccount,
                                 onCancel: {
-                                        showAlert = false // 隐藏弹框
+                                        showAlert = false
                                 }
                         )
                         
-                        // LoadingView 用于显示删除进度
                         if showLoading {
                                 LoadingView(isVisible: $showLoading, message: .constant("Deleting Account..."))
+                        }
+                }
+                .sheet(isPresented: $showEditView) {
+                        EditAccountView(account: account) { updatedAccount in
+                                // 更新当前界面显示的 Account 数据
+                                account = updatedAccount
+                                print("Updated account:", updatedAccount)
                         }
                 }
         }
         
         private func deleteAccount() {
-                showAlert = false // 隐藏弹框
-                showLoading = true // 显示加载提示
+                showAlert = false
+                showLoading = true
                 
                 DispatchQueue.global().async {
                         let success = SdkUtil.shared.removeAccount(uuid: account.id)
                         
                         DispatchQueue.main.async {
-                                showLoading = false // 隐藏加载提示
+                                showLoading = false
                                 if success {
-                                        onAccountDeleted?() // 通知 HomeView 刷新
-                                        presentationMode.wrappedValue.dismiss() // 返回 HomeView
+                                        onAccountDeleted?()
+                                        presentationMode.wrappedValue.dismiss()
                                 } else {
                                         print("Failed to delete account")
                                 }

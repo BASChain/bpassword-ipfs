@@ -14,7 +14,7 @@ struct HomeView: View {
                                         List(sortedAccounts(), id: \.id) { account in
                                                 NavigationLink(
                                                         destination: AccountDetailView(
-                                                                account: account,
+                                                                account: bindingForAccount(account), // 传递绑定
                                                                 onAccountDeleted: { hasLoaded = false } // 设置 hasLoaded 为 false
                                                         )
                                                 ) {
@@ -57,5 +57,16 @@ struct HomeView: View {
         
         private func sortedAccounts() -> [Account] {
                 return accounts.values.sorted { $0.lastUpdated > $1.lastUpdated }
+        }
+        
+        /// 根据 `Account` 获取绑定
+        private func bindingForAccount(_ account: Account) -> Binding<Account> {
+                guard let uuid = accounts.first(where: { $0.value.id == account.id })?.key else {
+                        fatalError("Account not found")
+                }
+                return Binding(
+                        get: { self.accounts[uuid]! },
+                        set: { self.accounts[uuid] = $0 }
+                )
         }
 }
