@@ -19,8 +19,8 @@ enum LogLevel: Int8 {
 class SdkUtil: NSObject {
         // MARK: - 单例模式
         static let shared = SdkUtil()
-        //        private let server_url = "https://bc.simplenets.org:5001"
-        private let server_url = "http://192.168.18.51:5004"
+        private let server_url = "https://bc.simplenets.org:5001"
+        //        private let server_url = "http://192.168.18.51:5004"
         private let server_token = "ac8ad031c9905e3ead2454d1a1f6c110"
         static let AppUrl = "https://apps.apple.com/us/app/onelock/id6739830100"
         
