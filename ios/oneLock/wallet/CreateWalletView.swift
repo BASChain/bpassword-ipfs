@@ -15,10 +15,7 @@ struct CreateWalletView: View {
                                 .environmentObject(appState)
                 } else {
                         // 显示创建钱包视图
-                        ZStack {
-                                // 背景
-                                Color.white
-                                        .edgesIgnoringSafeArea(.all)
+                        VStack {
                                 
                                 VStack(spacing: 0) {
                                         // Section 1
@@ -45,55 +42,49 @@ struct CreateWalletView: View {
                                 }
                                 
                                 // Section 2 (覆盖部分)
-                                ZStack {
-                                        // 背景颜色和圆角
-                                        RoundedRectangle(cornerRadius: 31)
-                                                .fill(Color.white)
-                                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                                .shadow(color: .gray.opacity(0.1), radius: 4, x: 0, y: -2)
+                                VStack(spacing: 12) {
+                                        // 输入框 1
+                                        SecureField("Enter Password", text: $password)
+                                                .padding(.horizontal, 16)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(width: UIScreen.main.bounds.width - 48, height: 50)
+                                                .background(Color(red: 243 / 255, green: 243 / 255, blue: 243 / 255)) // 背景颜色
+                                                .cornerRadius(16) // 圆角
+                                                .font(.system(size: 16)) // 字体
+                                                .foregroundColor(Color(red: 137 / 255, green: 145 / 255, blue: 155 / 255)) // 字体颜色
                                         
-                                        VStack() { // 调整间距
-                                                // 输入框 1
-                                                SecureField("Enter Password", text: $password)
-                                                        .padding(.horizontal, 16) // 内边距
-                                                        .frame(height: 50) // 高度
-                                                        .background(Color(red: 243 / 255, green: 243 / 255, blue: 243 / 255)) // 背景颜色
-                                                        .cornerRadius(24) // 圆角
-                                                        .font(.system(size: 16)) // 字体
-                                                        .foregroundColor(Color(red: 137 / 255, green: 145 / 255, blue: 155 / 255)) // 字体颜色
-                                                
-                                                // 输入框 2
-                                                SecureField("Confirm Password", text: $confirmPassword)
-                                                        .padding(.horizontal, 16)
-                                                        .frame(height: 50)
-                                                        .background(Color(red: 243 / 255, green: 243 / 255, blue: 243 / 255))
-                                                        .cornerRadius(24)
-                                                        .font(.system(size: 16))
-                                                        .foregroundColor(Color(red: 137 / 255, green: 145 / 255, blue: 155 / 255))
-                                                
-                                                if let error = errorMessage {
-                                                        Text(error)
-                                                                .foregroundColor(.red)
-                                                                .padding()
-                                                }
-                                                
-                                                // 按钮
-                                                Button(action: {
-                                                        generateWallet()
-                                                }) {
-                                                        RoundedRectangle(cornerRadius: 31)
-                                                                .fill(Color(red: 15 / 255, green: 211 / 255, blue: 212 / 255))
-                                                                .frame(height: 50)
-                                                                .overlay(
-                                                                        Text("Generate Wallet")
-                                                                                .font(.system(size: 16, weight: .semibold))
-                                                                                .foregroundColor(.white)
-                                                                )
-                                                }
-                                        } .padding(.top, 32) // 调整顶部间距
+                                        // 输入框 2
+                                        SecureField("Confirm Password", text: $confirmPassword)
+                                                .padding(.horizontal, 16)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(width: UIScreen.main.bounds.width - 48, height: 50)
+                                                .background(Color(red: 243 / 255, green: 243 / 255, blue: 243 / 255))
+                                                .cornerRadius(16)
+                                                .font(.system(size: 16))
+                                                .foregroundColor(Color(red: 137 / 255, green: 145 / 255, blue: 155 / 255))
+                                        
+                                        if let error = errorMessage {
+                                                Text(error)
+                                                        .foregroundColor(.red)
+                                                        .padding()
+                                        }
+                                        
+                                        // 按钮
+                                        Button(action: {
+                                                generateWallet()
+                                        }) {
+                                                RoundedRectangle(cornerRadius: 31)
+                                                        .fill(Color(red: 15 / 255, green: 211 / 255, blue: 212 / 255))
+                                                        .frame(width: UIScreen.main.bounds.width - 48, height: 50)
+                                                        .overlay(
+                                                                Text("Generate Wallet")
+                                                                        .font(.system(size: 16, weight: .semibold))
+                                                                        .foregroundColor(.white)
+                                                        )
+                                        }
                                 }
-                                .frame(height: 700)
-                                .offset(y: 85) // 调整 Section 2 向上覆盖 Section 1 的底部
+                                .background(Color.blue.opacity(0.2)) // 临时背景色用于可视化布局
+                                
                         }
                         .contentShape(Rectangle()) // 确保手势覆盖整个区域
                         .onTapGesture {
