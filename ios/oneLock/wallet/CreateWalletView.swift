@@ -6,6 +6,7 @@ struct CreateWalletView: View {
         @State private var errorMessage: String? = nil
         @State private var mnemonic: String? = nil
         @EnvironmentObject var appState: AppState // 添加环境对象引用
+        @Environment(\.dismiss) private var dismiss // 用于返回上一页面
         
         var body: some View {
                 if let mnemonicPhrase = mnemonic {
@@ -99,6 +100,19 @@ struct CreateWalletView: View {
                         .contentShape(Rectangle()) // 确保手势覆盖整个区域
                         .onTapGesture {
                                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                        }
+                        .navigationBarBackButtonHidden(true) // 隐藏系统返回按钮
+                        .toolbar {
+                                ToolbarItem(placement: .navigationBarLeading) {
+                                        Button(action: {
+                                                dismiss() // 自定义返回逻辑
+                                        }) {
+                                                Image("back_icon") // 使用自定义的图片
+                                                        .resizable()
+                                                        .scaledToFit()
+                                                        .frame(width: 24, height: 24) // 调整图片大小
+                                        }
+                                }
                         }
                 }
         }
