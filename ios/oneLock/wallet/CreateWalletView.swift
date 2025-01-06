@@ -26,7 +26,7 @@ struct CreateWalletView: View {
                                                         Image("password-img")
                                                                 .resizable()
                                                                 .scaledToFill()
-                                                                .frame(width: UIScreen.main.bounds.width, height: 215)
+                                                                .frame(width: UIScreen.main.bounds.width, height: 262)
                                                                 .clipped()
                                                         
                                                         VStack(alignment: .leading, spacing: 8) {
@@ -36,12 +36,13 @@ struct CreateWalletView: View {
                                                                         .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                                         .lineSpacing(6)
                                                         }
-                                                        .padding(.top, 14)
+                                                        .padding(.top, 120) // 移除顶部间距
                                                         .padding(.leading, 21)
                                                 }
+                                                .frame(maxWidth: .infinity, maxHeight: 262)
+                                                .ignoresSafeArea(edges: .top) // 让背景和标题顶对齐
                                         }
                                         .id("image and tittle")
-                                        .frame(maxWidth: .infinity)
                                         
                                         // Section 2 (覆盖部分)
                                         VStack(spacing: 24) {
@@ -82,9 +83,12 @@ struct CreateWalletView: View {
                                                                                 .foregroundColor(.white)
                                                                 )
                                                 }
+                                                Spacer()
                                         }.id("password area")
-                                                .background(Color.red.opacity(0.2))
-                                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                                .background(Color.green.opacity(0.2))
+                                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                                                .clipShape(RoundedRectangle(cornerRadius: 20))
+                                        
                                 }
                                 .id("main container")
                                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 对齐顶部
