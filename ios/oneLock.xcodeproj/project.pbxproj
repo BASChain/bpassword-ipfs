@@ -7,8 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2B94CB272D1FF10C00C484B0 /* LockLib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B94CB262D1FF10C00C484B0 /* LockLib.xcframework */; };
-		2B94CB282D1FF10C00C484B0 /* LockLib.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2B94CB262D1FF10C00C484B0 /* LockLib.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		69C6BD4D2D2B9A3F000A77EC /* LockLib.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2B94CB262D1FF10C00C484B0 /* LockLib.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,20 +26,6 @@
 			remoteInfo = "BPassword-ipfs";
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		2B94CB252D1FEF9200C484B0 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				2B94CB282D1FF10C00C484B0 /* LockLib.xcframework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2B94CB262D1FF10C00C484B0 /* LockLib.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = LockLib.xcframework; path = ../go/bin/LockLib.xcframework; sourceTree = "<group>"; };
@@ -72,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2B94CB272D1FF10C00C484B0 /* LockLib.xcframework in Frameworks */,
+				69C6BD4D2D2B9A3F000A77EC /* LockLib.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,7 +117,6 @@
 				69E13C742D1B9A970081BBA4 /* Sources */,
 				69E13C752D1B9A970081BBA4 /* Frameworks */,
 				69E13C762D1B9A970081BBA4 /* Resources */,
-				2B94CB252D1FEF9200C484B0 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
