@@ -27,8 +27,8 @@ struct CreateWalletView: View {
                                                 Image("password-img")
                                                         .resizable()
                                                         .scaledToFill()
-                                                        .frame(width: UIScreen.main.bounds.width, height: 215)
-                                                        .clipped()
+                                                        .frame(width: UIScreen.main.bounds.width, height: 262)
+                                                        .clipped().ignoresSafeArea(edges: .top)
                                                 
                                                 VStack(alignment: .leading, spacing: 8) {
                                                         // 标题
@@ -52,7 +52,7 @@ struct CreateWalletView: View {
                                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                                                 .shadow(color: .gray.opacity(0.1), radius: 4, x: 0, y: -2)
                                         
-                                        VStack(spacing: 24) { // 调整间距
+                                        VStack() { // 调整间距
                                                 // 输入框 1
                                                 SecureField("Enter Password", text: $password)
                                                         .padding(.horizontal, 16) // 内边距
@@ -90,11 +90,9 @@ struct CreateWalletView: View {
                                                                                 .foregroundColor(.white)
                                                                 )
                                                 }
-                                        }
-                                        .padding(.horizontal, 24)
-                                        .padding(.top, 32) // 调整顶部间距
+                                        } .padding(.top, 32) // 调整顶部间距
                                 }
-                                .frame(height: 597)
+                                .frame(height: 700)
                                 .offset(y: 85) // 调整 Section 2 向上覆盖 Section 1 的底部
                         }
                         .contentShape(Rectangle()) // 确保手势覆盖整个区域
