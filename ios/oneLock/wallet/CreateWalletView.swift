@@ -20,6 +20,11 @@ struct CreateWalletView: View {
                                 
                                 VStack(spacing: 0){
                                         VStack(spacing: 0){
+                                                let safeAreaTop = UIApplication.shared.connectedScenes
+                                                        .compactMap { $0 as? UIWindowScene }
+                                                        .flatMap { $0.windows }
+                                                        .first { $0.isKeyWindow }?
+                                                        .safeAreaInsets.top ?? 0
                                                 // Section 1
                                                 ZStack(alignment: .topLeading) {
                                                         // 背景图片
@@ -36,11 +41,11 @@ struct CreateWalletView: View {
                                                                         .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                                         .lineSpacing(6)
                                                         }
-                                                        .padding(.top, 120) // 移除顶部间距
+                                                        .padding(.top,  120) // 移除顶部间距
                                                         .padding(.leading, 21)
                                                 }
-                                                .frame(maxWidth: .infinity, maxHeight: 262)
-                                                .ignoresSafeArea(edges: .top) // 让背景和标题顶对齐
+                                                .ignoresSafeArea(edges: .top)
+                                                .frame(height: 262 - 2*safeAreaTop)
                                         }
                                         .id("image and tittle")
                                         
@@ -53,6 +58,7 @@ struct CreateWalletView: View {
                                                         .background(Color(red: 243 / 255, green: 243 / 255, blue: 243 / 255)) // 背景颜色
                                                         .cornerRadius(24) // 圆角
                                                         .font(.system(size: 16)) // 字体
+                                                        .padding(.top, 47)
                                                         .foregroundColor(Color(red: 137 / 255, green: 145 / 255, blue: 155 / 255)) // 字体颜色
                                                 
                                                 // 输入框 2
@@ -87,7 +93,7 @@ struct CreateWalletView: View {
                                         }.id("password area")
                                                 .background(Color.green.opacity(0.2))
                                                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                                                .clipShape(RoundedRectangle(cornerRadius: 20))
+                                                .clipShape(RoundedRectangle(cornerRadius: 32))
                                         
                                 }
                                 .id("main container")
