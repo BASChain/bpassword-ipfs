@@ -5,10 +5,10 @@ struct MnemonicView: View {
         let password: String
         @State private var isButtonPressed: Bool = false
         @State private var errorMessage: String? = nil
-
+        @Environment(\.dismiss) private var dismiss
         @Environment(\.presentationMode) var presentationMode
         @EnvironmentObject var appState: AppState
-
+        
         var body: some View {
                 VStack(spacing: 20) {
                         VStack(alignment: .leading, spacing: 16) {
@@ -19,7 +19,7 @@ struct MnemonicView: View {
                                         .lineSpacing(6) // 设置行间距
                                         .multilineTextAlignment(.leading) // 左对齐
                                         .frame(width: 251, alignment: .leading) // 固定宽度，左对齐
-
+                                
                                 // 副标题
                                 Text("Keep this phrase secure and offline.\nIt is the only way to recover your wallet.")
                                         .font(.custom("Helvetica", size: 16)) // 使用 Helvetica 字体，`font-size: 16px`
@@ -30,7 +30,7 @@ struct MnemonicView: View {
                         }
                         .padding(.top, 32) // 设置顶部间距，适配设计图
                         .padding(.leading, 22) // 设置左边距
-
+                        
                         // 助记词显示区域
                         ZStack {
                                 if isButtonPressed {
@@ -53,7 +53,7 @@ struct MnemonicView: View {
                                 }
                         }
                         .padding(.horizontal, 24)
-
+                        
                         // 长按按钮区域
                         Button(action: {}) {
                                 Text("Press and Hold to View Mnemonic")
@@ -71,7 +71,7 @@ struct MnemonicView: View {
                                         }
                                 }
                         }, perform: {})
-
+                        
                         // 按钮区域
                         VStack(spacing: 16) {
                                 // 复制助记词按钮
@@ -85,7 +85,7 @@ struct MnemonicView: View {
                                                 .cornerRadius(31)
                                 }
                                 .padding(.horizontal, 24)
-
+                                
                                 // 已备份按钮
                                 Button(action: createWallet) {
                                         Text("I have backed up my mnemonic")
@@ -98,34 +98,47 @@ struct MnemonicView: View {
                                 }
                                 .padding(.horizontal, 24)
                         }
-
+                        
                         if let error = errorMessage {
                                 Text(error)
                                         .foregroundColor(.red)
                                         .padding()
                         }
-
+                        
                         Spacer()
                 }
                 .padding()
-                .background(Color.white) // 页面背景
+                .background(Color.white) // 页面背景 
+                .navigationBarBackButtonHidden(true)
+                .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                                Button(action: {
+                                        dismiss()
+                                }) {
+                                        Image("back_icon")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 24, height: 24)
+                                }
+                        }
+                }
         }
-
+        
         private func copyMnemonic() {
                 UIPasteboard.general.string = mnemonic
                 SdkUtil.shared.toastManager?.showToast(message: "Mnemonic copied!", isSuccess: true)
         }
-
+        
         private func createWallet() {
                 errorMessage = nil
                 LoadingManager.shared.show(message: "Creating Wallet...")
-
+                
                 DispatchQueue.global().async {
                         let success = SdkUtil.shared.createWallet(mnemonic: mnemonic, password: password)
-
+                        
                         DispatchQueue.main.async {
                                 LoadingManager.shared.hide()
-
+                                
                                 if success {
                                         appState.hasWallet = true
                                 } else {
