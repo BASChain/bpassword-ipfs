@@ -8,6 +8,7 @@ struct MnemonicView: View {
         @Environment(\.dismiss) private var dismiss
         @Environment(\.presentationMode) var presentationMode
         @EnvironmentObject var appState: AppState
+        @State private var isCopied: Bool = false // 跟踪是否已经复制
         
         var body: some View {
                 VStack(spacing: 20) {
@@ -56,11 +57,17 @@ struct MnemonicView: View {
                         // 修改后的复制按钮区域
                         Button(action: copyMnemonic) {
                                 HStack {
-                                        Image(systemName: "doc.on.doc") // 添加图标
-                                                .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255)) // 深蓝图标
-                                        Text("Copy Mnemonic")
-                                                .font(.system(size: 16, weight: .semibold))
-                                                .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255)) // 深蓝文字
+                                        if isCopied {
+                                                Image("copy-success")
+                                                Text("Copy Success")
+                                                        .font(.system(size: 16, weight: .semibold))
+                                                        .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255)) // 深蓝文字
+                                        }else{
+                                                Image("copy-Mnemonic") // 添加图标
+                                                Text("Copy Mnemonic")
+                                                        .font(.system(size: 16, weight: .semibold))
+                                                        .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255)) // 深蓝文字
+                                        }
                                 }
                                 .frame(width: 180, height: 40) // 修正宽高
                                 .background(Color(red: 41/255, green: 97/255, blue: 97/255).opacity(0.2))
@@ -131,7 +138,11 @@ struct MnemonicView: View {
         
         private func copyMnemonic() {
                 UIPasteboard.general.string = mnemonic
-                SdkUtil.shared.toastManager?.showToast(message: "Mnemonic copied!", isSuccess: true)
+                isCopied = true
+                // 设置一个延时，清除状态（可选）
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                        isCopied = false // 2秒后重置状态
+                }
         }
         
         private func createWallet() {
