@@ -1,20 +1,5 @@
 import SwiftUI
 
-// 自定义形状，仅为指定的角应用圆角
-struct RoundedCornersShape: Shape {
-        var corners: UIRectCorner
-        var radius: CGFloat
-        
-        func path(in rect: CGRect) -> Path {
-                let path = UIBezierPath(
-                        roundedRect: rect,
-                        byRoundingCorners: corners,
-                        cornerRadii: CGSize(width: radius, height: radius)
-                )
-                return Path(path.cgPath)
-        }
-}
-
 struct CreateWalletView: View {
         @State private var password: String = ""
         @State private var confirmPassword: String = ""
@@ -127,6 +112,12 @@ struct CreateWalletView: View {
                         errorMessage = "Passwords do not match"
                         return
                 }
+                
+                guard password.count >= 8 else {
+                        errorMessage = "Password must be at least 8 characters long."
+                        return
+                }
+                
                 
                 // 调用 SdkUtil 来生成助记词
                 if let generatedMnemonic = SdkUtil.shared.generateMnemonic() {
