@@ -1,9 +1,3 @@
-//
-//  AddAccountView.swift
-//  oneLock
-//
-//  Created by wesley on 2024/12/26.
-//
 import SwiftUI
 
 struct AddAccountView: View {
@@ -13,39 +7,101 @@ struct AddAccountView: View {
         @State private var password: String = ""
         @State private var isPasswordVisible: Bool = false
         
-        
         var onSave: (() -> Void)? // 回调通知 HomeView 刷新
         
         var body: some View {
-                Form {
-                        Section(header: Text("Platform")) {
-                                TextField("Enter platform name", text: $platform)
-                        }
-                        Section(header: Text("Username")) {
-                                TextField("Enter username", text: $username)
-                        }
-                        Section(header: Text("Password")) {
-                                HStack {
-                                        if isPasswordVisible {
-                                                TextField("Enter password", text: $password)
-                                                        .textFieldStyle(.roundedBorder)
-                                        } else {
-                                                SecureField("Enter password", text: $password)
-                                                        .textFieldStyle(.roundedBorder)
-                                        }
-                                        Button(action: {
-                                                isPasswordVisible.toggle()
-                                        }) {
-                                                Image(systemName: isPasswordVisible ? "eye" : "eye.slash")
-                                                        .foregroundColor(.gray)
+                VStack(spacing: 16) {
+                        // 表单区域
+                        VStack(alignment: .leading, spacing: 24) {
+                                // 平台输入
+                                VStack(alignment: .leading, spacing: 8) {
+                                        Text("PLATFORM")
+                                                .font(.system(size: 16, weight: .medium))
+                                                .foregroundColor(Color(red: 25/255, green: 25/255, blue: 29/255))
+                                        
+                                        TextField("Enter platform name", text: $platform)
+                                                .padding() .autocapitalization(.none) // 禁止首字母大写
+                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                .cornerRadius(31)
+                                                .font(.system(size: 16))
+                                                .foregroundColor(Color(red: 137/255, green: 145/255, blue: 155/255))
+                                }
+                                
+                                // 用户名输入
+                                VStack(alignment: .leading, spacing: 8) {
+                                        Text("USERNAME")
+                                                .font(.system(size: 16, weight: .medium))
+                                                .foregroundColor(Color(red: 25/255, green: 25/255, blue: 29/255))
+                                        
+                                        TextField("Enter username", text: $username)
+                                                .padding() .autocapitalization(.none) // 禁止首字母大写
+                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                .cornerRadius(31)
+                                                .font(.system(size: 16))
+                                                .foregroundColor(Color(red: 137/255, green: 145/255, blue: 155/255))
+                                }
+                                
+                                // 密码输入
+                                VStack(alignment: .leading, spacing: 8) {
+                                        Text("PASSWORD")
+                                                .font(.system(size: 16, weight: .medium))
+                                                .foregroundColor(Color(red: 41/255, green: 97/255, blue: 97/255))
+                                        
+                                        HStack {
+                                                if isPasswordVisible {
+                                                        TextField("Enter password", text: $password)
+                                                                .padding() .autocapitalization(.none) // 禁止首字母大写
+                                                                .background(Color(red: 203/255, green: 233/255, blue: 232/255))
+                                                                .cornerRadius(31)
+                                                                .font(.system(size: 16))
+                                                                .foregroundColor(Color(red: 41/255, green: 97/255, blue: 97/255))
+                                                } else {
+                                                        SecureField("Enter password", text: $password)
+                                                                .padding() .autocapitalization(.none) // 禁止首字母大写
+                                                                .background(Color(red: 203/255, green: 233/255, blue: 232/255))
+                                                                .cornerRadius(31)
+                                                                .font(.system(size: 16))
+                                                                .foregroundColor(Color(red: 41/255, green: 97/255, blue: 97/255))
+                                                }
+                                                
+                                                Button(action: {
+                                                        isPasswordVisible.toggle()
+                                                }) {
+                                                        Image(isPasswordVisible ? "opened-icon" : "closed-icon")
+                                                                .foregroundColor(Color(red: 113/255, green: 157/255, blue: 157/255))
+                                                }
                                         }
                                 }
+                                
+                                // 保存按钮
+                                Button(action: saveAccount) {
+                                        Text("Save")
+                                                .font(.system(size: 16, weight: .bold))
+                                                .foregroundColor(.white)
+                                                .padding()
+                                                .frame(maxWidth: .infinity)
+                                                .background(Color(red: 15/255, green: 211/255, blue: 212/255))
+                                                .cornerRadius(31)
+                                }
                         }
-                        Button("Save") {
-                                saveAccount()
+                        .padding(.horizontal, 24)
+                        
+                        Spacer()
+                }
+                .background(Color.white)
+                .navigationBarBackButtonHidden(true)
+                .toolbar {
+                        ToolbarItem(placement: .navigationBarLeading) {
+                                Button(action: {
+                                        presentationMode.wrappedValue.dismiss()
+                                }) {
+                                        Image("back_icon") // 替换为实际的返回图标
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 24, height: 24)
+                                }
                         }
                 }
-                .navigationTitle("Add Account")
         }
         
         private func saveAccount() {
