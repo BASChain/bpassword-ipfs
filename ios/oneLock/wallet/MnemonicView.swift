@@ -37,7 +37,7 @@ struct MnemonicView: View {
                                         // 显示助记词
                                         Text(mnemonic)
                                                 .font(.system(size: 18, weight: .bold, design: .monospaced))
-                                                .foregroundColor(.white)
+                                                .foregroundColor(Color(red: 15/255, green: 211/255, blue: 212/255))
                                                 .multilineTextAlignment(.center)
                                                 .padding()
                                                 .frame(width: 327, height: 204)
@@ -53,17 +53,35 @@ struct MnemonicView: View {
                                 }
                         }
                         .padding(.horizontal, 24)
-                        
-                        // 长按按钮区域
+                        // 修改后的复制按钮区域
+                        Button(action: copyMnemonic) {
+                                HStack {
+                                        Image(systemName: "doc.on.doc") // 添加图标
+                                                .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255)) // 深蓝图标
+                                        Text("Copy Mnemonic")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255)) // 深蓝文字
+                                }
+                                .frame(width: 180, height: 40) // 修正宽高
+                                .background(Color(red: 41/255, green: 97/255, blue: 97/255).opacity(0.2))
+                                .cornerRadius(20) // 圆角
+                                .overlay(
+                                        RoundedRectangle(cornerRadius: 20)
+                                                .stroke(Color(red: 0.6, green: 0.8, blue: 0.9), lineWidth: 1) // 浅蓝边框
+                                )
+                        }
+                        .padding(.top, 4) // 调整与助记词区域的间距
+                        // 修改后的长按按钮区域
                         Button(action: {}) {
                                 Text("Press and Hold to View Mnemonic")
                                         .font(.system(size: 16, weight: .semibold))
                                         .foregroundColor(.white)
                                         .frame(maxWidth: .infinity)
                                         .padding()
-                                        .background(Color.gray)
+                                        .background(Color.orange) // 修改为橙色背景
                                         .cornerRadius(31)
                         }
+                        .padding(.horizontal, 24) // 按钮两侧边距
                         .onLongPressGesture(minimumDuration: 0.1, pressing: { isPressing in
                                 if !LoadingManager.shared.isVisible {
                                         withAnimation {
@@ -72,32 +90,19 @@ struct MnemonicView: View {
                                 }
                         }, perform: {})
                         
-                        // 按钮区域
-                        VStack(spacing: 16) {
-                                // 复制助记词按钮
-                                Button(action: copyMnemonic) {
-                                        Text("Copy Mnemonic")
-                                                .font(.system(size: 16, weight: .semibold))
-                                                .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255)) // 深蓝文字
-                                                .frame(maxWidth: .infinity)
-                                                .padding()
-                                                .background(Color(red: 255/255, green: 161/255, blue: 54/255)) // 橙色背景
-                                                .cornerRadius(31)
-                                }
-                                .padding(.horizontal, 24)
-                                
-                                // 已备份按钮
-                                Button(action: createWallet) {
-                                        Text("I have backed up my mnemonic")
-                                                .font(.system(size: 16, weight: .semibold))
-                                                .foregroundColor(.white)
-                                                .frame(maxWidth: .infinity)
-                                                .padding()
-                                                .background(Color(red: 15/255, green: 211/255, blue: 212/255)) // 浅蓝背景
-                                                .cornerRadius(31)
-                                }
-                                .padding(.horizontal, 24)
+                        
+                        
+                        // 已备份按钮
+                        Button(action: createWallet) {
+                                Text("I have backed up my mnemonic")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color(red: 15/255, green: 211/255, blue: 212/255)) // 浅蓝背景
+                                        .cornerRadius(31)
                         }
+                        .padding(.horizontal, 24)
                         
                         if let error = errorMessage {
                                 Text(error)
@@ -108,7 +113,7 @@ struct MnemonicView: View {
                         Spacer()
                 }
                 .padding()
-                .background(Color.white) // 页面背景 
+                .background(Color.white) // 页面背景
                 .navigationBarBackButtonHidden(true)
                 .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
