@@ -101,7 +101,13 @@ struct SettingView: View {
                                 }
                                 .listStyle(InsetGroupedListStyle())
                         }
-                        .navigationTitle("Settings")
+                        .navigationTitle("")
+                        .toolbar {
+                                ToolbarItem(placement: .principal) {
+                                        Text("Settings")
+                                                .font(.custom("SF Pro Text", size: 18).weight(.medium))
+                                }
+                        }
                 }
         }
         

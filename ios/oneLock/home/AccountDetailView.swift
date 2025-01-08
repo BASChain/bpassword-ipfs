@@ -102,7 +102,7 @@ struct AccountDetailView: View {
                                 }) {
                                         Image("back_icon")
                                                 .resizable()
-                                                .frame(width: 13, height: 13)
+                                                .frame(width: 24, height: 24)
                                 }
                         }
                         ToolbarItem(placement: .navigationBarTrailing) {
@@ -111,7 +111,7 @@ struct AccountDetailView: View {
                                 }) {
                                         Image("dle_icon")
                                                 .resizable()
-                                                .frame(width: 18, height: 18)
+                                                .frame(width: 24, height: 24)
                                 }
                         }
                 })

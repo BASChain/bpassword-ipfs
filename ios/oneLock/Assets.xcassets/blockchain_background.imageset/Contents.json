@@ -1,17 +1,15 @@
 {
   "images" : [
     {
-      "filename" : "menemonic-img.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "menemonic-img@2x.png",
+      "filename" : "block_chain_back.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "menemonic-img@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }
