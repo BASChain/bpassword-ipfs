@@ -4,7 +4,7 @@ struct AccountDetailView: View {
         @Binding var account: Account // 使用 @Binding 从父视图传递进来
         @State private var isPasswordVisible: Bool = false
         @State private var showAlert: Bool = false
-        @State private var showEditView: Bool = false // 控制跳转到编辑界面
+        @State private var showEditView: Bool = false // 控制显示自定义弹出视图
         @Environment(\.presentationMode) var presentationMode
         var onAccountDeleted: (() -> Void)?
         
@@ -45,7 +45,7 @@ struct AccountDetailView: View {
                                 
                                 // 编辑按钮
                                 Button(action: {
-                                        showEditView = true
+                                        showEditView = true // 显示编辑界面
                                 }) {
                                         Text("Edit Account")
                                                 .font(.custom("PingFangSC-Medium", size: 16))
@@ -61,31 +61,6 @@ struct AccountDetailView: View {
                         }
                         .padding()
                         .navigationBarBackButtonHidden(true)
-                        .toolbar {
-                                ToolbarItem(placement: .principal) {
-                                        Text("Account Details")
-                                                .font(.custom("SFProText-Medium", size: 18))
-                                                .foregroundColor(Color.black)
-                                }
-                                ToolbarItem(placement: .navigationBarLeading) {
-                                        Button(action: {
-                                                presentationMode.wrappedValue.dismiss()
-                                        }) {
-                                                Image("back_icon")
-                                                        .resizable()
-                                                        .frame(width: 13, height: 13)
-                                        }
-                                }
-                                ToolbarItem(placement: .navigationBarTrailing) {
-                                        Button(action: {
-                                                showAlert = true
-                                        }) {
-                                                Image("dle_icon")
-                                                        .resizable()
-                                                        .frame(width: 18, height: 18)
-                                        }
-                                }
-                        }
                         
                         // 删除确认弹窗
                         GenericAlertView(
@@ -97,12 +72,49 @@ struct AccountDetailView: View {
                                         showAlert = false
                                 }
                         )
-                }
-                .sheet(isPresented: $showEditView) {
-                        EditAccountView(account: account) { updatedAccount in
-                                account = updatedAccount
+                        
+                        // 自定义 Overlay 替代 sheet
+                        if showEditView {
+                                EditAccountView(account: $account, onUpdate: { updatedAccount in
+                                        account = updatedAccount
+                                        showEditView = false
+                                },showEditView: $showEditView)
+                                .transition(.move(edge: .bottom))
+                                .zIndex(1)
+                                .background(
+                                        Color.black.opacity(0.4)
+                                                .edgesIgnoringSafeArea(.all)
+                                                .onTapGesture {
+                                                        showEditView = false
+                                                }
+                                )
                         }
                 }
+                .toolbar(content: {
+                        ToolbarItem(placement: .principal) {
+                                Text("Account Details")
+                                        .font(.custom("SFProText-Medium", size: 18))
+                                        .foregroundColor(Color.black)
+                        }
+                        ToolbarItem(placement: .navigationBarLeading) {
+                                Button(action: {
+                                        presentationMode.wrappedValue.dismiss()
+                                }) {
+                                        Image("back_icon")
+                                                .resizable()
+                                                .frame(width: 13, height: 13)
+                                }
+                        }
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                                Button(action: {
+                                        showAlert = true
+                                }) {
+                                        Image("dle_icon")
+                                                .resizable()
+                                                .frame(width: 18, height: 18)
+                                }
+                        }
+                })
         }
         
         private func deleteAccount() {
@@ -120,38 +132,5 @@ struct AccountDetailView: View {
                                 }
                         }
                 }
-        }
-}
-
-struct InfoRow: View {
-        let title: String
-        let value: String
-        
-        var body: some View {
-                HStack {
-                        Text(title)
-                                .font(.custom("PingFangSC-Regular", size: 14))
-                                .foregroundColor(Color.gray)
-                        Spacer()
-                        ZStack {
-                                if value == "Password Hidden" {
-                                        Image("password_mask")
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(height: 30)
-                                                .clipShape(RoundedRectangle(cornerRadius: 4))
-                                                .overlay(
-                                                        Text(value)
-                                                                .font(.custom("SFProText-Medium", size: 16))
-                                                                .foregroundColor(.gray)
-                                                )
-                                } else {
-                                        Text(value)
-                                                .font(.custom("SFProText-Medium", size: 16))
-                                                .foregroundColor(.black)
-                                }
-                        }
-                }
-                .padding(.horizontal, 24)
         }
 }

@@ -21,7 +21,7 @@ struct HomeView: View {
                                                                         HStack {
                                                                                 VStack(alignment: .leading, spacing: 5) {
                                                                                         Text(account.platform)
-                                                                                                .font(.custom("SF Pro Text", size: 20).weight(.medium))
+                                                                                                .font(.custom("SF Pro Text", size: 19).weight(.medium))
                                                                                                 .foregroundColor(Color.black)
                                                                                 }
                                                                                 Spacer()

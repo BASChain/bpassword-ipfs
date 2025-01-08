@@ -1,70 +1,94 @@
-//
-//  EditAccountView.swift
-//  oneLock
-//
-//  Created by wesley on 2025/1/2.
-//
-
 import SwiftUI
 
 struct EditAccountView: View {
-        @State private var account: Account // 本地 Account 对象
+        @Binding var account: Account
         @State private var isPasswordVisible: Bool = false
-        var onUpdate: (Account) -> Void // 更新回调
-        @Environment(\.presentationMode) var presentationMode // 控制视图返回
-        
-        init(account: Account, onUpdate: @escaping (Account) -> Void) {
-                self._account = State(initialValue: account) // 直接将 account 赋值为本地状态
-                self.onUpdate = onUpdate
-        }
+        var onUpdate: (Account) -> Void
+        @Binding var showEditView: Bool
         
         var body: some View {
-                NavigationView {
-                        VStack(spacing: 20) {
-                                TextField("Platform", text: $account.platform)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                
-                                TextField("Username", text: $account.username)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                
+                ZStack {
+                        // 半透明背景
+                        Color.black.opacity(0.4)
+                                .edgesIgnoringSafeArea(.all)
+                                .onTapGesture {
+                                        showEditView = false
+                                }
+                        
+                        // 弹出视图
+                        VStack(spacing: 16) {
+                                // 标题栏
                                 HStack {
-                                        if isPasswordVisible {
-                                                TextField("Password", text: $account.password)
-                                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        } else {
-                                                SecureField("Password", text: $account.password)
-                                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        }
-                                        
+                                        Spacer()
+                                        Text("Edit Account")
+                                                .font(.custom("SFProText-Medium", size: 18))
+                                                .foregroundColor(Color.black)
+                                        Spacer()
                                         Button(action: {
-                                                isPasswordVisible.toggle()
+                                                showEditView = false
                                         }) {
-                                                Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
-                                                        .foregroundColor(.gray)
+                                                Image("close")
+                                                        .resizable()
+                                                        .frame(width: 18, height: 18)
+                                                        .padding(.trailing, 16)
                                         }
                                 }
+                                .padding(.top, 16)
                                 
+                                // 输入区域
+                                VStack(spacing: 16) {
+                                        EditRow(title: "PLATFORM", text: $account.platform)
+                                        EditRow(title: "USERNAME", text: $account.username)
+                                        
+                                        HStack {
+                                                if isPasswordVisible {
+                                                        TextField("PASSWORD", text: $account.password)
+                                                                .textFieldStyle(PlainTextFieldStyle())
+                                                } else {
+                                                        SecureField("PASSWORD", text: $account.password)
+                                                                .textFieldStyle(PlainTextFieldStyle())
+                                                }
+                                                Button(action: { isPasswordVisible.toggle() }) {
+                                                        Image(systemName: isPasswordVisible ? "eye.slash" : "eye")
+                                                                .foregroundColor(.gray)
+                                                                .frame(width: 24, height: 24)
+                                                }
+                                        }
+                                        .padding(12)
+                                        .background(Color(red: 243/255, green: 249/255, blue: 250/255))
+                                        .cornerRadius(22)
+                                }
+                                .padding(.horizontal, 24)
+                                
+                                // 更新按钮
                                 Button(action: updateAccount) {
                                         Text("Update")
+                                                .font(.custom("PingFangSC-Medium", size: 16))
+                                                .foregroundColor(.white)
                                                 .padding()
                                                 .frame(maxWidth: .infinity)
-                                                .background(Color.blue)
-                                                .foregroundColor(.white)
-                                                .cornerRadius(10)
+                                                .background(Color(red: 15/255, green: 211/255, blue: 212/255))
+                                                .cornerRadius(22)
                                 }
-                                
-                                Spacer()
+                                .padding(.horizontal, 24)
+                                .padding(.bottom, 16)
                         }
-                        .padding()
-                        .navigationTitle("Edit Account")
-                        .navigationBarItems(leading: Button("Cancel") {
-                                presentationMode.wrappedValue.dismiss() // 返回上一视图
-                        })
+                        .padding(.vertical, 16)
+                        .frame(width: UIScreen.main.bounds.width)
+                        .background(
+                                ZStack {
+                                        Color.white
+                                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                                .fill(Color.white)
+                                                .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: -2)
+                                }
+                        )
+                        .cornerRadius(20, corners: [.topLeft, .topRight])
+                        .frame(maxHeight: .infinity, alignment: .bottom)
                 }
         }
         
         private func updateAccount() {
-                
                 account.lastUpdated = Int64(Date().timeIntervalSince1970)
                 LoadingManager.shared.show(message: "Updating Account...")
                 
@@ -74,12 +98,46 @@ struct EditAccountView: View {
                                 LoadingManager.shared.hide()
                                 if success {
                                         onUpdate(account)
-                                        presentationMode.wrappedValue.dismiss()
+                                        showEditView = false
                                 } else {
                                         print("Failed to save account")
                                         SdkUtil.shared.toastManager?.showToast(message: "Operation failed", isSuccess: false)
                                 }
                         }
                 }
+        }
+}
+
+struct EditRow: View {
+        let title: String
+        @Binding var text: String
+        
+        var body: some View {
+                VStack(alignment: .leading, spacing: 4) {
+                        Text(title)
+                                .font(.custom("PingFangSC-Medium", size: 14))
+                                .foregroundColor(Color.gray)
+                        
+                        TextField("Enter \(title.lowercased())", text: $text)
+                                .padding(12)
+                                .background(Color(red: 243/255, green: 249/255, blue: 250/255))
+                                .cornerRadius(22)
+                }
+        }
+}
+
+extension View {
+        func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
+                clipShape(RoundedCorner(radius: radius, corners: corners))
+        }
+}
+
+struct RoundedCorner: Shape {
+        var radius: CGFloat = 0.0
+        var corners: UIRectCorner = .allCorners
+        
+        func path(in rect: CGRect) -> Path {
+                let path = UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius))
+                return Path(path.cgPath)
         }
 }
