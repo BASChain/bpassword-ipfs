@@ -22,8 +22,8 @@ func initWalletManager() *WalletManager {
 	address := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
 
 	return &WalletManager{
-		privateKey: privateKey,
-		address:    address,
+		priKey:  privateKey,
+		address: address,
 	}
 }
 
@@ -43,7 +43,7 @@ MAC 的长度：
 
 func TestEncrypt(t *testing.T) {
 	wallet := initWalletManager()
-	privateKey := wallet.privateKey
+	privateKey := wallet.priKey
 	publicKey := &privateKey.PublicKey
 
 	// 模拟待加密数据
@@ -118,11 +118,11 @@ func TestEncrypt(t *testing.T) {
 func TestEnDecode(t *testing.T) {
 	wallet := initWalletManager()
 
-	cipherData, err := Encode([]byte(testStr), &wallet.privateKey.PublicKey)
+	cipherData, err := Encode([]byte(testStr), &wallet.priKey.PublicKey)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	plainData, err := Decode(cipherData, wallet.privateKey)
+	plainData, err := Decode(cipherData, wallet.priKey)
 	if err != nil {
 		t.Errorf(err.Error())
 	}

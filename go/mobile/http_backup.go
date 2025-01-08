@@ -38,7 +38,7 @@ func signMessage(message []byte, privateKey *ecdsa.PrivateKey) (string, error) {
 
 func syncDataFromSrv() (*service.EncodedData, error) {
 	var queryReq = service.QueryRequest{
-		WalletAddr: __walletMng.address,
+		WalletAddr: __walletMng.getAddr(),
 		QueryTime:  time.Now().Unix(),
 	}
 
@@ -74,7 +74,7 @@ func uploadLocalData(encodedData []byte, srvVer int64) (*service.UpdateResult, e
 
 	var updateReq = &service.UpdateRequest{
 		EncodedData: &service.EncodedData{
-			WalletAddr:  __walletMng.address,
+			WalletAddr:  __walletMng.getAddr(),
 			Version:     srvVer,
 			EncodeValue: hex.EncodeToString(encodedData),
 		},

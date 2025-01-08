@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/tyler-smith/go-bip39"
+	"sync"
 	"time"
 )
 
@@ -21,15 +22,24 @@ type WalletManager struct {
 	address       string
 	timer         *time.Ticker
 	lastTouchTime int64
+	sync.RWMutex
 }
 
 var __walletMng = &WalletManager{}
 
 func (wm *WalletManager) getPriKey(useKey bool) *ecdsa.PrivateKey {
+	wm.Lock()
+	defer wm.Unlock()
 	if useKey {
 		__walletMng.lastTouchTime = time.Now().Unix()
 	}
 	return wm.priKey
+}
+
+func (wm *WalletManager) getAddr() string {
+	wm.RLock()
+	defer wm.RUnlock()
+	return wm.address
 }
 
 func CheckWallet() ([]byte, error) {
@@ -205,27 +215,31 @@ func OpenWallet(password string) error {
 	}
 
 	// 保存私钥和地址到 WalletManager
+	__walletMng.Lock()
 	__walletMng.priKey = key.PrivateKey
 	__walletMng.address = key.Address.Hex()
 	__walletMng.lastTouchTime = time.Now().Unix()
 
 	utils.LogInst().Infof("------>>>Wallet successfully opened. Address: %s\n", __walletMng.address)
+	__walletMng.Unlock()
 	go WalletClock()
 
 	return nil
 }
 
 func WalletAddress() string {
-	return __walletMng.address
+	return __walletMng.getAddr()
 }
 
 func CloseWallet() {
+	__walletMng.Lock()
+	defer __walletMng.Unlock()
 	__walletMng.address = ""
 	__walletMng.priKey = nil
 }
 
 func WalletIsOpen() bool {
-	return len(__walletMng.address) > 0 && __walletMng.getPriKey(false) != nil
+	return len(__walletMng.getAddr()) > 0 && __walletMng.getPriKey(false) != nil
 }
 
 func ChangePassword(old, new string) error {

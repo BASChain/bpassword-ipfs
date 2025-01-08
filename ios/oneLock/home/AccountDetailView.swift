@@ -1,10 +1,3 @@
-//
-//  AccountDetailView.swift
-//  oneLock
-//
-//  Created by wesley on 2024/12/26.
-//
-
 import SwiftUI
 
 struct AccountDetailView: View {
@@ -18,68 +11,83 @@ struct AccountDetailView: View {
         var body: some View {
                 ZStack {
                         VStack(spacing: 20) {
-                                Text("Platform: \(account.platform)")
-                                        .font(.title)
-                                Text("Username: \(account.username)")
-                                        .font(.headline)
-                                ZStack {
-                                        Text(account.password)
-                                                .font(.headline)
-                                                .foregroundColor(.red)
-                                                .opacity(isPasswordVisible ? 1.0 : 0.0)
+                                // 信息区域
+                                VStack(spacing: 16) {
+                                        InfoRow(title: "Platform", value: account.platform)
+                                        Divider().background(Color.gray.opacity(0.3))
                                         
-                                        if !isPasswordVisible {
-                                                Color.black.opacity(0.7)
-                                                        .cornerRadius(5)
-                                                Text("Password Hidden")
-                                                        .foregroundColor(.white)
-                                                        .font(.subheadline)
-                                        }
+                                        InfoRow(title: "Username", value: account.username)
+                                        Divider().background(Color.gray.opacity(0.3))
+                                        
+                                        InfoRow(title: "Password", value: isPasswordVisible ? account.password : "Password Hidden")
                                 }
-                                .frame(height: 50)
                                 .padding()
+                                .background(Color(red: 243/255, green: 249/255, blue: 250/255))
+                                .cornerRadius(22)
+                                .padding(.horizontal, 12)
                                 
+                                // 提示文字
                                 Button(action: {}) {
-                                        Text("Press and Hold to View Password")
+                                        Text("Press and Hold to View Password!")
+                                                .font(.custom("PingFangSC-Medium", size: 16))
+                                                .foregroundColor(Color.white)
                                                 .padding()
                                                 .frame(maxWidth: .infinity)
-                                                .background(Color.blue)
-                                                .foregroundColor(.white)
-                                                .cornerRadius(10)
+                                                .background(Color(red: 15/255, green: 211/255, blue: 212/255))
+                                                .cornerRadius(22)
                                 }
+                                .padding(.horizontal, 28)
                                 .onLongPressGesture(minimumDuration: 0.1, pressing: { isPressing in
                                         withAnimation {
                                                 isPasswordVisible = isPressing
                                         }
                                 }) {}
                                 
+                                // 编辑按钮
                                 Button(action: {
-                                        showAlert = true
-                                }) {
-                                        Text("Delete Account")
-                                                .padding()
-                                                .frame(maxWidth: .infinity)
-                                                .background(Color.red)
-                                                .foregroundColor(.white)
-                                                .cornerRadius(10)
-                                }
-                                
-                                Button(action: {
-                                        showEditView = true // 跳转到编辑界面
+                                        showEditView = true
                                 }) {
                                         Text("Edit Account")
+                                                .font(.custom("PingFangSC-Medium", size: 16))
+                                                .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                 .padding()
                                                 .frame(maxWidth: .infinity)
-                                                .background(Color.green)
-                                                .foregroundColor(.white)
-                                                .cornerRadius(10)
+                                                .background(Color(red: 255/255, green: 161/255, blue: 54/255))
+                                                .cornerRadius(22)
                                 }
+                                .padding(.horizontal, 28)
                                 
                                 Spacer()
                         }
                         .padding()
-                        .navigationTitle("Account Details")
+                        .navigationBarBackButtonHidden(true)
+                        .toolbar {
+                                ToolbarItem(placement: .principal) {
+                                        Text("Account Details")
+                                                .font(.custom("SFProText-Medium", size: 18))
+                                                .foregroundColor(Color.black)
+                                }
+                                ToolbarItem(placement: .navigationBarLeading) {
+                                        Button(action: {
+                                                presentationMode.wrappedValue.dismiss()
+                                        }) {
+                                                Image("back_icon")
+                                                        .resizable()
+                                                        .frame(width: 13, height: 13)
+                                        }
+                                }
+                                ToolbarItem(placement: .navigationBarTrailing) {
+                                        Button(action: {
+                                                showAlert = true
+                                        }) {
+                                                Image("dle_icon")
+                                                        .resizable()
+                                                        .frame(width: 18, height: 18)
+                                        }
+                                }
+                        }
                         
+                        // 删除确认弹窗
                         GenericAlertView(
                                 isPresented: $showAlert,
                                 title: "Confirm Deletion",
@@ -89,13 +97,10 @@ struct AccountDetailView: View {
                                         showAlert = false
                                 }
                         )
-                        
                 }
                 .sheet(isPresented: $showEditView) {
                         EditAccountView(account: account) { updatedAccount in
-                                // 更新当前界面显示的 Account 数据
                                 account = updatedAccount
-                                print("Updated account:", updatedAccount)
                         }
                 }
         }
@@ -115,5 +120,38 @@ struct AccountDetailView: View {
                                 }
                         }
                 }
+        }
+}
+
+struct InfoRow: View {
+        let title: String
+        let value: String
+        
+        var body: some View {
+                HStack {
+                        Text(title)
+                                .font(.custom("PingFangSC-Regular", size: 14))
+                                .foregroundColor(Color.gray)
+                        Spacer()
+                        ZStack {
+                                if value == "Password Hidden" {
+                                        Image("password_mask")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(height: 30)
+                                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                                                .overlay(
+                                                        Text(value)
+                                                                .font(.custom("SFProText-Medium", size: 16))
+                                                                .foregroundColor(.gray)
+                                                )
+                                } else {
+                                        Text(value)
+                                                .font(.custom("SFProText-Medium", size: 16))
+                                                .foregroundColor(.black)
+                                }
+                        }
+                }
+                .padding(.horizontal, 24)
         }
 }

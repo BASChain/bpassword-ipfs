@@ -15,7 +15,9 @@ struct HomeView: View {
                                         ScrollView {
                                                 VStack(spacing: 12) {
                                                         ForEach(sortedAccounts(), id: \.id) { account in
-                                                                NavigationLink(destination: AccountDetailView(account: bindingForAccount(account))) {
+                                                                NavigationLink(destination: AccountDetailView(account: bindingForAccount(account)){
+                                                                        hasLoaded = false
+                                                                }) {
                                                                         HStack {
                                                                                 VStack(alignment: .leading, spacing: 5) {
                                                                                         Text(account.platform)
