@@ -4,6 +4,8 @@ struct SettingView: View {
     @State private var autoCloseDuration: Int = SdkUtil.shared.getAutoCloseDuration()
     let blockchainAddress: String = SdkUtil.shared.walletAddress()
     
+        
+        
     var body: some View {
         NavigationView {
             List {
