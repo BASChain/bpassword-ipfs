@@ -1,128 +1,148 @@
-//
-//  SettingView.swift
-//  BPassword-ipfs
-//
-//  Created by wesley on 2024/12/25.
-//
 import SwiftUI
 
 struct SettingView: View {
-        @State private var autoCloseDuration: Int = SdkUtil.shared.getAutoCloseDuration()
-        @State private var showPasswordChangeView = false // 控制密码修改视图的显示
-        let blockchainAddress: String = SdkUtil.shared.walletAddress()
-        
-        var body: some View {
-                NavigationView {
-                        VStack(spacing: 20) {
-                                // 第一部分：显示用户的区块链地址
-                                VStack(alignment: .leading, spacing: 10) {
-                                        Text("Your Blockchain Address")
-                                                .font(.headline)
-                                                .foregroundColor(.gray)
-                                        Text(blockchainAddress)
-                                                .font(.subheadline)
-                                                .foregroundColor(.blue)
-                                                .lineLimit(1)
-                                                .truncationMode(.middle) // 截断长地址中间部分
-                                                .padding()
-                                                .background(Color(UIColor.systemGray6))
-                                                .cornerRadius(10)
-                                                .contextMenu {
-                                                        Button(action: {
-                                                                UIPasteboard.general.string = blockchainAddress
-                                                        }) {
-                                                                Label("Copy Address", systemImage: "doc.on.doc")
-                                                        }
-                                                }
-                                }
-                                .frame(height: 200)
-                                .padding(.horizontal)
-                                
-                                // 第二部分：设置列表
-                                List {
-                                        // 自动关闭钱包时长设置
-                                        Section(header: Text("Wallet Settings")) {
-                                                HStack {
-                                                        Text("Auto Close Wallet Duration")
-                                                        Spacer()
-                                                        Picker("", selection: $autoCloseDuration) {
-                                                                ForEach([1, 5, 10, 15, 30, 60], id: \.self) { value in
-                                                                        Text("\(value) min").tag(value)
-                                                                }
-                                                        }
-                                                        .pickerStyle(MenuPickerStyle())
-                                                        .onChange(of: autoCloseDuration) { newValue in
-                                                                let success = SdkUtil.shared.setAutoCloseDuration(newValue) // 保存用户选择的值
-                                                                if !success{
-                                                                        SdkUtil.shared.toastManager?.showToast(message: "Save Failed!", isSuccess: false)
-                                                                }else{
-                                                                        SdkUtil.shared.toastManager?.showToast(message: "Save Success!", isSuccess: true)
-                                                                }
-                                                        }
-                                                }
-                                        }
-                                        
-                                        // 修改密码
-                                        Section {
-                                                // 修改密码
-                                                NavigationLink(destination: PasswordChangeView()) {
-                                                        HStack {
-                                                                Text("Change Password")
-                                                                Spacer()
-                                                                Image(systemName: "lock")
-                                                                        .foregroundColor(.gray)
-                                                        }
-                                                }
-                                        }
-                                        
-                                        // 当前版本号
-                                        Section(header: Text("App Info")) {
-                                                HStack {
-                                                        Text("Current Version")
-                                                        Spacer()
-                                                        Text(SdkUtil.shared.getVersion())
-                                                                .foregroundColor(.gray)
-                                                }
-                                        }
-                                        
-                                        // 分享本 APP
-                                        Section {
-                                                Button(action: {
-                                                        shareApp()
-                                                }) {
-                                                        HStack {
-                                                                Text("Share This App")
-                                                                Spacer()
-                                                                Image(systemName: "square.and.arrow.up")
-                                                                        .foregroundColor(.blue)
-                                                        }
-                                                }
-                                        }
-                                }
-                                .listStyle(InsetGroupedListStyle())
-                        }
-                        .navigationTitle("")
-                        .toolbar {
-                                ToolbarItem(placement: .principal) {
-                                        Text("Settings")
-                                                .font(.custom("SF Pro Text", size: 18).weight(.medium))
-                                }
-                        }
+    @State private var autoCloseDuration: Int = SdkUtil.shared.getAutoCloseDuration()
+    let blockchainAddress: String = SdkUtil.shared.walletAddress()
+    
+    var body: some View {
+        NavigationView {
+            List {
+                // MARK: 1) 区块链地址
+                ZStack(alignment: .topLeading) {
+                    Image("blockchain_background")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 105)
+                        .cornerRadius(16)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Your Blockchain Address:")
+                            .font(.custom("HelveticaNeue-Medium", size: 18))
+                            .foregroundColor(Color(red: 15/255, green: 211/255, blue: 212/255))
+                        
+                        Text(blockchainAddress)
+                            .font(.custom("Helvetica", size: 14))
+                            .foregroundColor(.white)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    // 根据设计图可微调上下左右间距
+                    .padding(.top, 22)
+                    .padding(.leading, 22)
+                    .padding(.bottom, 34)
+                    .padding(.trailing, 22)
                 }
-        }
-        
-        /// 分享 App 的逻辑
-        private func shareApp() {
+                // 去掉默认内边距与行背景，让自定义背景能完整展示
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+                // 给整行左右留白22pt，贴合设计图
+                .padding(.horizontal, 22)
+                // 保持与设计图同样高度
+                .frame(height: 105)
                 
-                guard let url = URL(string: SdkUtil.AppUrl) else { return }
-                let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
-                
-                // 使用适配 iOS 15 及以上的逻辑
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let rootViewController = windowScene.windows.first?.rootViewController {
-                        rootViewController.present(activityVC, animated: true, completion: nil)
-                } else {
-                        print("Unable to present activity view controller")
+                // MARK: 2) Auto Close Wallet Duration
+                HStack {
+                    Text("Auto Close Wallet Duration")
+                        .font(.custom("SFProText-Medium", size: 15))
+                        .foregroundColor(.black)
+                    Spacer()
+                    Picker("", selection: $autoCloseDuration) {
+                        ForEach([1, 5, 10, 15, 30, 60], id: \.self) { value in
+                            Text("\(value) Mins")
+                                .font(.custom("HelveticaNeue-Medium", size: 14))
+                                .foregroundColor(Color(red: 41/255, green: 97/255, blue: 97/255))
+                                .tag(value)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: autoCloseDuration) { newValue in
+                        let success = SdkUtil.shared.setAutoCloseDuration(newValue)
+                        if !success {
+                            SdkUtil.shared.toastManager?.showToast(message: "Save Failed!", isSuccess: false)
+                        } else {
+                            SdkUtil.shared.toastManager?.showToast(message: "Save Success!", isSuccess: true)
+                        }
+                    }
                 }
+                
+                // MARK: 3) Change Password
+                NavigationLink(destination: PasswordChangeView()) {
+                    HStack {
+                        Text("Change Password")
+                            .font(.custom("SFProText-Medium", size: 15))
+                            .foregroundColor(.black)
+                        Spacer()
+                        Image(systemName: "lock")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 11, height: 11)
+                            .foregroundColor(.gray)
+                    }
+                }
+                
+                // MARK: 4) 自定义分隔线（若设计图有一个灰色线条）
+                Rectangle()
+                    .fill(Color(red: 243/255, green: 244/255, blue: 247/255))
+                    .frame(height: 1)
+                    // 上下留些间距以便与两行内容分隔开
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+                
+                // MARK: 5) Current Version
+                HStack {
+                    Text("Current Version")
+                        .font(.custom("SFProText-Medium", size: 15))
+                        .foregroundColor(.black)
+                    Spacer()
+                    Text(SdkUtil.shared.getVersion()) // 例: "1.0"
+                        .font(.custom("SFProText-Regular", size: 14))
+                        .foregroundColor(Color(red: 25/255, green: 25/255, blue: 29/255))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 6)
+                        .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                        .cornerRadius(10)
+                }
+                
+                // MARK: 6) Share This App
+                Button(action: {
+                    shareApp()
+                }) {
+                    HStack {
+                        Text("Share This App")
+                            .font(.custom("SFProText-Medium", size: 15))
+                            .foregroundColor(Color(red: 41/255, green: 97/255, blue: 97/255))
+                        Spacer()
+                        Image(systemName: "square.and.arrow.up")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 11, height: 13)
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+            // 让列表平整无分组间距
+            .listStyle(PlainListStyle())
+            // 导航标题
+            .navigationBarTitle("Settings", displayMode: .inline)
         }
+    }
+    
+    private func shareApp() {
+        guard let url = URL(string: SdkUtil.AppUrl) else { return }
+        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootViewController = windowScene.windows.first?.rootViewController {
+            rootViewController.present(activityVC, animated: true, completion: nil)
+        } else {
+            print("Unable to present activity view controller")
+        }
+    }
+}
+
+// MARK: - 预览
+struct SettingView_Previews: PreviewProvider {
+    static var previews: some View {
+        SettingView()
+    }
 }
