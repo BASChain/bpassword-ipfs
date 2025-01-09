@@ -6,21 +6,15 @@
 //
 
 import SwiftUI
-
 @main
 struct OneLockApp: App {
-        
         @StateObject private var appState = AppState()
         @StateObject private var toastManager = ToastManager()
+        @StateObject private var permissionManager = NetworkPermissionManager() // 添加权限管理
         @Environment(\.scenePhase) private var scenePhase
-        
-        init() {
-                initializeSdk()
-        }
         
         
         var body: some Scene {
-                
                 WindowGroup {
                         ZStack {
                                 // 根据 App 状态加载相应视图
@@ -36,7 +30,10 @@ struct OneLockApp: App {
                                 } else {
                                         WalletSetupView()
                                                 .environmentObject(appState)
-                                                .onAppear { checkWalletStatus() }
+                                                .onAppear {
+                                                        checkWalletStatus()
+                                                        requestNetworkPermission()
+                                                }
                                 }
                         }
                         .toast(
@@ -44,7 +41,8 @@ struct OneLockApp: App {
                                 message: toastManager.message,
                                 isSuccess: toastManager.isSuccess,
                                 duration: toastManager.duration
-                        ).loadingView()
+                        )
+                        .loadingView()
                         .onAppear {
                                 SdkUtil.shared.toastManager = toastManager
                                 SdkUtil.shared.appState = appState // 在视图生命周期内设置
@@ -60,11 +58,15 @@ struct OneLockApp: App {
                 }
         }
         
-        
         private func initializeSdk() {
-                print("Initializing SDK...")
-                SdkUtil.shared.initializeSDK(logLevel: LogLevel.debug)
-                print("SDK initialized.")
+                // 延迟初始化 SDK，确保网络权限已授权
+                if permissionManager.isPermissionGranted {
+                        print("Initializing SDK...")
+                        SdkUtil.shared.initializeSDK(logLevel: LogLevel.debug)
+                        print("SDK initialized.")
+                } else {
+                        print("Network permission not granted, SDK initialization delayed.")
+                }
         }
         
         private func checkWalletStatus() {
@@ -81,7 +83,19 @@ struct OneLockApp: App {
                         }
                 }
         }
+        
+        private func requestNetworkPermission() {
+                permissionManager.requestPermission { granted in
+                        if granted {
+                                print("Network permission granted.")
+                                initializeSdk()
+                        } else {
+                                print("Network permission denied.")
+                        }
+                }
+        }
 }
+
 
 class AppState: ObservableObject {
         @Published var hasWallet: Bool = true

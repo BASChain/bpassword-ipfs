@@ -23,9 +23,9 @@ struct ImportWalletView: View {
                                 ZStack(alignment: .topLeading) {
                                         Image("import-img")
                                                 .resizable()
-                                                .scaledToFill()
-                                                .frame(height: 262)
-                                                .clipped()
+                                                .scaledToFill() // 确保图片填充整个区域
+                                                .frame(width: geometry.size.width, height: geometry.size.height * 0.3) // 宽度为屏幕宽度，高度按比例
+                                                .clipped() // 防止图片溢出
                                                 .ignoresSafeArea(edges: .top)
                                         
                                         VStack(alignment: .leading, spacing: 8) {
@@ -34,10 +34,10 @@ struct ImportWalletView: View {
                                                         .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                         .lineSpacing(6)
                                         }
-                                        .padding(.top, 100)
+                                        .padding(.top, 53) // 调整顶部距离为 106pt
                                         .padding(.leading, 24)
                                 }
-                                .frame(height: 262 - geometry.safeAreaInsets.top - 40)
+                                .frame(height: geometry.size.height * 0.3)
                                 
                                 // 输入区域
                                 VStack(spacing: 16) {
@@ -52,7 +52,7 @@ struct ImportWalletView: View {
                                                 .foregroundColor(Color(red: 61/255, green: 147/255, blue: 147/255))
                                                 .padding(.horizontal, 16)
                                                 .padding(.vertical, 12)
-                                                .frame(maxWidth: .infinity, minHeight: 150, maxHeight: 150, alignment: .leading)
+                                                .frame(maxWidth: .infinity, minHeight: 150, maxHeight: geometry.size.height * 0.3, alignment: .leading)
                                                 .background(Color(red: 203/255, green: 233/255, blue: 232/255)) // 设置浅绿色背景
                                                 .cornerRadius(31)
                                                 .overlay(
@@ -158,7 +158,9 @@ struct ImportWalletView: View {
                                                         )
                                         }
                                 }
-                                .padding()
+                                .padding(.horizontal, geometry.size.width * 0.05)
+                                .padding(.top, -20) // 调整顶部与标题的间距为 -20pt
+                                .padding(.bottom, geometry.safeAreaInsets.bottom + 16)
                                 .background(
                                         RoundedCornersShape(corners: [.topLeft, .topRight], radius: 32)
                                                 .fill(Color.white)
@@ -185,12 +187,12 @@ struct ImportWalletView: View {
                         .onTapGesture {
                                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                         }
-                }
-                .onAppear {
-                        addKeyboardObservers()
-                }
-                .onDisappear {
-                        removeKeyboardObservers()
+                        .onAppear {
+                                addKeyboardObservers(geometry: geometry)
+                        }
+                        .onDisappear {
+                                removeKeyboardObservers()
+                        }
                 }
         }
         
@@ -219,11 +221,11 @@ struct ImportWalletView: View {
                 }
         }
         
-        private func addKeyboardObservers() {
+        private func addKeyboardObservers(geometry: GeometryProxy) {
                 NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
                         if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                                let keyboardHeight = keyboardFrame.height
-                                keyboardOffset = -keyboardHeight / 2
+                                let offset = keyboardFrame.height > geometry.size.height / 3 ? -keyboardFrame.height * 0.4 : -keyboardFrame.height / 2
+                                keyboardOffset = offset
                         }
                 }
                 NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
