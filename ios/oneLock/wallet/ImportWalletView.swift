@@ -13,6 +13,8 @@ struct ImportWalletView: View {
         @State private var confirmPassword: String = ""
         @State private var errorMessage: String? = nil
         @State private var keyboardOffset: CGFloat = 0 // 输入区域的键盘偏移量
+        @State private var isPasswordVisible: Bool = false
+        @State private var isConfirmPasswordVisible: Bool = false
         
         var body: some View {
                 GeometryReader { geometry in
@@ -63,21 +65,78 @@ struct ImportWalletView: View {
                                                 .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         
-                                        SecureField("Enter Password", text: $password)
-                                                .padding()
-                                                .frame(height: 50)
-                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
-                                                .cornerRadius(31)
-                                                .font(.system(size: 16))
-                                                .foregroundColor(Color(red: 137/255, green: 145/255, blue: 155/255))
+                                        HStack {
+                                                if isPasswordVisible {
+                                                        TextField("Enter Password", text: $password)
+                                                                .padding()
+                                                                .frame(height: 50)
+                                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                                .cornerRadius(31)
+                                                                .font(.system(size: 16))
+                                                                .foregroundColor(Color(red: 137/255, green: 145/255, blue: 155/255))
+                                                                .disableAutocorrection(true)
+                                                                .textContentType(.oneTimeCode)
+                                                } else {
+                                                        SecureField("Enter Password", text: $password)
+                                                                .padding()
+                                                                .frame(height: 50)
+                                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                                .cornerRadius(31)
+                                                                .font(.system(size: 16))
+                                                                .foregroundColor(Color(red: 137/255, green: 145/255, blue: 155/255))
+                                                                .disableAutocorrection(true)
+                                                                .textContentType(.oneTimeCode)
+                                                }
+                                                
+                                                Button(action: {
+                                                        isPasswordVisible.toggle()
+                                                }) {
+                                                        Image(isPasswordVisible ? "opened-gray-icon" : "closed-icon")
+                                                                .resizable()
+                                                                .scaledToFit()
+                                                                .frame(width: 20, height: 20)
+                                                }
+                                                .padding(.trailing, 16)
+                                        }
                                         
-                                        SecureField("Confirm Password", text: $confirmPassword)
-                                                .padding()
-                                                .frame(height: 50)
-                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
-                                                .cornerRadius(31)
-                                                .font(.system(size: 16))
-                                                .foregroundColor(Color(red: 137/255, green: 145/255, blue: 155/255))
+                                        Text("Confirm Password")
+                                                .font(.system(size: 18, weight: .bold))
+                                                .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                        
+                                        HStack {
+                                                if isConfirmPasswordVisible {
+                                                        TextField("Confirm Password", text: $confirmPassword)
+                                                                .padding()
+                                                                .frame(height: 50)
+                                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                                .cornerRadius(31)
+                                                                .font(.system(size: 16))
+                                                                .foregroundColor(Color(red: 137/255, green: 145/255, blue: 155/255))
+                                                                .disableAutocorrection(true)
+                                                                .textContentType(.oneTimeCode)
+                                                } else {
+                                                        SecureField("Confirm Password", text: $confirmPassword)
+                                                                .padding()
+                                                                .frame(height: 50)
+                                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                                .cornerRadius(31)
+                                                                .font(.system(size: 16))
+                                                                .foregroundColor(Color(red: 137/255, green: 145/255, blue: 155/255))
+                                                                .disableAutocorrection(true)
+                                                                .textContentType(.oneTimeCode)
+                                                }
+                                                
+                                                Button(action: {
+                                                        isConfirmPasswordVisible.toggle()
+                                                }) {
+                                                        Image(isConfirmPasswordVisible ? "opened-gray-icon" : "closed-icon")
+                                                                .resizable()
+                                                                .scaledToFit()
+                                                                .frame(width: 20, height: 20)
+                                                }
+                                                .padding(.trailing, 16)
+                                        }
                                         
                                         if let errorMessage = errorMessage {
                                                 Text(errorMessage)
