@@ -145,8 +145,9 @@ struct PasswordChangeView: View {
                         errorMessage = "Old password cannot be empty."
                         return
                 }
-                guard !newPassword.isEmpty else {
-                        errorMessage = "New password cannot be empty."
+                // 验证输入
+                guard !newPassword.isEmpty, newPassword.count >= 8 else {
+                        errorMessage = newPassword.isEmpty ? "New password cannot be empty." : "New password must be at least 8 characters long."
                         return
                 }
                 guard newPassword == confirmPassword else {
