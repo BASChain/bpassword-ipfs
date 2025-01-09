@@ -173,14 +173,14 @@ struct ImportWalletView: View {
                                         }
                                 }
                                 .padding(.horizontal, geometry.size.width * 0.05)
-                                .padding(.bottom, geometry.safeAreaInsets.bottom + 16)
+//                                .padding(.bottom, geometry.safeAreaInsets.bottom)
+                                .frame(maxHeight: .infinity, alignment: .top) // 确保贴近屏幕底部
                                 .background(
                                         RoundedCornersShape(corners: [.topLeft, .topRight], radius: 32)
                                                 .fill(Color.white)
                                                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: -5)
                                 )
-                                .offset(y: -20) // 向上移动 20pt
-                                .offset(y: keyboardOffset) // 保留键盘偏移功能
+                                .offset(y: -20 + keyboardOffset)
                                 .animation(.easeOut, value: keyboardOffset)
                         }
                         .background(Color.white)
