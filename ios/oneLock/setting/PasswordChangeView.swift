@@ -20,24 +20,28 @@ struct PasswordChangeView: View {
         
         var body: some View {
                 VStack(spacing: 20) {
-                        Text("Change Password")
-                                .font(.headline)
-                                .padding()
                         
                         // 输入旧密码
                         HStack {
                                 if showOldPassword {
                                         TextField("Enter Old Password", text: $oldPassword)
-                                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                                .textFieldStyle(PlainTextFieldStyle())
+                                                .padding()
+                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                .cornerRadius(31)
                                 } else {
                                         SecureField("Enter Old Password", text: $oldPassword)
-                                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                                .textFieldStyle(PlainTextFieldStyle())
+                                                .padding()
+                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                .cornerRadius(31)
                                 }
                                 Button(action: {
                                         showOldPassword.toggle()
                                 }) {
-                                        Image(systemName: showOldPassword ? "eye.slash" : "eye")
+                                        Image(showOldPassword ?  "opened-gray-icon": "closed-icon") // 替换为设计图中的实际图片
                                                 .foregroundColor(.gray)
+                                                .padding(.trailing, 16)
                                 }
                         }
                         .padding(.horizontal)
@@ -46,16 +50,23 @@ struct PasswordChangeView: View {
                         HStack {
                                 if showNewPassword {
                                         TextField("Enter New Password", text: $newPassword)
-                                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                                .textFieldStyle(PlainTextFieldStyle())
+                                                .padding()
+                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                .cornerRadius(31)
                                 } else {
                                         SecureField("Enter New Password", text: $newPassword)
-                                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                                .textFieldStyle(PlainTextFieldStyle())
+                                                .padding()
+                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                .cornerRadius(31)
                                 }
                                 Button(action: {
                                         showNewPassword.toggle()
                                 }) {
-                                        Image(systemName: showNewPassword ? "eye.slash" : "eye")
+                                        Image(showNewPassword ? "opened-gray-icon"  : "closed-icon") // 替换为设计图中的实际图片
                                                 .foregroundColor(.gray)
+                                                .padding(.trailing, 16)
                                 }
                         }
                         .padding(.horizontal)
@@ -64,16 +75,23 @@ struct PasswordChangeView: View {
                         HStack {
                                 if showConfirmPassword {
                                         TextField("Confirm New Password", text: $confirmPassword)
-                                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                                .textFieldStyle(PlainTextFieldStyle())
+                                                .padding()
+                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                .cornerRadius(31)
                                 } else {
                                         SecureField("Confirm New Password", text: $confirmPassword)
-                                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                                .textFieldStyle(PlainTextFieldStyle())
+                                                .padding()
+                                                .background(Color(red: 243/255, green: 243/255, blue: 243/255))
+                                                .cornerRadius(31)
                                 }
                                 Button(action: {
                                         showConfirmPassword.toggle()
                                 }) {
-                                        Image(systemName: showConfirmPassword ? "eye.slash" : "eye")
+                                        Image(showConfirmPassword ? "opened-gray-icon":  "closed-icon" ) // 替换为设计图中的实际图片
                                                 .foregroundColor(.gray)
+                                                .padding(.trailing, 16)
                                 }
                         }
                         .padding(.horizontal)
@@ -89,17 +107,36 @@ struct PasswordChangeView: View {
                         // 提交按钮
                         Button(action: validateAndSubmit) {
                                 Text("Submit")
-                                        .padding()
-                                        .frame(maxWidth: .infinity)
-                                        .background(Color.blue)
+                                        .font(.custom("Helvetica-Bold", size: 16))
                                         .foregroundColor(.white)
-                                        .cornerRadius(10)
+                                        .frame(maxWidth: .infinity)
+                                        .padding()
+                                        .background(Color(red: 15/255, green: 211/255, blue: 212/255))
+                                        .cornerRadius(31)
                         }
                         .padding(.horizontal)
                         
                         Spacer()
                 }
                 .padding()
+                .navigationBarBackButtonHidden(true)
+                .toolbar {
+                        ToolbarItem(placement: .principal) {
+                                Text("Change Password")
+                                        .font(.custom("SFProText-Medium", size: 18))
+                                        .foregroundColor(Color.black)
+                        }
+                        ToolbarItem(placement: .navigationBarLeading) {
+                                Button(action: {
+                                        presentationMode.wrappedValue.dismiss()
+                                }) {
+                                        Image("back_icon") // 替换为实际的返回图标
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 24, height: 24)
+                                }
+                        }
+                }
         }
         
         private func validateAndSubmit() {

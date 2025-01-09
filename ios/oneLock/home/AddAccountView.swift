@@ -91,6 +91,11 @@ struct AddAccountView: View {
                 .background(Color.white)
                 .navigationBarBackButtonHidden(true)
                 .toolbar {
+                        ToolbarItem(placement: .principal) {
+                                Text("Add Account")
+                                        .font(.custom("SFProText-Medium", size: 18))
+                                        .foregroundColor(Color.black)
+                        }
                         ToolbarItem(placement: .navigationBarLeading) {
                                 Button(action: {
                                         presentationMode.wrappedValue.dismiss()
