@@ -54,7 +54,7 @@ struct ImportWalletView: View {
                                                         .foregroundColor(Color(red: 61/255, green: 147/255, blue: 147/255))
                                                         .padding(.horizontal, 16)
                                                         .padding(.vertical, 12)
-                                                        .frame(height: 50) // 设置固定高度为 50pt
+                                                        .frame(height: 120) // 设置固定高度为 50pt
                                                         .fixedSize(horizontal: false, vertical: true) // 禁止垂直扩展
                                                         .background(Color(red: 203/255, green: 233/255, blue: 232/255)) // 设置浅绿色背景
                                                         .cornerRadius(31)
@@ -69,7 +69,7 @@ struct ImportWalletView: View {
                                                         .foregroundColor(Color(red: 61/255, green: 147/255, blue: 147/255))
                                                         .padding(.horizontal, 16)
                                                         .padding(.vertical, 12)
-                                                        .frame(height: 50) // 设置固定高度为 50pt
+                                                        .frame(height: 120) // 设置固定高度为 50pt
                                                         .fixedSize(horizontal: false, vertical: true) // 禁止垂直扩展
                                                         .background(Color(red: 203/255, green: 233/255, blue: 232/255)) // 设置浅绿色背景
                                                         .cornerRadius(31)
@@ -117,11 +117,6 @@ struct ImportWalletView: View {
                                                 }
                                                 .padding(.trailing, 16)
                                         }
-                                        
-                                        Text("Confirm Password")
-                                                .font(.system(size: 18, weight: .bold))
-                                                .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
-                                                .frame(maxWidth: .infinity, alignment: .leading)
                                         
                                         HStack {
                                                 if isConfirmPasswordVisible {
