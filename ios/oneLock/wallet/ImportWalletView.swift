@@ -197,6 +197,8 @@ struct ImportWalletView: View {
         private func importWallet() {
                 if mnemonic.isEmpty {
                         errorMessage = "Mnemonic cannot be empty."
+                } else if password.count < 8 {
+                        errorMessage = "Password must be at least 8 characters."
                 } else if password != confirmPassword || password.isEmpty {
                         errorMessage = "Passwords do not match or are empty."
                 } else {
