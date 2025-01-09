@@ -24,7 +24,7 @@ struct ImportWalletView: View {
                                         Image("import-img")
                                                 .resizable()
                                                 .scaledToFill() // 确保图片填充整个区域
-                                                .frame(width: geometry.size.width, height: geometry.size.height * 0.3) // 宽度为屏幕宽度，高度按比例
+                                                .frame(width: geometry.size.width, height: geometry.size.height * 0.3) // 减去顶部安全区高度
                                                 .clipped() // 防止图片溢出
                                                 .ignoresSafeArea(edges: .top)
                                         
@@ -34,10 +34,10 @@ struct ImportWalletView: View {
                                                         .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                         .lineSpacing(6)
                                         }
-                                        .padding(.top, 53) // 调整顶部距离为 106pt
+                                        .padding(.top, 53) // 调整顶部距离为 53pt
                                         .padding(.leading, 24)
                                 }
-                                .frame(height: geometry.size.height * 0.3)
+                                .frame(height: geometry.size.height * 0.3 - geometry.safeAreaInsets.top) // 修正高度
                                 
                                 // 输入区域
                                 VStack(spacing: 16) {
@@ -45,20 +45,39 @@ struct ImportWalletView: View {
                                                 .font(.system(size: 18, weight: .bold))
                                                 .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                 .frame(maxWidth: .infinity, alignment: .leading)
+                                                .padding(.top, 35) // 设置顶端距离
                                         
-                                        TextEditor(text: $mnemonic)
-                                                .scrollContentBackground(.hidden) // 确保隐藏默认背景
-                                                .font(.custom("Helvetica", size: 16))
-                                                .foregroundColor(Color(red: 61/255, green: 147/255, blue: 147/255))
-                                                .padding(.horizontal, 16)
-                                                .padding(.vertical, 12)
-                                                .frame(maxWidth: .infinity, minHeight: 150, maxHeight: geometry.size.height * 0.3, alignment: .leading)
-                                                .background(Color(red: 203/255, green: 233/255, blue: 232/255)) // 设置浅绿色背景
-                                                .cornerRadius(31)
-                                                .overlay(
-                                                        RoundedRectangle(cornerRadius: 31)
-                                                                .stroke(Color(red: 203/255, green: 233/255, blue: 232/255), lineWidth: 2)
-                                                )
+                                        if #available(iOS 16.0, *) {
+                                                TextEditor(text: $mnemonic)
+                                                        .scrollContentBackground(.hidden) // 确保隐藏默认背景
+                                                        .font(.custom("Helvetica", size: 16))
+                                                        .foregroundColor(Color(red: 61/255, green: 147/255, blue: 147/255))
+                                                        .padding(.horizontal, 16)
+                                                        .padding(.vertical, 12)
+                                                        .frame(height: 50) // 设置固定高度为 50pt
+                                                        .fixedSize(horizontal: false, vertical: true) // 禁止垂直扩展
+                                                        .background(Color(red: 203/255, green: 233/255, blue: 232/255)) // 设置浅绿色背景
+                                                        .cornerRadius(31)
+                                                        .overlay(
+                                                                RoundedRectangle(cornerRadius: 31)
+                                                                        .stroke(Color(red: 203/255, green: 233/255, blue: 232/255), lineWidth: 2)
+                                                        )
+                                        } else {
+                                                
+                                                TextEditor(text: $mnemonic)
+                                                        .font(.custom("Helvetica", size: 16))
+                                                        .foregroundColor(Color(red: 61/255, green: 147/255, blue: 147/255))
+                                                        .padding(.horizontal, 16)
+                                                        .padding(.vertical, 12)
+                                                        .frame(height: 50) // 设置固定高度为 50pt
+                                                        .fixedSize(horizontal: false, vertical: true) // 禁止垂直扩展
+                                                        .background(Color(red: 203/255, green: 233/255, blue: 232/255)) // 设置浅绿色背景
+                                                        .cornerRadius(31)
+                                                        .overlay(
+                                                                RoundedRectangle(cornerRadius: 31)
+                                                                        .stroke(Color(red: 203/255, green: 233/255, blue: 232/255), lineWidth: 2)
+                                                        )
+                                        }
                                         
                                         Text("Password")
                                                 .font(.system(size: 18, weight: .bold))
@@ -159,14 +178,14 @@ struct ImportWalletView: View {
                                         }
                                 }
                                 .padding(.horizontal, geometry.size.width * 0.05)
-                                .padding(.top, -20) // 调整顶部与标题的间距为 -20pt
                                 .padding(.bottom, geometry.safeAreaInsets.bottom + 16)
                                 .background(
                                         RoundedCornersShape(corners: [.topLeft, .topRight], radius: 32)
                                                 .fill(Color.white)
                                                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: -5)
                                 )
-                                .offset(y: keyboardOffset)
+                                .offset(y: -20) // 向上移动 20pt
+                                .offset(y: keyboardOffset) // 保留键盘偏移功能
                                 .animation(.easeOut, value: keyboardOffset)
                         }
                         .background(Color.white)
