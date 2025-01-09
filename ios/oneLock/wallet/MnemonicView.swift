@@ -46,7 +46,7 @@ struct MnemonicView: View {
                                                 .cornerRadius(31)
                                 } else {
                                         // 显示默认图片
-                                        Image("backup-img")
+                                        Image("menemonic-img")
                                                 .resizable()
                                                 .aspectRatio(contentMode: .fit)
                                                 .frame(width: 327, height: 204)
