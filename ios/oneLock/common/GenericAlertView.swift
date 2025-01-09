@@ -1,11 +1,3 @@
-//
-//  GenericAlertView.swift
-//  oneLock
-//
-//  Created by wesley on 2024/12/26.
-//
-
-
 import SwiftUI
 
 struct GenericAlertView: View {
@@ -18,49 +10,65 @@ struct GenericAlertView: View {
         var body: some View {
                 if isPresented {
                         ZStack {
+                                // 半透明背景遮罩
                                 Color.black.opacity(0.4)
                                         .edgesIgnoringSafeArea(.all)
+                                        .onTapGesture {
+                                                // 点击背景关闭弹窗
+                                                onCancel()
+                                                isPresented = false
+                                        }
                                 
                                 VStack(spacing: 20) {
+                                        // 标题
                                         Text(title)
-                                                .font(.headline)
-                                                .padding(.top)
-                                        
-                                        Text(message)
-                                                .font(.body)
+                                                .font(.custom("HelveticaNeue-Bold", size: 18))
+                                                .foregroundColor(Color(red: 25/255, green: 25/255, blue: 29/255))
                                                 .multilineTextAlignment(.center)
-                                                .padding()
                                         
-                                        HStack(spacing: 20) {
+                                        // 消息内容
+                                        Text(message)
+                                                .font(.custom("HelveticaNeue", size: 14))
+                                                .foregroundColor(Color(red: 103/255, green: 103/255, blue: 106/255))
+                                                .multilineTextAlignment(.center)
+                                                .padding(.horizontal, 20)
+                                        
+                                        // 按钮区域
+                                        HStack(spacing: 16) {
+                                                // 取消按钮
                                                 Button(action: {
                                                         onCancel()
                                                         isPresented = false
                                                 }) {
                                                         Text("Cancel")
-                                                                .padding()
+                                                                .font(.custom("PingFangSC-Semibold", size: 16))
+                                                                .foregroundColor(Color(red: 41/255, green: 97/255, blue: 97/255))
+                                                                .padding(.vertical, 11)
                                                                 .frame(maxWidth: .infinity)
-                                                                .background(Color.gray.opacity(0.2))
-                                                                .cornerRadius(10)
+                                                                .background(Color(red: 243/255, green: 249/255, blue: 250/255))
+                                                                .cornerRadius(31)
                                                 }
                                                 
+                                                // 确认按钮
                                                 Button(action: {
                                                         onConfirm()
                                                         isPresented = false
                                                 }) {
                                                         Text("Confirm")
-                                                                .padding()
+                                                                .font(.custom("PingFangSC-Semibold", size: 16))
+                                                                .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
+                                                                .padding(.vertical, 11)
                                                                 .frame(maxWidth: .infinity)
-                                                                .background(Color.blue)
-                                                                .foregroundColor(.white)
-                                                                .cornerRadius(10)
+                                                                .background(Color(red: 255/255, green: 161/255, blue: 54/255))
+                                                                .cornerRadius(31)
                                                 }
                                         }
-                                        .padding([.leading, .trailing, .bottom])
+                                        .padding(.horizontal, 16)
                                 }
+                                .padding(20)
                                 .background(Color.white)
-                                .cornerRadius(20)
-                                .padding()
-                                .shadow(radius: 10)
+                                .cornerRadius(16)
+                                .padding(.horizontal, 40) // 修正此处的 padding 确保两侧有10pt距离
                         }
                 }
         }
