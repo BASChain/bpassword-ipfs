@@ -2,8 +2,9 @@ import SwiftUI
 
 struct ImportWalletView: View {
         init() {
-                UITextView.appearance().backgroundColor = .clear // 强制清除默认白色背景
+                UITextView.appearance().backgroundColor = UIColor.clear // 强制清除 UITextView 的默认白色背景
         }
+        
         @EnvironmentObject var appState: AppState
         @Environment(\.presentationMode) var presentationMode
         
@@ -16,9 +17,9 @@ struct ImportWalletView: View {
         var body: some View {
                 GeometryReader { geometry in
                         VStack(spacing: 0) {
-                                // 顶部背景和标题（固定部分）
+                                // 顶部背景和标题
                                 ZStack(alignment: .topLeading) {
-                                        Image("import-img") // 替换为实际的背景图片
+                                        Image("import-img")
                                                 .resizable()
                                                 .scaledToFill()
                                                 .frame(height: 262)
@@ -36,7 +37,7 @@ struct ImportWalletView: View {
                                 }
                                 .frame(height: 262 - geometry.safeAreaInsets.top - 40)
                                 
-                                // 输入区域（动态调整偏移）
+                                // 输入区域
                                 VStack(spacing: 16) {
                                         Text("Entire secret recovery phrase")
                                                 .font(.system(size: 18, weight: .bold))
@@ -44,12 +45,13 @@ struct ImportWalletView: View {
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         
                                         TextEditor(text: $mnemonic)
+                                                .scrollContentBackground(.hidden) // 确保隐藏默认背景
                                                 .font(.custom("Helvetica", size: 16))
                                                 .foregroundColor(Color(red: 61/255, green: 147/255, blue: 147/255))
                                                 .padding(.horizontal, 16)
                                                 .padding(.vertical, 12)
                                                 .frame(maxWidth: .infinity, minHeight: 150, maxHeight: 150, alignment: .leading)
-                                                .background(Color(red: 203/255, green: 233/255, blue: 232/255)) // 设置外部背景
+                                                .background(Color(red: 203/255, green: 233/255, blue: 232/255)) // 设置浅绿色背景
                                                 .cornerRadius(31)
                                                 .overlay(
                                                         RoundedRectangle(cornerRadius: 31)
@@ -103,7 +105,7 @@ struct ImportWalletView: View {
                                                 .fill(Color.white)
                                                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: -5)
                                 )
-                                .offset(y: keyboardOffset) // 只调整输入区域的偏移
+                                .offset(y: keyboardOffset)
                                 .animation(.easeOut, value: keyboardOffset)
                         }
                         .background(Color.white)
@@ -113,7 +115,7 @@ struct ImportWalletView: View {
                                         Button(action: {
                                                 presentationMode.wrappedValue.dismiss()
                                         }) {
-                                                Image("back_icon") // 替换为实际的返回图标
+                                                Image("back_icon")
                                                         .resizable()
                                                         .scaledToFit()
                                                         .frame(width: 24, height: 24)
@@ -160,7 +162,7 @@ struct ImportWalletView: View {
                 NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
                         if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
                                 let keyboardHeight = keyboardFrame.height
-                                keyboardOffset = -keyboardHeight / 2 // 只调整输入区域的偏移
+                                keyboardOffset = -keyboardHeight / 2
                         }
                 }
                 NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
