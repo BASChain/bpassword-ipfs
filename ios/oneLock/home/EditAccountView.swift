@@ -93,15 +93,24 @@ struct EditAccountView: View {
                 LoadingManager.shared.show(message: "Updating Account...")
                 
                 DispatchQueue.global().async {
-                        let success = SdkUtil.shared.addAccount(account: self.account)
-                        DispatchQueue.main.async {
-                                LoadingManager.shared.hide()
-                                if success {
-                                        onUpdate(account)
-                                        showEditView = false
-                                } else {
-                                        print("Failed to save account")
-                                        SdkUtil.shared.toastManager?.showToast(message: "Operation failed", isSuccess: false)
+                        do{
+                                let success = try SdkUtil.shared.addAccount(account: self.account)
+                                DispatchQueue.main.async {
+                                        LoadingManager.shared.hide()
+                                        if success {
+                                                onUpdate(account)
+                                                showEditView = false
+                                        } else {
+                                                print("Failed to save account")
+                                                SdkUtil.shared.toastManager?.showToast(message: "Operation failed", isSuccess: false)
+                                        }
+                                }
+                                
+                        }catch{
+                                DispatchQueue.main.async {
+                                        LoadingManager.shared.hide()
+                                        print("Error saving account: \(error.localizedDescription)")
+                                        SdkUtil.shared.toastManager?.showToast(message: "An error occurred: \(error.localizedDescription)", isSuccess: false)
                                 }
                         }
                 }

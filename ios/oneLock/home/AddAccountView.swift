@@ -107,24 +107,39 @@ struct AddAccountView: View {
                                 }
                         }
                 }
+                .onTapGesture {
+                        // 点击空白区域时隐藏键盘
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
         }
         
         private func saveAccount() {
+                guard !platform.isEmpty, !username.isEmpty, !password.isEmpty else {
+                        PopupManager.shared.showPopup(title: "Tips", message: "All fields are required", isSuccess: false)
+                        return
+                }
                 let account = Account(platform: platform, username: username,
                                       password: password, lastUpdated: Int64(Date().timeIntervalSince1970))
                 LoadingManager.shared.show(message: "Saving Account...")
                 
                 DispatchQueue.global().async {
-                        let success = SdkUtil.shared.addAccount(account: account)
-                        
-                        DispatchQueue.main.async {
-                                LoadingManager.shared.hide()
-                                if success {
-                                        onSave?() // 通知 HomeView 刷新
-                                        presentationMode.wrappedValue.dismiss()
-                                } else {
-                                        print("Failed to save account")
-                                        SdkUtil.shared.toastManager?.showToast(message: "Operation failed", isSuccess: false)
+                        do {  let success = try SdkUtil.shared.addAccount(account: account)
+                                
+                                DispatchQueue.main.async {
+                                        LoadingManager.shared.hide()
+                                        if success {
+                                                onSave?() // 通知 HomeView 刷新
+                                                presentationMode.wrappedValue.dismiss()
+                                        } else {
+                                                print("Failed to save account")
+                                                SdkUtil.shared.toastManager?.showToast(message: "Operation failed", isSuccess: false)
+                                        }
+                                }
+                        } catch {
+                                DispatchQueue.main.async {
+                                        LoadingManager.shared.hide()
+                                        print("Error saving account: \(error.localizedDescription)")
+                                        SdkUtil.shared.toastManager?.showToast(message: "An error occurred: \(error.localizedDescription)", isSuccess: false)
                                 }
                         }
                 }

@@ -14,7 +14,10 @@ enum LogLevel: Int8 {
         case warning = 2
         case error = 3
 }
-
+enum SdkError: Error {
+        case serializationFailed
+        case accountSaveFailed(String)
+}
 // 定义一个类以实现日志处理
 class SdkUtil: NSObject {
         // MARK: - 单例模式
@@ -101,28 +104,32 @@ class SdkUtil: NSObject {
                 return LockLibWalletAddress()
         }
         
-        func addAccount(account: Account) -> Bool {
-                var err: NSError? = nil
-                
+        
+        func addAccount(account: Account) throws -> Bool {
                 // 将 Account 实例转换为 JSON 字符串
                 guard let jsonStr = account.jsonString() else {
-                        print("Failed to serialize Account to JSON.")
-                        return false
+                        throw SdkError.serializationFailed
                 }
                 
+                var err: NSError? = nil
+                
+                // 调用 C 函数进行添加或更新
                 LockLibAddOrUpdateAccount(jsonStr, &err)
                 
-                // 检查错误
-                guard let e = err else {
+                // 如果没有错误
+                if err == nil {
                         print("Account successfully saved.")
                         return true
                 }
                 
-                // 打印详细错误信息
-                print("Failed to save account. Error: \(e.localizedDescription)")
+                // 如果有错误，抛出异常
+                if let error = err {
+                        throw SdkError.accountSaveFailed(error.localizedDescription)
+                }
+                
+                // 如果没有返回任何错误，默认返回 false
                 return false
         }
-        
         func loadAccounts() -> [UUID: Account] {
                 var accountsMap = [UUID: Account]()
                 
