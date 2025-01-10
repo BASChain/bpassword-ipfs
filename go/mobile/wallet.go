@@ -18,6 +18,7 @@ import (
 )
 
 type WalletManager struct {
+	dbPath        string
 	priKey        *ecdsa.PrivateKey
 	address       string
 	timer         *time.Ticker
@@ -42,24 +43,25 @@ func (wm *WalletManager) getAddr() string {
 	return wm.address
 }
 
-func CheckWallet() ([]byte, error) {
-	// 打开 LevelDB 数据库
-	db, err := leveldb.OpenFile(__api.dbPath, nil)
+func InitWalletPath(dbPath string) bool {
+	__walletMng.Lock()
+	defer __walletMng.Unlock()
+
+	__walletMng.dbPath = dbPath
+	db, err := leveldb.OpenFile(dbPath, nil)
 	if err != nil {
-		return nil, err
+		return false
 	}
 	defer db.Close()
 
 	// 尝试读取钱包数据
-	data, err := db.Get([]byte(__db_key_wallet_), nil)
+	_, err = db.Get([]byte(__db_key_wallet_), nil)
 	if err != nil {
-		if errors.Is(err, leveldb.ErrNotFound) {
-			return nil, nil // 未找到数据
-		}
-		return nil, err
+		fmt.Println("----->>> failed load data from local database:", err)
+		return false
 	}
 
-	return data, nil
+	return true
 }
 
 func GenerateMnemonic() ([]byte, error) {
@@ -172,9 +174,9 @@ func generateKeystore(privateKey *ecdsa.PrivateKey, password string) (string, er
 }
 
 func storeKeystoreInLevelDB(keystoreString string) error {
-	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
 	if err != nil {
-		utils.LogInst().Errorf("Error opening LevelDB at path %s: %s", __api.dbPath, err.Error())
+		utils.LogInst().Errorf("Error opening LevelDB at path %s: %s", __walletMng.dbPath, err.Error())
 		return fmt.Errorf("failed to open LevelDB: %w", err)
 	}
 	defer db.Close()
@@ -193,7 +195,7 @@ func storeKeystoreInLevelDB(keystoreString string) error {
 // OpenWallet 从 LevelDB 中读取钱包并解密
 func OpenWallet(password string) error {
 	// 打开 LevelDB 数据库
-	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
 	if err != nil {
 		return fmt.Errorf("failed to open LevelDB: %w", err)
 	}
@@ -244,7 +246,7 @@ func WalletIsOpen() bool {
 
 func ChangePassword(old, new string) error {
 	// 打开 LevelDB 数据库
-	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
 	if err != nil {
 		return fmt.Errorf("failed to open LevelDB: %w", err)
 	}
@@ -283,7 +285,7 @@ func ChangePassword(old, new string) error {
 
 // KeyExpireTime 读取存储的 clock time 值
 func KeyExpireTime() int {
-	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
 	if err != nil {
 		fmt.Printf("failed to open LevelDB: %v\n", err)
 		return DefaultClockTimeInMinutes // 返回默认值
@@ -308,7 +310,7 @@ func KeyExpireTime() int {
 }
 
 func SaveExpireTime(clockTime int) error {
-	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
 	if err != nil {
 		return fmt.Errorf("failed to open LevelDB: %w", err)
 	}

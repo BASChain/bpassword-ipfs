@@ -1,19 +1,16 @@
-//
-//  NetworkPermissionManager.swift
-//  oneLock
-//
-//  Created by wesley on 2025/1/9.
-//
-
-
 import SwiftUI
 import Network
 
 class NetworkPermissionManager: ObservableObject {
+        // 单例实例
+        static let shared = NetworkPermissionManager()
+        
         @Published var isPermissionGranted: Bool = false
         
         private var monitor: NWPathMonitor?
         private let queue = DispatchQueue(label: "NetworkMonitor")
+        
+        private init() { }  // 私有化初始化方法，确保不能通过其他方式初始化
         
         func requestPermission(completion: @escaping (Bool) -> Void) {
                 // 模拟权限请求逻辑
@@ -34,7 +31,7 @@ class NetworkPermissionManager: ObservableObject {
 }
 
 struct NetworkPermissionView: View {
-        @StateObject private var permissionManager = NetworkPermissionManager()
+        @StateObject private var permissionManager = NetworkPermissionManager.shared  // 使用单例实例
         @State private var showPermissionExplanation = false
         
         var body: some View {

@@ -6,99 +6,84 @@
 //
 
 import SwiftUI
+
+class AppStateManager {
+    static let shared = AppStateManager()
+    var appState = AppState() // 这里是全局的 AppState
+
+    private init() {}
+}
+
+
 @main
 struct OneLockApp: App {
-        @StateObject private var appState = AppState()
+        private var appState = AppState()
         @StateObject private var toastManager = ToastManager()
-        @StateObject private var permissionManager = NetworkPermissionManager() // 添加权限管理
-        @Environment(\.scenePhase) private var scenePhase
-        
+        init(){
+                SdkUtil.shared.initializeSDK(logLevel: LogLevel.debug)
+                AppStateManager.shared.appState.hasWallet = SdkUtil.shared.initWalletStatus()
+                requestNetworkPermissionAndInitialize()
+        }
         
         var body: some Scene {
                 WindowGroup {
-                        ZStack {
-                                // 根据 App 状态加载相应视图
-                                if appState.hasWallet {
-                                        if appState.isPasswordValidated {
-                                                MainView()
-                                                        .environmentObject(appState)
-                                        } else {
-                                                PasswordView()
-                                                        .environmentObject(appState)
-                                                        .onAppear { checkWalletStatus() }
-                                        }
-                                } else {
-                                        WalletSetupView()
-                                                .environmentObject(appState)
-                                                .onAppear {
-                                                        checkWalletStatus()
-                                                        requestNetworkPermission()
-                                                }
-                                }
-                        }
+                    RootView()
+                        .environmentObject(AppStateManager.shared.appState) // 注入全局的 AppState
                         .toast(
-                                isVisible: $toastManager.isVisible,
-                                message: toastManager.message,
-                                isSuccess: toastManager.isSuccess,
-                                duration: toastManager.duration
+                            isVisible: $toastManager.isVisible,
+                            message: toastManager.message,
+                            isSuccess: toastManager.isSuccess,
+                            duration: toastManager.duration
                         )
                         .loadingView()
                         .onAppear {
-                                SdkUtil.shared.toastManager = toastManager
-                                SdkUtil.shared.appState = appState // 在视图生命周期内设置
+                            SdkUtil.shared.toastManager = toastManager
                         }
                 }
-                .onChange(of: scenePhase) { newPhase in
-                        if newPhase == .active {
-                                print("++++++>>>App moved to the foreground.")
-                                SdkUtil.shared.syncLocalData()
-                        } else if newPhase == .background {
-                                print("++++++>>>App moved to the background.")
-                        }
-                }
-        }
+            }
         
-        private func initializeSdk() {
-                // 延迟初始化 SDK，确保网络权限已授权
-                if permissionManager.isPermissionGranted {
-                        print("Initializing SDK...")
-                        SdkUtil.shared.initializeSDK(logLevel: LogLevel.debug)
-                        print("SDK initialized.")
-                } else {
-                        print("Network permission not granted, SDK initialization delayed.")
-                }
-        }
-        
-        private func checkWalletStatus() {
-                DispatchQueue.global().async {
-                        if let walletData = SdkUtil.shared.checkWallet() {
-                                DispatchQueue.main.async {
-                                        appState.hasWallet = true
-                                        appState.walletData = walletData
-                                }
-                        } else {
-                                DispatchQueue.main.async {
-                                        appState.hasWallet = false
-                                }
-                        }
-                }
-        }
-        
-        private func requestNetworkPermission() {
-                permissionManager.requestPermission { granted in
+        /// 初始化流程：申请网络权限并初始化 SDK
+        private func requestNetworkPermissionAndInitialize() {
+                NetworkPermissionManager.shared.requestPermission { granted in
                         if granted {
                                 print("Network permission granted.")
-                                initializeSdk()
+                                
                         } else {
                                 print("Network permission denied.")
+                                handlePermissionDenied()
                         }
+                }
+        }
+        
+        
+        
+        /// 处理权限被拒绝的情况
+        private func handlePermissionDenied() {
+                DispatchQueue.main.async {
+                        print("Permission denied. Some features may not work.")
                 }
         }
 }
 
-
 class AppState: ObservableObject {
-        @Published var hasWallet: Bool = true
+        @Published var hasWallet: Bool = false
         @Published var isPasswordValidated: Bool = false
-        @Published var walletData: String? = nil
+}
+
+struct RootView: View {
+    @EnvironmentObject var appState: AppState
+
+    var body: some View {
+        Group {
+            if appState.hasWallet {
+                if appState.isPasswordValidated {
+                    MainView()
+                } else {
+                    PasswordView()
+                }
+            } else {
+                WalletSetupView()
+            }
+        }
+    }
 }

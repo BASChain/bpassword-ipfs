@@ -39,30 +39,18 @@ class SdkUtil: NSObject {
         // MARK: - 方法
         func initializeSDK(logLevel: LogLevel) {
                 // 调用 Go 库中的 InitSDK 方法
-                let dbPath = getDatabasePath()
+                
                 var err:NSError? = nil
-                LockLibInitSDK(self, dbPath,server_url, server_token, logLevel.rawValue, &err)
+                LockLibInitSDK(self,server_url, server_token, logLevel.rawValue, &err)
                 
                 if let error = err {
                         print("Failed to initialize SDK: \(error.localizedDescription)")
                 }
         }
         
-        func checkWallet() -> String? {
-                
-                // 调用 Go 的 CheckWallet 方法
-                var err:NSError? = nil
-                if let walletData = LockLibCheckWallet(&err) {
-                        if let walletString = String(data: walletData as Data, encoding: .utf8) {
-                                return walletString
-                        } else {
-                                print("Failed to decode wallet data.")
-                        }
-                }
-                if let error = err {
-                        print("Error checking wallet: \(error.localizedDescription)")
-                }
-                return nil
+        func initWalletStatus() -> Bool {
+                let dbPath = getDatabasePath()
+                return LockLibInitWalletPath(dbPath)
         }
         
         func generateMnemonic() -> String? {

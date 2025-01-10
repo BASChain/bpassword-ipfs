@@ -13,22 +13,27 @@ class LoadingManager: ObservableObject {
         
         static let shared = LoadingManager() // 单例模式
         
+        private var showCount = 0 // 显示计数
+        
         private init() {}
         
         func show(message: String) {
                 DispatchQueue.main.async {
                         self.message = message
+                        self.showCount += 1
                         self.isVisible = true
                 }
         }
         
         func hide() {
                 DispatchQueue.main.async {
-                        self.isVisible = false
+                        self.showCount = max(self.showCount - 1, 0)
+                        if self.showCount == 0 {
+                                self.isVisible = false
+                        }
                 }
         }
 }
-
 struct LoadingModifier: ViewModifier {
         @ObservedObject private var loadingManager = LoadingManager.shared // 使用全局单例
         @State private var rotationAngle: Double = 0 // 控制旋转角度
@@ -48,9 +53,10 @@ struct LoadingModifier: ViewModifier {
                                                         .frame(width: 50, height: 50)
                                                         .rotationEffect(Angle(degrees: rotationAngle))
                                                         .onAppear {
-                                                                withAnimation(Animation.linear(duration: 1).repeatForever(autoreverses: false)) {
-                                                                        rotationAngle = 360
-                                                                }
+                                                                startRotation()
+                                                        }
+                                                        .onDisappear {
+                                                                rotationAngle = 0 // 重置角度
                                                         }
                                                 
                                                 Text(loadingManager.message)
@@ -68,10 +74,25 @@ struct LoadingModifier: ViewModifier {
                                 }
                                 .transition(AnyTransition.opacity.combined(with: .scale))
                                 .animation(.easeInOut, value: loadingManager.isVisible)
+                                .onChange(of: loadingManager.isVisible) { isVisible in
+                                        if isVisible {
+                                                startRotation()
+                                        } else {
+                                                rotationAngle = 0 // 可选：在隐藏时重置角度
+                                        }
+                                }
                         }
                 }
         }
+        
+        private func startRotation() {
+                rotationAngle = 0
+                withAnimation(Animation.linear(duration: 1).repeatForever(autoreverses: false)) {
+                        rotationAngle = 360
+                }
+        }
 }
+
 
 extension View {
         func loadingView() -> some View {

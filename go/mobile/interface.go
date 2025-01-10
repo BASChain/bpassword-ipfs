@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/BASChain/bpassword-ipfs/go/utils"
-	"github.com/syndtr/goleveldb/leveldb"
 )
 
 type AppI interface {
@@ -15,7 +14,6 @@ type AppI interface {
 	CloseWallet()
 }
 type API struct {
-	dbPath   string
 	srvUrl   string
 	token    string
 	callback AppI
@@ -23,7 +21,7 @@ type API struct {
 
 var __api = &API{}
 
-func InitSDK(exi AppI, dbPath, url, token string, logLevel int8) error {
+func InitSDK(exi AppI, url, token string, logLevel int8) error {
 	if exi == nil {
 		return errors.New("invalid application interface")
 	}
@@ -33,14 +31,10 @@ func InitSDK(exi AppI, dbPath, url, token string, logLevel int8) error {
 	})
 
 	// 打开数据库
-	db, err := leveldb.OpenFile(dbPath, nil)
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
+
 	utils.LogInst().Debugf("bpassword ipfs version init sdk success, log level:%d", logLevel)
 
-	__api = &API{dbPath: dbPath, srvUrl: url, token: token, callback: exi}
+	__api = &API{srvUrl: url, token: token, callback: exi}
 
 	utils.LogInst().Debugf("------>>>init sdk success")
 	return nil

@@ -46,9 +46,9 @@ func initCachedAccountData() {
 		utils.LogInst().Errorf("----->>>wallet not open")
 		return
 	}
-	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
 	if err != nil {
-		utils.LogInst().Errorf("----->>>open %s failed:%s", __api.dbPath, err.Error())
+		utils.LogInst().Errorf("----->>>open %s failed:%s", __walletMng.dbPath, err.Error())
 		return
 	}
 	defer db.Close()
@@ -156,7 +156,7 @@ func localDbSave() error {
 		return fmt.Errorf("private key is required")
 	}
 
-	db, err := leveldb.OpenFile(__api.dbPath, nil)
+	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
