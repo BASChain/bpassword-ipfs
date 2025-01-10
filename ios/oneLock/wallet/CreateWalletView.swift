@@ -26,13 +26,16 @@ struct CreateWalletView: View {
                                                         .ignoresSafeArea(edges: .top)
                                                 
                                                 VStack(alignment: .leading, spacing: 8) {
+                                                        Spacer()
                                                         Text("Create\nAccount")
                                                                 .font(.system(size: 28, weight: .bold))
                                                                 .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                                 .lineSpacing(6)
+                                                        
+                                                        Spacer().frame(height: 8)
                                                 }
                                                 // 调整标题的顶部 padding，减去安全区域高度
-                                                .padding(.top, 100)
+                                                .padding(.bottom, 100)
                                                 .padding(.leading, 21)
                                         }
                                         // 设置父容器高度为120
