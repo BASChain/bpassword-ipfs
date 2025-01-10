@@ -58,6 +58,8 @@ struct HomeView: View {
                         }
                         .onAppear {
                                 loadAccountsIfNeeded()
+                                PopupManager.shared.showPopup(title: "Success", message: "Signin Success", isSuccess: true)
+                                SdkUtil.shared.toastManager?.showToast(message:"decode local data failed:ecies: invalid message", isSuccess:true)
                         }
                 }
         }
