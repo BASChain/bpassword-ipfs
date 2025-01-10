@@ -12,7 +12,6 @@ struct ImportWalletView: View {
         @State private var password: String = ""
         @State private var confirmPassword: String = ""
         @State private var errorMessage: String? = nil
-        @State private var keyboardOffset: CGFloat = 0 // 输入区域的键盘偏移量
         @State private var isPasswordVisible: Bool = false
         @State private var isConfirmPasswordVisible: Bool = false
         
@@ -63,7 +62,6 @@ struct ImportWalletView: View {
                                                                         .stroke(Color(red: 203/255, green: 233/255, blue: 232/255), lineWidth: 2)
                                                         )
                                         } else {
-                                                
                                                 TextEditor(text: $mnemonic)
                                                         .font(.custom("Helvetica", size: 16))
                                                         .foregroundColor(Color(red: 61/255, green: 147/255, blue: 147/255))
@@ -173,15 +171,12 @@ struct ImportWalletView: View {
                                         }
                                 }
                                 .padding(.horizontal, geometry.size.width * 0.05)
-//                                .padding(.bottom, geometry.safeAreaInsets.bottom)
                                 .frame(maxHeight: .infinity, alignment: .top) // 确保贴近屏幕底部
                                 .background(
                                         RoundedCornersShape(corners: [.topLeft, .topRight], radius: 32)
                                                 .fill(Color.white)
                                                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: -5)
                                 )
-                                .offset(y: -20 + keyboardOffset)
-                                .animation(.easeOut, value: keyboardOffset)
                         }
                         .background(Color.white)
                         .navigationBarBackButtonHidden(true)
@@ -200,12 +195,6 @@ struct ImportWalletView: View {
                         }
                         .onTapGesture {
                                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                        }
-                        .onAppear {
-                                addKeyboardObservers(geometry: geometry)
-                        }
-                        .onDisappear {
-                                removeKeyboardObservers()
                         }
                 }
         }
@@ -233,22 +222,5 @@ struct ImportWalletView: View {
                                 }
                         }
                 }
-        }
-        
-        private func addKeyboardObservers(geometry: GeometryProxy) {
-                NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
-                        if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
-                                let offset = keyboardFrame.height > geometry.size.height / 3 ? -keyboardFrame.height * 0.4 : -keyboardFrame.height / 2
-                                keyboardOffset = offset
-                        }
-                }
-                NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
-                        keyboardOffset = 0
-                }
-        }
-        
-        private func removeKeyboardObservers() {
-                NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
-                NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
         }
 }
