@@ -13,8 +13,9 @@ struct MnemonicView: View {
         var body: some View {
                 GeometryReader { geometry in
                         VStack() {
-                                Spacer() .frame(height:40)
+                                Spacer().frame(height:geometry.size.height * 0.03)
                                 VStack() {
+                                        
                                         // 主标题
                                         Text("Backup Your\nMnemonic Phrase")
                                                 .font(.system(size: 28, weight: .bold))
@@ -22,7 +23,7 @@ struct MnemonicView: View {
                                                 .lineSpacing(geometry.size.height * 0.005)
                                                 .multilineTextAlignment(.leading)
                                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                        Spacer() .frame(height:8)
+                                        Spacer().frame(height:4) // 主副标题间距
                                         // 副标题
                                         Text("Keep this phrase secure and offline.\nIt is the only way to recover your wallet.")
                                                 .font(.custom("Helvetica", size: 16))
@@ -30,10 +31,11 @@ struct MnemonicView: View {
                                                 .lineSpacing(geometry.size.height * 0.005)
                                                 .multilineTextAlignment(.leading)
                                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                } .padding(.horizontal, 22)
+                                }
+                                .padding(.horizontal, 22)
                                 
+                                Spacer().frame(height:geometry.size.height * 0.08)
                                 
-                                Spacer() .frame(height:50)
                                 // 助记词显示区域
                                 ZStack {
                                         if isButtonPressed {
@@ -42,20 +44,21 @@ struct MnemonicView: View {
                                                         .foregroundColor(Color(red: 15/255, green: 211/255, blue: 212/255))
                                                         .multilineTextAlignment(.center)
                                                         .padding()
-                                                        .frame(height:212)
+                                                        .frame(height: geometry.size.height * 0.25)
                                                         .background(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                         .cornerRadius(geometry.size.height * 0.02)
                                         } else {
                                                 Image("menemonic-img")
                                                         .resizable()
-                                                        .aspectRatio(contentMode: .fit)
-                                                        .frame(height:212)
+                                                        .aspectRatio(contentMode: .fill)
+                                                        .frame(height: geometry.size.height * 0.25)
                                                         .cornerRadius(geometry.size.height * 0.02)
                                         }
                                 }
                                 .padding(.horizontal, 16)
                                 
-                                Spacer() .frame(height:8)
+                                Spacer().frame(height:8)  // 助记词与复制按钮间距
+                                
                                 // 复制按钮
                                 Button(action: copyMnemonic) {
                                         HStack {
@@ -71,16 +74,19 @@ struct MnemonicView: View {
                                                                 .foregroundColor(Color(red: 41/255, green: 97/255, blue: 97/255))
                                                 }
                                         }
-                                }.frame(width:157,height:30,alignment: .center)
-                                        .padding(.horizontal, 32)
-                                        .background(Color(red: 41/255, green: 97/255, blue: 97/255).opacity(0.2))
-                                        .cornerRadius(17)
-                                        .overlay(
-                                                RoundedRectangle(cornerRadius: 17)
-                                                        .stroke(Color(red: 0.6, green: 0.8, blue: 0.9), lineWidth: 1)
-                                        )
+                                }
+                                .frame(width: geometry.size.width * 0.4, height: geometry.size.height * 0.05)
+                                .padding(.horizontal, 32)
+                                .background(Color(red: 41/255, green: 97/255, blue: 97/255).opacity(0.2))
+                                .cornerRadius(geometry.size.height * 0.03)
+                                .overlay(
+                                        RoundedRectangle(cornerRadius: geometry.size.height * 0.03)
+                                                .stroke(Color(red: 0.6, green: 0.8, blue: 0.9), lineWidth: 1)
+                                )
                                 
-                                Spacer() .frame(height:40)
+                                
+                                Spacer().frame(height:geometry.size.height * 0.06)
+                                
                                 
                                 // 长按按钮
                                 Button(action: {}) {
@@ -100,7 +106,9 @@ struct MnemonicView: View {
                                                 }
                                         }
                                 }, perform: {})
+                                
                                 Spacer() .frame(height:16)
+                                
                                 // 已备份按钮
                                 Button(action: createWallet) {
                                         Text("I have backed up my mnemonic")
@@ -113,12 +121,7 @@ struct MnemonicView: View {
                                 }
                                 .padding(.horizontal, 16)
                                 
-                                if let error = errorMessage {
-                                        Text(error)
-                                                .foregroundColor(.red)
-                                                .padding()
-                                }
-                                Spacer()
+                                Spacer() // 底部间距动态调整
                         }
                         .background(Color.white)
                         .navigationBarBackButtonHidden(true)
