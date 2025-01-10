@@ -20,7 +20,6 @@ class PopupManager {
         }
 }
 
-
 struct PopupView: View {
         let title: String
         let message: String
@@ -31,16 +30,18 @@ struct PopupView: View {
         
         var body: some View {
                 ZStack {
-                        Color.black.opacity(0.4)
+                        // 背景遮罩
+                        Color.black.opacity(0.6)
                                 .edgesIgnoringSafeArea(.all)
                                 .onTapGesture {
                                         dismiss()
                                 }
                         
-                        VStack(spacing: 20) {
+                        // 弹框内容
+                        VStack(spacing: 16) { // 调整间距
                                 Image(isSuccess ? "success-icon" : "oops-icon")
                                         .resizable()
-                                        .frame(width: 50, height: 50)
+                                        .frame(width: UIScreen.main.bounds.width * 0.15, height: UIScreen.main.bounds.width * 0.15) // 图标动态大小
                                 
                                 Text(title)
                                         .font(.title2)
@@ -52,11 +53,11 @@ struct PopupView: View {
                                         .foregroundColor(.gray)
                                         .multilineTextAlignment(.center)
                         }
-                        .padding()
+                        .padding(24)
+                        .frame(width: UIScreen.main.bounds.width * 0.8) // 动态宽度
                         .background(Color.white)
-                        .cornerRadius(12)
-                        .shadow(radius: 8)
-                        .padding(40)
+                        .cornerRadius(16) // 圆角更大
+                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 4) // 细腻阴影
                 }
         }
         
