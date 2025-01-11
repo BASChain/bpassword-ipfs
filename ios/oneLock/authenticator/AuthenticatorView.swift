@@ -36,9 +36,7 @@ struct AuthenticatorView: View {
                                 ToolbarItem(placement: .navigationBarTrailing) {
                                         HStack(spacing: 2) { // 修改按钮间距为 8pt
                                                 
-                                                Button(action: {
-                                                        print("Add button tapped")
-                                                }) {
+                                                NavigationLink(destination: NewAuthAccountView()) {
                                                         Color.clear // 透明背景
                                                                 .frame(width: 24, height: 24) // 设置Button的尺寸为24pt × 24pt
                                                                 .overlay(
@@ -48,9 +46,7 @@ struct AuthenticatorView: View {
                                                                                 .frame(width: 22, height: 22) // 设置Image的尺寸
                                                                 )
                                                 }
-                                                Button(action: {
-                                                        print("Scan button tapped")
-                                                }) {
+                                                NavigationLink(destination: AuthScanView()) {
                                                         Color.clear // 使用透明背景
                                                                 .frame(width: 24, height: 24) // 设置按钮的尺寸为 24pt
                                                                 .overlay(
@@ -80,15 +76,16 @@ struct CodeCardView: View {
                         VStack(alignment: .leading, spacing: 8) {
                                 // 服务名称
                                 Text(serviceName)
-                                        .font(.custom("SF Pro Text Medium", size: 14)) // 修改为 SF Pro Text Medium, 大小为 14pt
+                                        .font(.system(size: 14, weight: .medium)) // 使用系统字体替代 SF Pro Text Medium, 大小为 14pt
                                         .foregroundColor(Color(red: 25/255, green: 25/255, blue: 29/255)) // 修改颜色为 rgba(25, 25, 29, 1)
                                 
                                 // 验证码
                                 Text(code)
-                                        .font(.custom("Helvetica Neue Medium", size: 24)) // 修改为 Helvetica Neue Medium, 大小为 24pt
+                                        .font(.system(size: 24, weight: .medium)) // 替换为系统字体，与 Helvetica Neue Medium 接近，大小为 24pt
                                         .foregroundColor(Color(red: 23/255, green: 212/255, blue: 213/255)) // 修改颜色为 rgba(23, 212, 213, 1)
                                         .fontWeight(.bold)
                         }
+                        .padding(.leading, 20) // 设置左侧距离为 20pt
                         Spacer()
                         // 倒计时图标
                         ZStack {
@@ -105,6 +102,10 @@ struct CodeCardView: View {
                 .background(cardBackgroundColor) // 浅蓝背景
                 .cornerRadius(13) // 更大的圆角
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                .onTapGesture {
+                        UIPasteboard.general.string = code // 复制code到剪贴板
+                        SdkUtil.shared.toastManager?.showToast(message: "Copy Success", isSuccess: true, duration:1.0)
+                }
                 .onAppear {
                         startTimer()
                 }
@@ -122,3 +123,6 @@ struct CodeCardView: View {
                 }
         }
 }
+
+
+
