@@ -44,12 +44,8 @@ struct HomeView: View {
                                         }
                                 }
                         }
-                        .navigationTitle("")
+                        .navigationBarTitle("Account Manager", displayMode: .inline)
                         .toolbar {
-                                ToolbarItem(placement: .principal) {
-                                        Text("Account Manager")
-                                                .font(.custom("SF Pro Text", size: 18).weight(.medium))
-                                }
                                 ToolbarItem(placement: .navigationBarTrailing) {
                                         NavigationLink(destination: AddAccountView(onSave: loadAccounts)) {
                                                 Image("add_icon")

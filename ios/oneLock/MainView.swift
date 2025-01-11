@@ -24,7 +24,7 @@ struct MainView: View {
         
         var body: some View {
                 TabView(selection: $selectedTab) {
-                        // Home Tab
+                        
                         HomeView()
                                 .tabItem {
                                         Image(selectedTab == 0 ? "home_icon" : "home_vis_icon")
@@ -32,13 +32,19 @@ struct MainView: View {
                                 }
                                 .tag(0)
                         
-                        // Settings Tab
-                        SettingView()
+                        AuthenticatorView()
                                 .tabItem {
-                                        Image(selectedTab == 1 ? "set_vis_icon" : "set_icon")
-                                        Text("Settings")
+                                        Image(selectedTab == 1 ? "authen_vis_icon" : "authen_icon")
+                                        Text("Authenticator")
                                 }
                                 .tag(1)
+                        
+                        SettingView()
+                                .tabItem {
+                                        Image(selectedTab == 2 ? "set_vis_icon" : "set_icon")
+                                        Text("Settings")
+                                }
+                                .tag(2)
                 }
         }
 }
