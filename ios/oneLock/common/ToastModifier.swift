@@ -6,7 +6,7 @@ class ToastManager: ObservableObject {
         @Published var isSuccess: Bool = true  // Toast 状态（成功/失败）
         @Published var duration: Double = 3.0  // 默认显示时长
         
-        func showToast(message: String, isSuccess: Bool, duration: Double = 5.0) {
+        func showToast(message: String, isSuccess: Bool, duration: Double = 3.0) {
                 self.message = message
                 self.isSuccess = isSuccess
                 self.duration = duration

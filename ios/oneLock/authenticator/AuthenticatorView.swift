@@ -5,7 +5,6 @@
 //  Created by wesley on 2025/1/11.
 //
 
-
 import SwiftUI
 
 struct AuthenticatorView: View {
@@ -24,7 +23,7 @@ struct AuthenticatorView: View {
                         VStack {
                                 ScrollView {
                                         VStack(spacing: 15) {
-                                                // 动态生成卡片列表
+                                                // 动态生成卡片列表，修复 id 的问题
                                                 ForEach(accounts, id: \.0) { account in
                                                         CodeCardView(serviceName: account.0, code: account.1)
                                                 }
@@ -35,17 +34,32 @@ struct AuthenticatorView: View {
                         .navigationBarTitle("Authenticator", displayMode: .inline)
                         .toolbar {
                                 ToolbarItem(placement: .navigationBarTrailing) {
-                                        HStack(spacing: 4) { // 设置两个按钮之间的间距
+                                        HStack(spacing: 2) { // 修改按钮间距为 8pt
+                                                
                                                 Button(action: {
                                                         print("Add button tapped")
                                                 }) {
-                                                        Image("add_icon")
+                                                        Color.clear // 透明背景
+                                                                .frame(width: 24, height: 24) // 设置Button的尺寸为24pt × 24pt
+                                                                .overlay(
+                                                                        Image("add_icon")
+                                                                                .resizable()
+                                                                                .scaledToFit()
+                                                                                .frame(width: 22, height: 22) // 设置Image的尺寸
+                                                                )
                                                 }
                                                 Button(action: {
                                                         print("Scan button tapped")
                                                 }) {
-                                                        Image("scan_icon")
-                                                }
+                                                        Color.clear // 使用透明背景
+                                                                .frame(width: 24, height: 24) // 设置按钮的尺寸为 24pt
+                                                                .overlay(
+                                                                        Image("scan_icon")
+                                                                                .resizable()
+                                                                                .scaledToFit()
+                                                                                .frame(width: 22, height: 22) // 设置图标的尺寸
+                                                                )
+                                                } 
                                         }
                                 }
                         }
