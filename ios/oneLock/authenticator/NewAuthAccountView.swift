@@ -21,7 +21,7 @@ struct NewAuthAccountView: View {
                                         .background(Color(red: 243 / 255, green: 249 / 255, blue: 250 / 255))
                                         .cornerRadius(10)
                         }
-                        .padding(.horizontal).background(Color.red)  .padding(.top, -15)
+                        .padding(.horizontal).padding(.top, -15)
                         
                         // Account Field
                         VStack(alignment: .leading, spacing: 8) {
