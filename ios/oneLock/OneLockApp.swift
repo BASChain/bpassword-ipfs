@@ -8,10 +8,10 @@
 import SwiftUI
 
 class AppStateManager {
-    static let shared = AppStateManager()
-    var appState = AppState() // 这里是全局的 AppState
-
-    private init() {}
+        static let shared = AppStateManager()
+        var appState = AppState() // 这里是全局的 AppState
+        
+        private init() {}
 }
 
 
@@ -27,20 +27,20 @@ struct OneLockApp: App {
         
         var body: some Scene {
                 WindowGroup {
-                    RootView()
-                        .environmentObject(AppStateManager.shared.appState) // 注入全局的 AppState
-                        .toast(
-                            isVisible: $toastManager.isVisible,
-                            message: toastManager.message,
-                            isSuccess: toastManager.isSuccess,
-                            duration: toastManager.duration
-                        )
-                        .loadingView()
-                        .onAppear {
-                            SdkUtil.shared.toastManager = toastManager
-                        }
+                        RootView()
+                                .environmentObject(AppStateManager.shared.appState) // 注入全局的 AppState
+                                .toast(
+                                        isVisible: $toastManager.isVisible,
+                                        message: toastManager.message,
+                                        isSuccess: toastManager.isSuccess,
+                                        duration: toastManager.duration
+                                )
+                                .loadingView()
+                                .onAppear {
+                                        SdkUtil.shared.toastManager = toastManager
+                                }
                 }
-            }
+        }
         
         /// 初始化流程：申请网络权限并初始化 SDK
         private func requestNetworkPermissionAndInitialize() {
@@ -71,19 +71,19 @@ class AppState: ObservableObject {
 }
 
 struct RootView: View {
-    @EnvironmentObject var appState: AppState
-
-    var body: some View {
-        Group {
-            if appState.hasWallet {
-                if appState.isPasswordValidated {
-                    MainView()
-                } else {
-                    PasswordView()
+        @EnvironmentObject var appState: AppState
+        
+        var body: some View {
+                Group {
+                        if appState.hasWallet {
+                                if appState.isPasswordValidated {
+                                        MainView()
+                                } else {
+                                        PasswordView()
+                                }
+                        } else {
+                                WalletSetupView()
+                        }
                 }
-            } else {
-                WalletSetupView()
-            }
         }
-    }
 }

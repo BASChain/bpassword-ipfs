@@ -28,7 +28,6 @@ class SdkUtil: NSObject {
         static let AppUrl = "https://apps.apple.com/us/app/onelock/id6739830100"
         
         var toastManager: ToastManager? // 引用 ToastManager
-        var appState: AppState?
         private override init() {
                 super.init()
         }
@@ -205,7 +204,7 @@ extension SdkUtil: LockLibAppIProtocol {
         
         func closeWallet() {
                 DispatchQueue.main.async {
-                        self.appState?.isPasswordValidated = false
+                        AppStateManager.shared.appState.isPasswordValidated = false
                 }
         }
         
