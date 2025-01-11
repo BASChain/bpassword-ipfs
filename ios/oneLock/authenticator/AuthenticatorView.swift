@@ -59,7 +59,7 @@ struct AuthenticatorView: View {
                                                                                 .scaledToFit()
                                                                                 .frame(width: 22, height: 22) // 设置图标的尺寸
                                                                 )
-                                                } 
+                                                }
                                         }
                                 }
                         }
@@ -72,7 +72,7 @@ struct CodeCardView: View {
         var code: String
         @State private var remainingTime: Int = 30 // 倒计时剩余时间
         
-        private let cardBackgroundColor = Color(red: 0.9, green: 0.95, blue: 0.95)
+        private let cardBackgroundColor = Color(red: 243/255, green: 249/255, blue: 250/255) // 修改背景颜色为 rgba(243, 249, 250, 1)
         private let circleStrokeColor = Color(red: 0.0, green: 0.7, blue: 0.8)
         
         var body: some View {
@@ -80,13 +80,13 @@ struct CodeCardView: View {
                         VStack(alignment: .leading, spacing: 8) {
                                 // 服务名称
                                 Text(serviceName)
-                                        .font(.headline)
-                                        .foregroundColor(.gray)
+                                        .font(.custom("SF Pro Text Medium", size: 14)) // 修改为 SF Pro Text Medium, 大小为 14pt
+                                        .foregroundColor(Color(red: 25/255, green: 25/255, blue: 29/255)) // 修改颜色为 rgba(25, 25, 29, 1)
                                 
                                 // 验证码
                                 Text(code)
-                                        .font(.largeTitle)
-                                        .foregroundColor(circleStrokeColor) // 浅蓝色
+                                        .font(.custom("Helvetica Neue Medium", size: 24)) // 修改为 Helvetica Neue Medium, 大小为 24pt
+                                        .foregroundColor(Color(red: 23/255, green: 212/255, blue: 213/255)) // 修改颜色为 rgba(23, 212, 213, 1)
                                         .fontWeight(.bold)
                         }
                         Spacer()
@@ -103,7 +103,7 @@ struct CodeCardView: View {
                 }
                 .padding()
                 .background(cardBackgroundColor) // 浅蓝背景
-                .cornerRadius(15) // 更大的圆角
+                .cornerRadius(13) // 更大的圆角
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
                 .onAppear {
                         startTimer()
