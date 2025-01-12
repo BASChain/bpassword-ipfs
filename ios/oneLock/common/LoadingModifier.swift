@@ -67,7 +67,7 @@ struct LoadingModifier: ViewModifier {
                                                         .background(Color.white)
                                                         .cornerRadius(8)
                                         }
-                                        .padding()
+                                        .padding(.top, 30)
                                         .background(Color.white)
                                         .cornerRadius(16)
                                         .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 4)
