@@ -1,10 +1,3 @@
-//
-//  AuthenticatorView.swift
-//  oneLock
-//
-//  Created by wesley on 2025/1/11.
-//
-
 import SwiftUI
 
 struct AuthenticatorView: View {
@@ -21,21 +14,28 @@ struct AuthenticatorView: View {
         var body: some View {
                 NavigationView {
                         VStack {
-                                ScrollView {
-                                        VStack(spacing: 15) {
-                                                // 动态生成卡片列表，修复 id 的问题
-                                                ForEach(accounts, id: \.0) { account in
-                                                        CodeCardView(serviceName: account.0, code: account.1)
-                                                }
+                                List {
+                                        ForEach(accounts, id: \.0) { account in
+                                                CodeCardView(serviceName: account.0, code: account.1)
+                                                        .swipeActions {
+                                                                Button(role: .destructive) {
+                                                                        // 删除逻辑，这里可以调用删除操作
+                                                                        print("\(account.0) deleted")
+                                                                } label: {
+                                                                        Label("Delete", systemImage: "trash")
+                                                                }
+                                                        }
+                                                        .padding(.vertical, 10) // 保持原有的间距
                                         }
-                                        .padding()
+                                        .listRowInsets(EdgeInsets()) // 去除默认的内边距
                                 }
+                                .padding(.top, 15) // 保持原来的顶部间距
+                                .listStyle(PlainListStyle()) // 移除分隔符和默认样式
                         }
                         .navigationBarTitle("Authenticator", displayMode: .inline)
                         .toolbar {
                                 ToolbarItem(placement: .navigationBarTrailing) {
                                         HStack(spacing: 2) { // 修改按钮间距为 8pt
-                                                
                                                 NavigationLink(destination: NewAuthAccountView()) {
                                                         Color.clear // 透明背景
                                                                 .frame(width: 24, height: 24) // 设置Button的尺寸为24pt × 24pt
@@ -104,7 +104,7 @@ struct CodeCardView: View {
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
                 .onTapGesture {
                         UIPasteboard.general.string = code // 复制code到剪贴板
-                        SdkUtil.shared.toastManager?.showToast(message: "Copy Success", isSuccess: true, duration:1.0)
+                        SdkUtil.shared.toastManager?.showToast(message: "Copy Success", isSuccess: true, duration: 1.0)
                 }
                 .onAppear {
                         startTimer()
@@ -123,6 +123,3 @@ struct CodeCardView: View {
                 }
         }
 }
-
-
-
