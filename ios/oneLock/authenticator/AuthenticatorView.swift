@@ -24,13 +24,15 @@ struct AuthenticatorView: View {
                                                                 } label: {
                                                                         Label("Delete", systemImage: "trash")
                                                                 }
+                                                                .tint(Color(red: 255/255, green: 161/255, blue: 54/255)) // 设置颜色为 rgba(255, 161, 54, 1)
                                                         }
                                                         .padding(.vertical, 10) // 保持原有的间距
                                         }
                                         .listRowInsets(EdgeInsets()) // 去除默认的内边距
+                                        .listRowSeparator(.hidden) // 隐藏分隔线
                                 }
                                 .padding(.top, 15) // 保持原来的顶部间距
-                                .listStyle(PlainListStyle()) // 移除分隔符和默认样式
+                                .listStyle(PlainListStyle()) // 使用简单的列表样式
                         }
                         .navigationBarTitle("Authenticator", displayMode: .inline)
                         .toolbar {
