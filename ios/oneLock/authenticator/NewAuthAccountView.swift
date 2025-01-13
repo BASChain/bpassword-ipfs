@@ -11,11 +11,9 @@ struct NewAuthAccountView: View {
         var body: some View {
                 GeometryReader { geometry in
                         ZStack {
-                                Color.clear // 覆盖整个视图区域
-                                        .contentShape(Rectangle()) // 确保捕获点击手势
-                                        .onTapGesture {
-                                                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                                        }
+                                Color.green.contentShape(Rectangle()) .onTapGesture {
+                                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                }
                                 VStack {
                                         // Service Field Group
                                         VStack(alignment: .leading, spacing: 8) {
@@ -36,7 +34,7 @@ struct NewAuthAccountView: View {
                                                                 }
                                                         }
                                         }
-                                        .padding(.top, 24)
+                                        .padding(.top, 24).background(Color.red)
                                         
                                         // Account Field Group
                                         VStack(alignment: .leading, spacing: 8) {
