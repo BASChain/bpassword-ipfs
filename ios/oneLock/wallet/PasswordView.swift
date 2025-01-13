@@ -102,13 +102,13 @@ struct PasswordView: View {
         
         private func validatePassword() {
                 errorMessage = nil
-                LoadingManager.shared.show(message: "Decoding Wallet...") // 显示加载提示
+                LoadingManager.shared.show(message: "Decoding Wallet...")
                 
                 DispatchQueue.global().async {
                         let success = SdkUtil.shared.openWallet(password: password)
                         
                         DispatchQueue.main.async {
-                                LoadingManager.shared.hide() // 隐藏加载提示
+//                                LoadingManager.shared.hide() // 隐藏加载提示
                                 if success {
                                         appState.isPasswordValidated = true
                                 } else {
