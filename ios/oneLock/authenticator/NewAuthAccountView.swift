@@ -91,9 +91,6 @@ struct NewAuthAccountView: View {
                                 }
                                 .padding(.top, 0) // 确保黄色区域紧贴红色背景底部
                                 .background(Color.yellow) // 设置背景颜色为黄色
-                                .frame(maxWidth: .infinity, alignment: .top) // 对齐顶部
-                                
-                                Spacer() // 防止内容挤压
                         }
                         .background(Color.blue.ignoresSafeArea()) // 蓝色背景作为底层背景
                         .onTapGesture {
