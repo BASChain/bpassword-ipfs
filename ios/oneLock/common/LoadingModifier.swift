@@ -34,6 +34,7 @@ class LoadingManager: ObservableObject {
                 }
         }
 }
+
 struct LoadingModifier: ViewModifier {
         @ObservedObject private var loadingManager = LoadingManager.shared // 使用全局单例
         @State private var rotationAngle: Double = 0 // 控制旋转角度
@@ -47,10 +48,10 @@ struct LoadingModifier: ViewModifier {
                                         Color.black.opacity(0.4)
                                                 .edgesIgnoringSafeArea(.all)
                                         
-                                        VStack(spacing: 20) {
+                                        VStack(spacing: 4) {
                                                 Image("loading")
                                                         .resizable()
-                                                        .frame(width: 50, height: 50)
+                                                        .frame(width: 60, height: 60)
                                                         .rotationEffect(Angle(degrees: rotationAngle))
                                                         .onAppear {
                                                                 startRotation()
@@ -62,15 +63,16 @@ struct LoadingModifier: ViewModifier {
                                                 Text(loadingManager.message)
                                                         .font(.system(size: 16, weight: .semibold))
                                                         .multilineTextAlignment(.center)
-                                                        .foregroundColor(.black)
-                                                        .padding()
-                                                        .background(Color.white)
-                                                        .cornerRadius(8)
+                                                        .foregroundColor(Color.black)
                                         }
-                                        .padding(.top, 30)
+                                        .padding(.vertical, 40)
+                                        .padding(.horizontal, 50)
+                                        .frame(maxWidth: UIScreen.main.bounds.width - 140)
+                                        .frame(maxHeight: 140)
                                         .background(Color.white)
-                                        .cornerRadius(16)
-                                        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 4)
+                                        .cornerRadius(20)
+                                        .shadow(color: Color.black.opacity(0.1), radius: 6, x: 0, y: 2)
+                                        .position(x: UIScreen.main.bounds.width / 2, y: UIScreen.main.bounds.height / 3)
                                 }
                                 .transition(AnyTransition.opacity.combined(with: .scale))
                                 .animation(.easeInOut, value: loadingManager.isVisible)

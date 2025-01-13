@@ -108,7 +108,7 @@ struct PasswordView: View {
                         let success = SdkUtil.shared.openWallet(password: password)
                         
                         DispatchQueue.main.async {
-//                                LoadingManager.shared.hide() // 隐藏加载提示
+                                LoadingManager.shared.hide() // 隐藏加载提示
                                 if success {
                                         appState.isPasswordValidated = true
                                 } else {
