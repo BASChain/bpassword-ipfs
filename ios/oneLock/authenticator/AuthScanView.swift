@@ -4,6 +4,7 @@ import AVFoundation
 struct AuthScanView: View {
         @State private var isScanning: Bool = true  // 自动开始扫描
         @State private var scannedCode: String? = nil
+        @State private var scanLineOffset: CGFloat = -UIScreen.main.bounds.height * 0.2 // 初始偏移
         @Environment(\.presentationMode) var presentationMode
         
         var onScanComplete: ((String?) -> Void)?
@@ -35,9 +36,10 @@ struct AuthScanView: View {
                                                                                 endPoint: .bottom
                                                                         )
                                                                         .frame(height: 20)
+                                                                        .offset(y: scanLineOffset)
                                                                         .onAppear {
                                                                                 withAnimation(Animation.linear(duration: 2.0).repeatForever(autoreverses: true)) {
-                                                                                        scannedCode = nil
+                                                                                        scanLineOffset = UIScreen.main.bounds.height * 0.2
                                                                                 }
                                                                         }
                                                                 }
@@ -89,6 +91,14 @@ struct AuthScanView: View {
                 case .success(let code):
                         scannedCode = code
                         print("Scanned code: \(code)")
+                        
+                        // 播放提示音
+                        AudioServicesPlaySystemSound(SystemSoundID(1052))
+                        
+                        // 播放震动
+                        let generator = UINotificationFeedbackGenerator()
+                        generator.notificationOccurred(.success)
+                        
                         DispatchQueue.main.async {
                                 presentationMode.wrappedValue.dismiss()
                         }
