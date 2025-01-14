@@ -25,10 +25,9 @@ struct PasswordView: View {
                                                                 .font(.system(size: 28, weight: .bold))
                                                                 .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                                 .lineSpacing(6)
-                                                }
-                                                // 调整标题的顶部 padding，减去安全区域高度
+                                                } 
                                                 .padding(.top, geometry.size.height / 9)
-                                                .padding(.leading, 21)
+                                                .padding(.leading, 24)
                                         }
                                         .frame(height: 262 - geometry.safeAreaInsets.top - 40)
                                         
@@ -67,7 +66,6 @@ struct PasswordView: View {
                                                                         .font(.system(size: 14))
                                                                         .foregroundColor(Color(red: 137 / 255, green: 145 / 255, blue: 155 / 255))
                                                                         .frame(width: UIScreen.main.bounds.width / 2, height: 32,alignment:.trailing)
-                                                                        .background(Color.yellow)
                                                         }
                                                         .padding(.trailing, 12) // 距右侧24pt
                                                 }

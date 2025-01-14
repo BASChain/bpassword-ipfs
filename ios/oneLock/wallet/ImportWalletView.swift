@@ -23,8 +23,9 @@ struct ImportWalletView: View {
                                         Image("import-img")
                                                 .resizable()
                                                 .scaledToFill() // 确保图片填充整个区域
-                                                .frame(width: geometry.size.width, height: geometry.size.height * 0.3) // 减去顶部安全区高度
+//                                                .frame(width: geometry.size.width, height: geometry.size.height * 0.3) // 减去顶部安全区高度
                                                 .clipped() // 防止图片溢出
+                                                .frame(height: 262)
                                                 .ignoresSafeArea(edges: .top)
                                         
                                         VStack(alignment: .leading, spacing: 8) {
@@ -33,7 +34,7 @@ struct ImportWalletView: View {
                                                         .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                         .lineSpacing(6)
                                         }
-                                        .padding(.top, 53) // 调整顶部距离为 53pt
+                                        .padding(.top, geometry.size.height / 6)
                                         .padding(.leading, 24)
                                 }
                                 .frame(height: geometry.size.height * 0.3 - geometry.safeAreaInsets.top) // 修正高度
@@ -169,14 +170,15 @@ struct ImportWalletView: View {
                                                                         .foregroundColor(.white)
                                                         )
                                         }
+                                        Spacer()
                                 }
-                                .padding(.horizontal, geometry.size.width * 0.05)
-                                .frame(maxHeight: .infinity, alignment: .top) // 确保贴近屏幕底部
+                                .padding()
                                 .background(
                                         RoundedCornersShape(corners: [.topLeft, .topRight], radius: 32)
                                                 .fill(Color.white)
                                                 .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: -5)
                                 )
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                         .background(Color.white)
                         .navigationBarBackButtonHidden(true)
