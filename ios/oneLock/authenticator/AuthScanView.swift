@@ -63,6 +63,10 @@ struct AuthScanView: View {
                                 }
                         }
                 }
+                .onAppear {
+                        // 关闭可能打开的键盘
+                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
                 .navigationBarBackButtonHidden(true)
                 .toolbar(content: {
                         ToolbarItem(placement: .principal) {
@@ -88,6 +92,7 @@ struct AuthScanView: View {
                 switch result {
                 case .success(let code):
                         scannedCode = code
+                        print("Scanned code: \(code)") // 打印扫码结果
                 case .failure(let error):
                         print("Scanning failed: \(error.localizedDescription)")
                 }
@@ -118,10 +123,12 @@ struct CodeScannerView: UIViewControllerRepresentable {
                 }
                 
                 func didFindCode(_ code: String) {
+                        print("Delegate didFindCode called with code: \(code)") // 打印详细信息
                         completion(.success(code))
                 }
                 
                 func didFailWithError(_ error: Error) {
+                        print("Delegate didFailWithError called with error: \(error.localizedDescription)") // 打印详细错误信息
                         completion(.failure(.unknown))
                 }
         }
@@ -143,21 +150,56 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
         override func viewDidLoad() {
                 super.viewDidLoad()
                 
+                print("ScannerViewController viewDidLoad called") // 打印日志
+                
+                let cameraAuthorizationStatus = AVCaptureDevice.authorizationStatus(for: .video)
+                switch cameraAuthorizationStatus {
+                case .notDetermined:
+                        AVCaptureDevice.requestAccess(for: .video) { granted in
+                                if granted {
+                                        DispatchQueue.main.async {
+                                                self.setupCaptureSession()
+                                        }
+                                } else {
+                                        print("Camera access denied")
+                                }
+                        }
+                case .authorized:
+                        print("Camera access authorized")
+                        DispatchQueue.global(qos: .background).async {
+                                self.setupCaptureSession()
+                        }
+                case .restricted, .denied:
+                        print("Camera access restricted or denied")
+                        return
+                @unknown default:
+                        fatalError("Unknown camera authorization status")
+                }
+        }
+        
+        func setupCaptureSession() {
                 captureSession = AVCaptureSession()
                 
-                guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else { return }
+                guard let videoCaptureDevice = AVCaptureDevice.default(for: .video) else {
+                        print("No video capture device found") // 打印日志
+                        return
+                }
                 let videoInput: AVCaptureDeviceInput
                 
                 do {
                         videoInput = try AVCaptureDeviceInput(device: videoCaptureDevice)
+                        print("Video input successfully created") // 打印日志
                 } catch {
+                        print("Error creating video input: \(error.localizedDescription)") // 打印日志
                         delegate?.didFailWithError(error)
                         return
                 }
                 
                 if captureSession.canAddInput(videoInput) {
                         captureSession.addInput(videoInput)
+                        print("Video input added to capture session") // 打印日志
                 } else {
+                        print("Unable to add video input to capture session") // 打印日志
                         delegate?.didFailWithError(CodeScannerView.ScanError.unknown)
                         return
                 }
@@ -169,31 +211,49 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
                         
                         metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
                         metadataOutput.metadataObjectTypes = [.qr]
-                        metadataOutput.rectOfInterest = CGRect(x: 0.2, y: 0.4, width: 0.6, height: 0.2)
+                        // 暂时取消 rectOfInterest 的设置以扩大检测范围
+                        // metadataOutput.rectOfInterest = CGRect(x: 0.2, y: 0.4, width: 0.6, height: 0.2)
+                        print("Metadata output added and configured") // 打印日志
                 } else {
+                        print("Unable to add metadata output to capture session") // 打印日志
                         delegate?.didFailWithError(CodeScannerView.ScanError.unknown)
                         return
                 }
                 
                 let previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
-                previewLayer.frame = view.layer.bounds
-                previewLayer.videoGravity = .resizeAspectFill
-                view.layer.addSublayer(previewLayer)
+                DispatchQueue.main.async {
+                        previewLayer.frame = self.view.layer.bounds
+                        previewLayer.videoGravity = .resizeAspectFill
+                        self.view.layer.addSublayer(previewLayer)
+                        print("Preview layer added") // 打印日志
+                }
                 
-                captureSession.startRunning()
+                DispatchQueue.global(qos: .background).async {
+                        self.captureSession.startRunning()
+                        print("Capture session started") // 打印日志
+                }
         }
         
         override func viewWillDisappear(_ animated: Bool) {
                 super.viewWillDisappear(animated)
                 if captureSession.isRunning {
                         captureSession.stopRunning()
+                        print("Capture session stopped") // 打印日志
                 }
         }
         
         func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
+                print("Metadata output didOutput called with \(metadataObjects.count) objects") // 打印日志
                 if let metadataObject = metadataObjects.first {
-                        guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else { return }
-                        guard let stringValue = readableObject.stringValue else { return }
+                        guard let readableObject = metadataObject as? AVMetadataMachineReadableCodeObject else {
+                                print("Metadata object is not readable") // 打印日志
+                                return
+                        }
+                        guard let stringValue = readableObject.stringValue else {
+                                print("Metadata object has no string value") // 打印日志
+                                return
+                        }
+                        print("Scanned value: \(stringValue)") // 打印日志
                         captureSession.stopRunning()
                         delegate?.didFindCode(stringValue)
                 }
