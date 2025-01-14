@@ -48,7 +48,15 @@ struct AuthenticatorView: View {
                                                                                 .frame(width: 22, height: 22) // 设置Image的尺寸
                                                                 )
                                                 }
-                                                NavigationLink(destination: AuthScanView()) {
+                                                NavigationLink(destination: AuthScanView(onScanComplete: { scannedCode in
+                                                        if let code = scannedCode {
+                                                                print("finally Scanned code: \(code)")
+                                                                // 在这里添加处理逻辑，比如保存数据或更新UI
+                                                        } else {
+                                                                print("Scan canceled or failed")
+                                                                // 处理扫码失败或取消的情况
+                                                        }
+                                                })) {
                                                         Color.clear // 使用透明背景
                                                                 .frame(width: 24, height: 24) // 设置按钮的尺寸为 24pt
                                                                 .overlay(
