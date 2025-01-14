@@ -1,16 +1,53 @@
 import SwiftUI
 import AVFoundation
 
+
 struct AuthScanView: View {
-        @State private var isScanning: Bool = false
+        @State private var isScanning: Bool = true  // 自动开始扫描
         @State private var scannedCode: String? = nil
+        @State private var scanLineOffset: CGFloat = -UIScreen.main.bounds.height * 0.3 // 初始偏移量
         @Environment(\.presentationMode) var presentationMode
         
         var body: some View {
-                VStack {
+                ZStack {
+                        Color.black.edgesIgnoringSafeArea(.all) // 背景颜色
+                        
                         if isScanning {
                                 CodeScannerView(codeTypes: [.qr], completion: handleScan)
                                         .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        .overlay(
+                                                ZStack {
+                                                        Color.black.opacity(0.5) // 半透明背景遮罩
+                                                                .edgesIgnoringSafeArea(.all)
+                                                        
+                                                        VStack {
+                                                                Spacer()
+                                                                
+                                                                // 扫描线区域
+                                                                ZStack {
+                                                                        LinearGradient(
+                                                                                gradient: Gradient(colors: [
+                                                                                        Color(red: 15/255, green: 211/255, blue: 212/255, opacity: 0),
+                                                                                        Color(red: 15/255, green: 211/255, blue: 212/255, opacity: 0.76),
+                                                                                        Color(red: 15/255, green: 211/255, blue: 212/255, opacity: 0)
+                                                                                ]),
+                                                                                startPoint: .top,
+                                                                                endPoint: .bottom
+                                                                        )
+                                                                        .frame(height: 20)
+                                                                        .offset(y: scanLineOffset)
+                                                                        .onAppear {
+                                                                                withAnimation(Animation.linear(duration: 2.0).repeatForever(autoreverses: true)) {
+                                                                                        scanLineOffset = UIScreen.main.bounds.height * 0.3
+                                                                                }
+                                                                        }
+                                                                }
+                                                                .padding(.horizontal, 26)
+                                                                
+                                                                Spacer()
+                                                        }
+                                                }
+                                        )
                         } else {
                                 Text(scannedCode ?? "Scan a QR Code")
                                         .font(.title)
@@ -25,34 +62,23 @@ struct AuthScanView: View {
                                         .foregroundColor(.white)
                                         .cornerRadius(10)
                                 }
-                                
-                                Button(action: {
-                                        self.isScanning = true
-                                }) {
-                                        Text("Start Scanning")
-                                                .font(.title2)
-                                                .padding()
-                                                .background(Color.blue)
-                                                .foregroundColor(.white)
-                                                .cornerRadius(10)
-                                }
                         }
                 }
-                .padding()
                 .navigationBarBackButtonHidden(true)
                 .toolbar(content: {
                         ToolbarItem(placement: .principal) {
-                                Text("Add Account")
+                                Text("Scan Account")
                                         .font(.custom("SFProText-Medium", size: 18))
-                                        .foregroundColor(Color.black)
+                                        .foregroundColor(Color.white)
                         }
                         ToolbarItem(placement: .navigationBarLeading) {
                                 Button(action: {
                                         presentationMode.wrappedValue.dismiss()
                                 }) {
-                                        Image("back_icon")
+                                        Image("scan-back-icon")
                                                 .resizable()
                                                 .frame(width: 24, height: 24)
+                                                .foregroundColor(.white)
                                 }
                         }
                 })
@@ -68,6 +94,7 @@ struct AuthScanView: View {
                 }
         }
 }
+
 
 struct CodeScannerView: UIViewControllerRepresentable {
         var codeTypes: [AVMetadataObject.ObjectType]
