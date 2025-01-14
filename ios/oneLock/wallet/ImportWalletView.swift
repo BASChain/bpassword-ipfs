@@ -34,10 +34,10 @@ struct ImportWalletView: View {
                                                         .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                         .lineSpacing(6)
                                         }
-                                        .padding(.top, geometry.size.height / 6)
+                                        .padding(.top, geometry.size.height / 8)
                                         .padding(.leading, 24)
                                 }
-                                .frame(height: geometry.size.height * 0.3 - geometry.safeAreaInsets.top) // 修正高度
+                                .frame(height: 262 - geometry.safeAreaInsets.top - 40)
                                 
                                 // 输入区域
                                 VStack(spacing: 16) {
