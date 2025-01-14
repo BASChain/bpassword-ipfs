@@ -1,7 +1,6 @@
 import SwiftUI
 import AVFoundation
 
-
 struct AuthScanView: View {
         @State private var isScanning: Bool = true  // 自动开始扫描
         @State private var scannedCode: String? = nil
@@ -95,7 +94,6 @@ struct AuthScanView: View {
         }
 }
 
-
 struct CodeScannerView: UIViewControllerRepresentable {
         var codeTypes: [AVMetadataObject.ObjectType]
         var completion: (Result<String, ScanError>) -> Void
@@ -181,13 +179,6 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
                 previewLayer.frame = view.layer.bounds
                 previewLayer.videoGravity = .resizeAspectFill
                 view.layer.addSublayer(previewLayer)
-                
-                let scanArea = UIView()
-                scanArea.frame = CGRect(x: view.bounds.width * 0.2, y: view.bounds.height * 0.4, width: view.bounds.width * 0.6, height: view.bounds.height * 0.2)
-                scanArea.layer.borderColor = UIColor.green.cgColor
-                scanArea.layer.borderWidth = 2
-                scanArea.backgroundColor = UIColor.clear
-                view.addSubview(scanArea)
                 
                 captureSession.startRunning()
         }
