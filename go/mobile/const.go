@@ -6,5 +6,6 @@ const (
 	__db_key_wallet_          = "__db_key_wallet__"
 	__db_key_clock_time_      = "__db_key_clock_time__"
 	__db_key_accounts         = "__db_key_accounts__"
+	__db_key_auth             = "__db_key_auth__"
 	DefaultClockTimeInMinutes = 1
 )
