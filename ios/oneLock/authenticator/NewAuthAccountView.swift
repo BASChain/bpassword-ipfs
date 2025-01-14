@@ -1,4 +1,5 @@
 import SwiftUI
+
 struct NewAuthAccountView: View {
         @State private var service: String = ""
         @State private var account: String = ""
@@ -28,7 +29,9 @@ struct NewAuthAccountView: View {
                                                                         service = String(newValue.prefix(30))
                                                                 }
                                                         }
-                                        }.padding(.top, 30)
+                                        }
+                                        .padding(.top, 30)
+                                        .background(Color.blue)
                                         
                                         // Account Field Group
                                         VStack(alignment: .leading, spacing: 8) {
@@ -47,7 +50,8 @@ struct NewAuthAccountView: View {
                                                                 let validCharacters = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "@.-_"))
                                                                 account = newValue.filter { String($0).rangeOfCharacter(from: validCharacters) != nil }
                                                         }
-                                        }.padding(.top, 12)
+                                        }
+                                        .padding(.top, 12)
                                         
                                         // Key Field Group
                                         VStack(alignment: .leading, spacing: 8) {
@@ -66,7 +70,8 @@ struct NewAuthAccountView: View {
                                                                 let validCharacters = CharacterSet.alphanumerics
                                                                 key = newValue.filter { String($0).rangeOfCharacter(from: validCharacters) != nil }
                                                         }
-                                        }.padding(.top, 12)
+                                        }
+                                        .padding(.top, 12)
                                         
                                         // Save 按钮
                                         Button(action: {
@@ -80,13 +85,15 @@ struct NewAuthAccountView: View {
                                                         .foregroundColor(.white)
                                                         .cornerRadius(32)
                                                         .padding(.horizontal, 20)
-                                        }.padding(.top, 24)
+                                        }
+                                        .padding(.top, 24)
                                         
-                                        Spacer() // 保持黄色内容下方留白
+                                        Spacer() // 保持内容与底部的间距
                                 }
-                                .frame(width: geometry.size.width, height: geometry.size.height)
-                                .background(Color.yellow)
-                                .border(Color.green, width: 2) // 调试整体 VStack 边框
+                                .frame(width: geometry.size.width, height: geometry.size.height) // 强制 VStack 填充屏幕
+                                .background(Color.yellow) // 黄色背景
+                                .border(Color.green, width: 2) // 绿色边框覆盖整个屏幕
+                                //                                .ignoresSafeArea() // 确保绿色边框扩展到安全区域
                         }
                         .onTapGesture {
                                 UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
