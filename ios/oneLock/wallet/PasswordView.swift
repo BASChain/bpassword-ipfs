@@ -27,7 +27,7 @@ struct PasswordView: View {
                                                                 .lineSpacing(6)
                                                 }
                                                 // 调整标题的顶部 padding，减去安全区域高度
-                                                .padding(.top, 100)
+                                                .padding(.top, geometry.size.height / 9)
                                                 .padding(.leading, 21)
                                         }
                                         .frame(height: 262 - geometry.safeAreaInsets.top - 40)
@@ -60,14 +60,17 @@ struct PasswordView: View {
                                                                 )
                                                 }
                                                 
-                                                NavigationLink(destination: ImportWalletView().environmentObject(appState)) {
-                                                        Text("Forget Password")
-                                                                .font(.system(size: 14))
-                                                                .foregroundColor(Color(red: 137 / 255, green: 145 / 255, blue: 155 / 255))
-                                                                .frame(maxWidth: .infinity, alignment: .trailing) // 调整为右对齐
-                                                                .padding(.trailing, 24) // 右边增加 24px 的间距
+                                                HStack {
+                                                        Spacer() // 左侧占位
+                                                        NavigationLink(destination: ImportWalletView().environmentObject(appState)) {
+                                                                Text("Forget Password")
+                                                                        .font(.system(size: 14))
+                                                                        .foregroundColor(Color(red: 137 / 255, green: 145 / 255, blue: 155 / 255))
+                                                                        .frame(width: UIScreen.main.bounds.width / 2, height: 32,alignment:.trailing)
+                                                                        .background(Color.yellow)
+                                                        }
+                                                        .padding(.trailing, 12) // 距右侧24pt
                                                 }
-                                                .padding(.top, 8) // 与“Open Wallet”按钮保持适当间距
                                                 
                                                 Spacer() // 将内容与底部留出空间
                                         }
