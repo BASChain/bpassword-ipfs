@@ -17,6 +17,7 @@ enum LogLevel: Int8 {
 enum SdkError: Error {
         case serializationFailed
         case accountSaveFailed(String)
+        case authSaveFailed(String)
 }
 // 定义一个类以实现日志处理
 class SdkUtil: NSObject {
@@ -197,10 +198,58 @@ class SdkUtil: NSObject {
                 print("Wallet Clock Time Saved Success: \(clockTime)")
                 return true
         }
+        
+        func loadAuthAccounts() -> [String: AuthAccount] {
+                var accountsMap = [String: AuthAccount]()
+                
+                guard let jsonData = LockLibLocalCachedAuth() else {
+                        return accountsMap
+                }
+                do {
+                        let decoder = JSONDecoder()
+                        print("current auth raw data:\(jsonData) \(String(data:jsonData, encoding: .utf8) ?? "---")")
+                        let decodedAccounts = try decoder.decode([String: AuthAccount].self, from: jsonData)
+                        for (key, account) in decodedAccounts {
+                                accountsMap[key] = account
+                        }
+                } catch {
+                        print("Failed to decode accounts JSON: \(error.localizedDescription)")
+                }
+                
+                return accountsMap
+        }
+        
+        func NewAuthManual(issuer:String, account:String, secret:String) throws -> Bool {
+                var err: NSError? = nil
+                
+                LockLibNewManualAuth(issuer,account,secret, &err)
+                
+                if err == nil {
+                        print("Account successfully saved.")
+                        return true
+                }
+                
+                if let error = err {
+                        throw SdkError.authSaveFailed(error.localizedDescription)
+                }
+                
+                return false
+        }
 }
 
 // MARK: - 实现 Go 的 APPI 接口
 extension SdkUtil: LockLibAppIProtocol {
+        func authCodeUpdate(_ key: String?, code: String?, timeleft: Int) {
+                
+        }
+        
+        func authDataUpdated(_ data: Data?, err: (any Error)?) {
+                guard let error = err else{
+                        return
+                }
+                self.toastManager?.showToast(message: "Authenticator data update failed: \(error.localizedDescription)", isSuccess: false)
+        }
+        
         
         func closeWallet() {
                 DispatchQueue.main.async {

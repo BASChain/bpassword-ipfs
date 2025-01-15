@@ -32,28 +32,13 @@ var __accountManager = &AccountManager{
 	Accounts: make(map[string]*Account),
 }
 
-func InitLocalData() {
-	if __walletMng.getPriKey(false) == nil {
-		return
-	}
-	initCachedAccountData()
-	go AsyncDataSyncing()
-	go AsyncCheckLocalAndSrv()
-}
-
 func initCachedAccountData() {
 	if __walletMng.getPriKey(false) == nil {
 		utils.LogInst().Errorf("----->>>wallet not open")
 		return
 	}
-	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
-	if err != nil {
-		utils.LogInst().Errorf("----->>>open %s failed:%s", __walletMng.dbPath, err.Error())
-		return
-	}
-	defer db.Close()
 
-	data, err := db.Get([]byte(__db_key_accounts), nil)
+	data, err := __walletMng.db.Get([]byte(__db_key_accounts), nil)
 	if err != nil {
 		if errors.Is(err, leveldb.ErrNotFound) {
 			utils.LogInst().Infof("----->>>no local data found")
@@ -156,19 +141,13 @@ func localDbSave() error {
 		return fmt.Errorf("private key is required")
 	}
 
-	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
-
 	data := __accountManager.fullData()
 	encodeData, err := Encode(data, &priKey.PublicKey)
 	if err != nil {
 		return fmt.Errorf("failed to encode Accounts: %w", err)
 	}
 
-	err = db.Put([]byte(__db_key_accounts), encodeData, nil)
+	err = __walletMng.db.Put([]byte(__db_key_accounts), encodeData, nil)
 	if err != nil {
 		return fmt.Errorf("failed to save Accounts to database: %w", err)
 	}
@@ -187,7 +166,7 @@ func AddOrUpdateAccount(accJsonStr string) error {
 		return err
 	}
 
-	go AsyncCheckLocalAndSrv()
+	go AsyncAccountVerCheck()
 	return nil
 }
 
@@ -207,6 +186,6 @@ func RemoveAccount(uuid string) error {
 	if err != nil {
 		return err
 	}
-	go AsyncCheckLocalAndSrv()
+	go AsyncAccountVerCheck()
 	return nil
 }

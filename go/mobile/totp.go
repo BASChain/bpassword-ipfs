@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/BASChain/bpassword-ipfs/go/utils"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -26,8 +27,8 @@ type TOTPConfig struct {
 	Period    int    `json:"period"`
 }
 
-func (tc *TOTPConfig) mapKey() string {
-	return tc.Issuer + "_" + tc.Account
+func cfgKey(issuer, acc string) string {
+	return issuer + "_" + acc
 }
 
 type AuthManager struct {
@@ -39,6 +40,41 @@ type AuthManager struct {
 
 var __authManager = &AuthManager{
 	Auth: make(map[string]*TOTPConfig),
+}
+
+func (am *AuthManager) newAuth(tc *TOTPConfig) {
+	am.mu.Lock()
+	cKey := cfgKey(tc.Issuer, tc.Account)
+	am.Auth[cKey] = tc
+	am.LocalVersion += 1
+	am.mu.Unlock()
+}
+
+func (am *AuthManager) authData() []byte {
+	am.mu.RLock()
+	defer am.mu.RUnlock()
+	bts, _ := json.Marshal(am.Auth)
+	return bts
+}
+
+func (am *AuthManager) delAuth(key string) bool {
+	am.mu.Lock()
+	defer am.mu.Unlock()
+	_, exists := am.Auth[key]
+	if !exists {
+		return false
+	}
+	delete(am.Auth, key)
+	am.LocalVersion += 1
+	utils.LogInst().Debugf("Auth with key %s removed from memory.\n", key)
+	return true
+}
+
+func (am *AuthManager) UpdateLatestVersion(srvVer int64) {
+	am.mu.RLock()
+	defer am.mu.RUnlock()
+	am.SrvVersion = srvVer
+	am.LocalVersion = srvVer
 }
 
 func authDbKey() []byte {
@@ -54,18 +90,13 @@ func saveAuthLocalDb() error {
 
 	dbKey := authDbKey()
 
-	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
 	data, _ := json.Marshal(__authManager)
 	encodeData, err := Encode(data, &priKey.PublicKey)
 	if err != nil {
 		return fmt.Errorf("failed to encode auth: %w", err)
 	}
 
-	err = db.Put(dbKey, encodeData, nil)
+	err = __walletMng.db.Put(dbKey, encodeData, nil)
 	if err != nil {
 		return fmt.Errorf("failed to save Accounts to database: %w", err)
 	}
@@ -323,7 +354,7 @@ func generateTOTPCodeWithTimeLeft(config *TOTPConfig) (string, int, error) {
 	// 计算倒计时：离下一次刷新还剩多少秒
 	// 原理： period - (当前UnixTime % period)
 	//-----------------------------------------------------
-	period := int(config.Period)
+	period := config.Period
 	if period <= 0 {
 		// 若用户没设置，或者出错，则默认30
 		period = 30
@@ -334,6 +365,7 @@ func generateTOTPCodeWithTimeLeft(config *TOTPConfig) (string, int, error) {
 
 	return code, timeLeft, nil
 }
+
 func newDefaultTOTPConfig(issuer, account, secret string) *TOTPConfig {
 	return &TOTPConfig{
 		Type:      "totp",  // 默认: TOTP
@@ -347,23 +379,247 @@ func newDefaultTOTPConfig(issuer, account, secret string) *TOTPConfig {
 }
 
 func NewScanAuth(url string) error {
-	cof, err := parseTOTP(url)
+	config, err := parseTOTP(url)
 	if err != nil {
 		return err
 	}
-	return _saveNewAuth(cof)
 
+	__authManager.newAuth(config)
+	go AsyncAuthVerCheck()
+
+	return _saveNewAuth(config)
 }
 
 func NewManualAuth(issuer, account, secret string) error {
 	config := newDefaultTOTPConfig(issuer, account, secret)
+
+	__authManager.newAuth(config)
+	go AsyncAuthVerCheck()
+
 	return _saveNewAuth(config)
 }
 
 func _saveNewAuth(conf *TOTPConfig) error {
 	__authManager.mu.Lock()
 	defer __authManager.mu.Unlock()
-	key := conf.mapKey()
+	key := cfgKey(conf.Issuer, conf.Account)
 	__authManager.Auth[key] = conf
 	return saveAuthLocalDb()
+}
+
+func initAuthList() {
+	if __walletMng.getPriKey(false) == nil {
+		utils.LogInst().Errorf("----->>>wallet not open")
+		return
+	}
+
+	data, err := __walletMng.db.Get(authDbKey(), nil)
+	if err != nil {
+		if errors.Is(err, leveldb.ErrNotFound) {
+			utils.LogInst().Infof("----->>>no local data found")
+			return
+		}
+		utils.LogInst().Errorf("----->>>database get failed:%s", err.Error())
+		return
+	}
+
+	rawData, err := Decode(data, __walletMng.getPriKey(true))
+	if err != nil {
+		utils.LogInst().Errorf("----->>>decode local data failed:%s", err.Error())
+		return
+	}
+
+	err = json.Unmarshal(rawData, &__authManager)
+	if err != nil {
+		utils.LogInst().Errorf("----->>>unmarshal local data failed:%s", err.Error())
+		return
+	}
+
+	if __authManager.Auth == nil {
+		__authManager.Auth = make(map[string]*TOTPConfig)
+		__authManager.LocalVersion = 0
+		__authManager.SrvVersion = -1
+	}
+	utils.LogInst().Infof("------>>> init local data success")
+}
+
+func LocalCachedAuth() []byte {
+	return __authManager.authData()
+}
+
+func RemoveAuth(is, ac string) error {
+	key := cfgKey(is, ac)
+	needUpdate := __authManager.delAuth(key)
+	if !needUpdate {
+		return nil
+	}
+	err := saveAuthLocalDb()
+	if err != nil {
+		return err
+	}
+	go AsyncAuthVerCheck()
+	return nil
+}
+
+func AsyncAuthVerCheck() {
+	utils.LogInst().Debugf("------>>>start pushing auth to server")
+	__authManager.mu.RLock()
+	if __authManager.LocalVersion == __authManager.SrvVersion || __authManager.LocalVersion == 0 {
+		utils.LogInst().Debugf("[Auth] local version and server version are same")
+		__authManager.mu.RUnlock()
+		return
+	}
+	__authManager.mu.RUnlock()
+	utils.LogInst().Debugf("[Auth]  local version and server version are not save ,prepare to push data")
+	var err = writeEncodedAuthDataToSrv()
+	if err != nil {
+		__api.callback.AuthDataUpdated(nil, err)
+		return
+	}
+}
+
+func writeEncodedAuthDataToSrv() error {
+	rawData := __authManager.authData()
+	priKey := __walletMng.getPriKey(true)
+	if priKey == nil {
+		return fmt.Errorf("invalid private key")
+	}
+	data, err := Encode(rawData, &priKey.PublicKey)
+	if err != nil {
+		utils.LogInst().Errorf("------>>>encode rawData failed:%s", err.Error())
+		return err
+	}
+	result, err := uploadLocalData(updateAuthDataAPi, data, __authManager.SrvVersion)
+	if err != nil {
+		utils.LogInst().Errorf("------>>>upload data failed:%s", err.Error())
+		return err
+	}
+	__authManager.UpdateLatestVersion(result.LatestVer)
+	return saveAuthLocalDb()
+}
+
+func AsyncAuthSyncing() {
+	utils.LogInst().Debugf("------>>>[Auth] start syncing data from server")
+	var onlineData = make(map[string]*TOTPConfig)
+
+	onlineVer, err := queryAndDecodeSrvData(queryAuthDataAPi, &onlineData)
+	if err != nil {
+		__api.callback.AuthDataUpdated(nil, err)
+		return
+	}
+	if onlineData == nil {
+		return
+	}
+
+	if onlineVer == __authManager.SrvVersion {
+		utils.LogInst().Infof("[Auth] proc sync result:local srvDataWithVer is same as server's")
+		return
+	}
+
+	if onlineVer < __authManager.SrvVersion {
+		utils.LogInst().Debugf("[Auth] proc sync result:local srvDataWithVer is newer than server's")
+		err = writeEncodedAuthDataToSrv()
+		if err != nil {
+			__api.callback.AuthDataUpdated(nil, err)
+			return
+		}
+		return
+	}
+
+	utils.LogInst().Debugf("[Auth] proc sync result: server srvDataWithVer is newer than local's")
+	err = mergeSrvDataAuth(onlineData, onlineVer)
+	if err != nil {
+		__api.callback.AuthDataUpdated(nil, err)
+		return
+	}
+	__api.callback.AuthDataUpdated(__authManager.authData(), nil)
+	return
+}
+
+func mergeSrvDataAuth(onlineData map[string]*TOTPConfig, onlineVer int64) error {
+	__authManager.mu.Lock()
+	defer __authManager.mu.Unlock()
+
+	for key, authCfg := range onlineData {
+		_, exist := __authManager.Auth[key]
+		if !exist {
+			__authManager.Auth[key] = authCfg
+		}
+	}
+
+	__authManager.SrvVersion = onlineVer
+
+	return saveAuthLocalDb()
+}
+
+type AuthScheduler struct {
+	ticker     *time.Ticker
+	paused     bool
+	pauseChan  chan struct{}
+	resumeChan chan struct{}
+	quitChan   chan struct{}
+}
+
+var __authTimer = &AuthScheduler{
+	pauseChan:  make(chan struct{}),
+	resumeChan: make(chan struct{}),
+	quitChan:   make(chan struct{}),
+	paused:     false,
+}
+
+func authCodeTimerStart() {
+	// 创建ticker
+	__authTimer.ticker = time.NewTicker(AuthCodeTimer)
+
+	utils.LogInst().Debugf("auther code timer start.....")
+	go func() {
+		defer __authTimer.ticker.Stop()
+		defer utils.LogInst().Debugf("auther code timer ending.....")
+
+		for {
+			select {
+			case <-__authTimer.ticker.C:
+				if !__authTimer.paused {
+					authCodeCalculate()
+				}
+
+			case <-__authTimer.pauseChan:
+				__authTimer.paused = true
+				fmt.Println("[Scheduler] 已暂停")
+
+			case <-__authTimer.resumeChan:
+				__authTimer.paused = false
+				fmt.Println("[Scheduler] 已恢复")
+
+			case <-__authTimer.quitChan:
+				fmt.Println("[Scheduler] 已停止")
+				return
+			}
+		}
+	}()
+}
+
+func authCodeCalculate() {
+	__authManager.mu.RLock()
+	defer __authManager.mu.RUnlock()
+	for key, config := range __authManager.Auth {
+		code, timeLeft, err := generateTOTPCodeWithCountdown(config)
+		if err != nil {
+			utils.LogInst().Errorf("auth code generate failed:%v", err)
+			continue
+		}
+		__api.callback.AuthCodeUpdate(key, code, timeLeft)
+	}
+}
+
+func AuthCodeTimerPause() {
+	__authTimer.pauseChan <- struct{}{}
+}
+
+func AuthCodeTimerResume() {
+	__authTimer.resumeChan <- struct{}{}
+}
+
+func AuthCodeTimerStop() {
+	__authTimer.quitChan <- struct{}{}
 }

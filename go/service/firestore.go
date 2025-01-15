@@ -15,10 +15,11 @@ import (
 const (
 	DefaultDBTimeOut = 15 * time.Second
 	BPasswordTable   = "table_account_data"
+	BAuthTable       = "table_authenticator_data"
 )
 
-func (dm *DbManager) CreateOrUpdateAccount(updateReq *EncodedData) (*UpdateResult, error) {
-	collection := dm.fileCli.Collection(BPasswordTable)
+func (dm *DbManager) update(updateReq *EncodedData, tableName string) (*UpdateResult, error) {
+	collection := dm.fileCli.Collection(tableName)
 	opCtx, cancel := context.WithTimeout(dm.ctx, DefaultDBTimeOut)
 	defer cancel()
 	// 尝试读取现有文档
@@ -72,11 +73,19 @@ func (dm *DbManager) CreateOrUpdateAccount(updateReq *EncodedData) (*UpdateResul
 	return result, nil
 }
 
+func (dm *DbManager) CreateOrUpdateAccount(updateReq *EncodedData) (*UpdateResult, error) {
+	return dm.update(updateReq, BPasswordTable)
+}
+
+func (dm *DbManager) UpdateAuthData(updateReq *EncodedData) (*UpdateResult, error) {
+	return dm.update(updateReq, BAuthTable)
+}
+
 // GetByAccount 从Firestore获取UpdateRequest
-func (dm *DbManager) GetByAccount(walletAddr string) (*EncodedData, error) {
+func (dm *DbManager) query(walletAddr, tableName string) (*EncodedData, error) {
 	opCtx, cancel := context.WithTimeout(dm.ctx, DefaultDBTimeOut)
 	defer cancel()
-	doc, err := dm.fileCli.Collection(BPasswordTable).Doc(walletAddr).Get(opCtx)
+	doc, err := dm.fileCli.Collection(tableName).Doc(walletAddr).Get(opCtx)
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			return &EncodedData{
@@ -94,6 +103,14 @@ func (dm *DbManager) GetByAccount(walletAddr string) (*EncodedData, error) {
 	}
 
 	return &data, nil
+}
+
+func (dm *DbManager) GetByAccount(walletAddr string) (*EncodedData, error) {
+	return dm.query(walletAddr, BPasswordTable)
+
+}
+func (dm *DbManager) GetAuthByAccount(walletAddr string) (*EncodedData, error) {
+	return dm.query(walletAddr, BAuthTable)
 }
 
 // DbManager 管理 Firestore 客户端

@@ -1,32 +1,29 @@
 import SwiftUI
 
 struct AuthenticatorView: View {
-        // 模拟的动态数据
-        let accounts = [
-                ("YouTube", "987 8473"),
-                ("Google", "123 4567"),
-                ("Facebook", "345 6789"),
-                ("Twitter", "765 4321"),
-                ("Instagram", "456 7890"),
-                ("LinkedIn", "678 9012")
-        ]
         
+        @State private var hasLoaded = false // 防止重复加载
+        @State private var accounts: [String: AuthAccount] = [:]
         var body: some View {
                 NavigationView {
                         VStack {
                                 List {
-                                        ForEach(accounts, id: \.0) { account in
-                                                CodeCardView(serviceName: account.0, code: account.1)
-                                                        .swipeActions {
-                                                                Button(role: .destructive) {
-                                                                        // 删除逻辑，这里可以调用删除操作
-                                                                        print("\(account.0) deleted")
-                                                                } label: {
-                                                                        Label("Delete", systemImage: "trash")
-                                                                }
-                                                                .tint(Color(red: 255/255, green: 161/255, blue: 54/255)) // 设置颜色为 rgba(255, 161, 54, 1)
+                                        ForEach(accounts.sorted(by: { $0.key < $1.key }), id: \.key) { key, account in
+                                                CodeCardView(
+                                                        serviceName: "\(account.issuer):\(account.account)",
+                                                        code: account.code
+                                                )
+                                                .swipeActions {
+                                                        Button(role: .destructive) {
+                                                                // 删除逻辑，这里可以调用删除操作
+                                                                print("\(key) deleted")
+                                                                
+                                                        } label: {
+                                                                Label("Delete", systemImage: "trash")
                                                         }
-                                                        .padding(.vertical, 10) // 保持原有的间距
+                                                        .tint(Color(red: 255/255, green: 161/255, blue: 54/255)) // 设置颜色为 rgba(255, 161, 54, 1)
+                                                }
+                                                .padding(.vertical, 10) // 保持原有的间距
                                         }
                                         .listRowInsets(EdgeInsets()) // 去除默认的内边距
                                         .listRowSeparator(.hidden) // 隐藏分隔线
@@ -38,7 +35,7 @@ struct AuthenticatorView: View {
                         .toolbar {
                                 ToolbarItem(placement: .navigationBarTrailing) {
                                         HStack(spacing: 2) { // 修改按钮间距为 8pt
-                                                NavigationLink(destination: NewAuthAccountView()) {
+                                                NavigationLink(destination: NewAuthAccountView(onSave: loadAccounts)) {
                                                         Color.clear // 透明背景
                                                                 .frame(width: 24, height: 24) // 设置Button的尺寸为24pt × 24pt
                                                                 .overlay(
@@ -70,7 +67,16 @@ struct AuthenticatorView: View {
                                 }
                         }
                 }
+                .onAppear {
+                        loadAccounts()
+                }
         }
+        
+        private func loadAccounts() {
+                accounts = SdkUtil.shared.loadAuthAccounts()
+                hasLoaded = true
+        }
+        
 }
 
 struct CodeCardView: View {

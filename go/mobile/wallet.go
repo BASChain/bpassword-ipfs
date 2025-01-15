@@ -18,12 +18,12 @@ import (
 )
 
 type WalletManager struct {
-	dbPath        string
 	priKey        *ecdsa.PrivateKey
 	address       string
 	timer         *time.Ticker
 	lastTouchTime int64
 	sync.RWMutex
+	db *leveldb.DB
 }
 
 var __walletMng = &WalletManager{}
@@ -47,12 +47,10 @@ func InitWalletPath(dbPath string) bool {
 	__walletMng.Lock()
 	defer __walletMng.Unlock()
 
-	__walletMng.dbPath = dbPath
 	db, err := leveldb.OpenFile(dbPath, nil)
 	if err != nil {
 		return false
 	}
-	defer db.Close()
 
 	// 尝试读取钱包数据
 	_, err = db.Get([]byte(__db_key_wallet_), nil)
@@ -60,6 +58,8 @@ func InitWalletPath(dbPath string) bool {
 		fmt.Println("----->>> failed load data from local database:", err)
 		return false
 	}
+
+	__walletMng.db = db
 
 	return true
 }
@@ -174,15 +174,9 @@ func generateKeystore(privateKey *ecdsa.PrivateKey, password string) (string, er
 }
 
 func storeKeystoreInLevelDB(keystoreString string) error {
-	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
-	if err != nil {
-		utils.LogInst().Errorf("Error opening LevelDB at path %s: %s", __walletMng.dbPath, err.Error())
-		return fmt.Errorf("failed to open LevelDB: %w", err)
-	}
-	defer db.Close()
 
 	utils.LogInst().Infof("Storing keystore in LevelDB...")
-	err = db.Put([]byte(__db_key_wallet_), []byte(keystoreString), nil)
+	var err = __walletMng.db.Put([]byte(__db_key_wallet_), []byte(keystoreString), nil)
 	if err != nil {
 		utils.LogInst().Errorf("Error storing keystore: %s", err.Error())
 		return fmt.Errorf("failed to store keystore: %w", err)
@@ -194,15 +188,9 @@ func storeKeystoreInLevelDB(keystoreString string) error {
 
 // OpenWallet 从 LevelDB 中读取钱包并解密
 func OpenWallet(password string) error {
-	// 打开 LevelDB 数据库
-	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
-	if err != nil {
-		return fmt.Errorf("failed to open LevelDB: %w", err)
-	}
-	defer db.Close()
 
 	// 从 LevelDB 中读取钱包 JSON 数据
-	keystoreJSON, err := db.Get([]byte(__db_key_wallet_), nil)
+	keystoreJSON, err := __walletMng.db.Get([]byte(__db_key_wallet_), nil)
 	if err != nil {
 		if errors.Is(err, leveldb.ErrNotFound) {
 			return errors.New("wallet not found in database")
@@ -245,15 +233,9 @@ func WalletIsOpen() bool {
 }
 
 func ChangePassword(old, new string) error {
-	// 打开 LevelDB 数据库
-	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
-	if err != nil {
-		return fmt.Errorf("failed to open LevelDB: %w", err)
-	}
-	defer db.Close()
 
 	// 从 LevelDB 中读取钱包 JSON 数据
-	keystoreJSON, err := db.Get([]byte(__db_key_wallet_), nil)
+	keystoreJSON, err := __walletMng.db.Get([]byte(__db_key_wallet_), nil)
 	if err != nil {
 		if errors.Is(err, leveldb.ErrNotFound) {
 			return errors.New("wallet not found in database")
@@ -274,7 +256,7 @@ func ChangePassword(old, new string) error {
 	}
 
 	// 保存新 Keystore JSON 到 LevelDB
-	err = db.Put([]byte(__db_key_wallet_), newKeystoreJSON, nil)
+	err = __walletMng.db.Put([]byte(__db_key_wallet_), newKeystoreJSON, nil)
 	if err != nil {
 		return fmt.Errorf("failed to save updated wallet to LevelDB: %w", err)
 	}
@@ -285,14 +267,8 @@ func ChangePassword(old, new string) error {
 
 // KeyExpireTime 读取存储的 clock time 值
 func KeyExpireTime() int {
-	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
-	if err != nil {
-		fmt.Printf("failed to open LevelDB: %v\n", err)
-		return DefaultClockTimeInMinutes // 返回默认值
-	}
-	defer db.Close()
 
-	value, err := db.Get([]byte(__db_key_clock_time_), nil)
+	value, err := __walletMng.db.Get([]byte(__db_key_clock_time_), nil)
 	if err != nil {
 		if errors.Is(err, leveldb.ErrNotFound) {
 			return 5 // 如果键不存在，返回默认值
@@ -310,18 +286,13 @@ func KeyExpireTime() int {
 }
 
 func SaveExpireTime(clockTime int) error {
-	db, err := leveldb.OpenFile(__walletMng.dbPath, nil)
-	if err != nil {
-		return fmt.Errorf("failed to open LevelDB: %w", err)
-	}
-	defer db.Close()
 
 	// 将整数值编码为字节数据
 	value := make([]byte, 4)
 	binary.BigEndian.PutUint32(value, uint32(clockTime))
 
 	// 将编码后的字节数据写入数据库
-	err = db.Put([]byte(__db_key_clock_time_), value, nil)
+	var err = __walletMng.db.Put([]byte(__db_key_clock_time_), value, nil)
 	if err != nil {
 		return fmt.Errorf("failed to save clock time: %w", err)
 	}

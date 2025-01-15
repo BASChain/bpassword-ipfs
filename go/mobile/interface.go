@@ -11,7 +11,9 @@ import (
 type AppI interface {
 	Log(s string)
 	DataUpdated(data []byte, err error)
+	AuthDataUpdated(data []byte, err error)
 	CloseWallet()
+	AuthCodeUpdate(key, code string, timeleft int)
 }
 type API struct {
 	srvUrl   string
@@ -36,42 +38,43 @@ func InitSDK(exi AppI, url, token string, logLevel int8) error {
 
 	__api = &API{srvUrl: url, token: token, callback: exi}
 
+	authCodeTimerStart()
 	utils.LogInst().Debugf("------>>>init sdk success")
+
 	return nil
 }
 
-func queryAndDecodeSrvData() (map[string]*Account, int64, error) {
-	srvDataWithVer, err := syncDataFromSrv()
+func queryAndDecodeSrvData(api string, onlineData any) (int64, error) {
+	srvDataWithVer, err := syncDataFromSrv(api)
 	if err != nil {
-		return nil, -1, err
+		return -1, err
 	}
 	if len(srvDataWithVer.EncodeValue) == 0 || srvDataWithVer.Version == -1 {
 		utils.LogInst().Debugf("------>>>no data on server:%v", srvDataWithVer.Version)
-		return nil, -1, nil
+		return -1, nil
 	}
 
 	cipheredData, err := hex.DecodeString(srvDataWithVer.EncodeValue)
 	if err != nil {
-		return nil, -1, err
+		return -1, err
 
 	}
 	rawData, err := Decode(cipheredData, __walletMng.getPriKey(true))
 	if err != nil {
 		utils.LogInst().Errorf("------>>>decode srvDataWithVer failed:%s", err.Error())
-		return nil, -1, err
+		return -1, err
 
 	}
-	var onlineData = make(map[string]*Account)
-	err = json.Unmarshal(rawData, &onlineData)
+	err = json.Unmarshal(rawData, onlineData)
 	if err != nil {
 		utils.LogInst().Errorf("------>>>unmarshal raw online data failed:%s content:%s", err.Error(), string(rawData))
-		return nil, -1, err
+		return -1, err
 	}
 
-	return onlineData, srvDataWithVer.Version, nil
+	return srvDataWithVer.Version, nil
 }
 
-func writeEncodedDataToSrv() error {
+func writeEncodedAccountDataToSrv() error {
 	rawData := __accountManager.accountData()
 	priKey := __walletMng.getPriKey(true)
 	if priKey == nil {
@@ -82,7 +85,7 @@ func writeEncodedDataToSrv() error {
 		utils.LogInst().Errorf("------>>>encode rawData failed:%s", err.Error())
 		return err
 	}
-	result, err := uploadLocalData(data, __accountManager.SrvVersion)
+	result, err := uploadLocalData(updateAccountDataAPi, data, __accountManager.SrvVersion)
 	if err != nil {
 		utils.LogInst().Errorf("------>>>upload data failed:%s", err.Error())
 		return err
@@ -91,9 +94,10 @@ func writeEncodedDataToSrv() error {
 	return localDbSave()
 }
 
-func AsyncDataSyncing() {
+func AsyncAccountSyncing() {
 	utils.LogInst().Debugf("------>>>start syncing data from server")
-	onlineData, onlineVer, err := queryAndDecodeSrvData()
+	var onlineData = make(map[string]*Account)
+	onlineVer, err := queryAndDecodeSrvData(queryAccountDataAPi, &onlineData)
 	if err != nil {
 		__api.callback.DataUpdated(nil, err)
 		return
@@ -109,7 +113,7 @@ func AsyncDataSyncing() {
 
 	if onlineVer < __accountManager.SrvVersion {
 		utils.LogInst().Debugf("proc sync result:local srvDataWithVer is newer than server's")
-		err = writeEncodedDataToSrv()
+		err = writeEncodedAccountDataToSrv()
 		if err != nil {
 			__api.callback.DataUpdated(nil, err)
 			return
@@ -143,7 +147,7 @@ func mergeSrvData(onlineData map[string]*Account, onlineVer int64) error {
 	return localDbSave()
 }
 
-func AsyncCheckLocalAndSrv() {
+func AsyncAccountVerCheck() {
 	utils.LogInst().Debugf("------>>>start pushing data to server")
 	__accountManager.mu.RLock()
 	if __accountManager.LocalVersion == __accountManager.SrvVersion || __accountManager.LocalVersion == 0 {
@@ -153,9 +157,22 @@ func AsyncCheckLocalAndSrv() {
 	}
 	__accountManager.mu.RUnlock()
 	utils.LogInst().Debugf("local version and server version are not save ,prepare to push data")
-	var err = writeEncodedDataToSrv()
+	var err = writeEncodedAccountDataToSrv()
 	if err != nil {
 		__api.callback.DataUpdated(nil, err)
 		return
 	}
+}
+
+func InitLocalData() {
+	if __walletMng.getPriKey(false) == nil {
+		return
+	}
+	initCachedAccountData()
+	initAuthList()
+
+	go AsyncAccountSyncing()
+	go AsyncAccountVerCheck()
+	go AsyncAuthSyncing()
+	go AsyncAuthVerCheck()
 }

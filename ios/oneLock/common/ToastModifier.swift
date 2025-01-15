@@ -7,10 +7,13 @@ class ToastManager: ObservableObject {
         @Published var duration: Double = 3.0  // 默认显示时长
         
         func showToast(message: String, isSuccess: Bool, duration: Double = 3.0) {
-                self.message = message
-                self.isSuccess = isSuccess
-                self.duration = duration
-                self.isVisible = true
+                
+                DispatchQueue.main.async {
+                        self.message = message
+                        self.isSuccess = isSuccess
+                        self.duration = duration
+                        self.isVisible = true
+                }
                 
                 // 自动隐藏
                 DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
