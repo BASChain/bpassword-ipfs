@@ -121,13 +121,11 @@ struct CreateWalletView: View {
                         return
                 }
                 
-                
-                // 调用 SdkUtil 来生成助记词
-                if let generatedMnemonic = SdkUtil.shared.generateMnemonic() {
-                        mnemonic = generatedMnemonic
+                do{
+                        mnemonic = try SdkUtil.shared.generateMnemonic()
                         errorMessage = nil
-                } else {
-                        errorMessage = "Failed to generate wallet. Please try again."
+                }catch{
+                        errorMessage = error.localizedDescription
                 }
         }
 }

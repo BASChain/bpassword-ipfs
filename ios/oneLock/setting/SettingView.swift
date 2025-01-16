@@ -212,14 +212,7 @@ struct BottomSheet: View {
                                                 }
                                                 .background(Color.white)
                                                 .onTapGesture {
-                                                        autoCloseDuration = value
-                                                        let success = SdkUtil.shared.setAutoCloseDuration(value) // 保存用户选择的值
-                                                        if !success {
-                                                                SdkUtil.shared.toastManager?.showToast(message: "Save Failed!", isSuccess: false)
-                                                        } else {
-                                                                SdkUtil.shared.toastManager?.showToast(message: "Save Success!", isSuccess: true)
-                                                        }
-                                                        show = false
+                                                        changeCloseDuration(value:value)
                                                 }
                                                 Divider()
                                         }
@@ -231,6 +224,19 @@ struct BottomSheet: View {
                         .background(Color.black.opacity(0.5).edgesIgnoringSafeArea(.all))
                         .transition(.move(edge: .bottom))
                         .animation(.easeInOut, value: show)
+                }
+        }
+        
+        private func changeCloseDuration(value:Int){
+                
+                
+                autoCloseDuration = value
+                do{
+                        try SdkUtil.shared.setAutoCloseDuration(value)
+                        SdkUtil.shared.toastManager?.showToast(message: "Save Success!", isSuccess: true)
+                        show = false
+                }catch{
+                        SdkUtil.shared.toastManager?.showToast(message: "Save Failed!", isSuccess: false)
                 }
         }
 }

@@ -20,7 +20,11 @@ struct OneLockApp: App {
         private var appState = AppState()
         @StateObject private var toastManager = ToastManager()
         init(){
-                SdkUtil.shared.initializeSDK(logLevel: LogLevel.debug)
+                do{
+                        try SdkUtil.shared.initializeSDK(logLevel: LogLevel.debug)
+                }catch{
+                        //TODO::
+                }
                 AppStateManager.shared.appState.hasWallet = SdkUtil.shared.initWalletStatus()
                 requestNetworkPermissionAndInitialize()
         }

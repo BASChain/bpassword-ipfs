@@ -16,9 +16,11 @@ enum LogLevel: Int8 {
 }
 enum SdkError: Error {
         case serializationFailed
-        case accountSaveFailed(String)
+        case account(String)
         case authSaveFailed(String)
         case wallet(String)
+        case sdk(String)
+        case setting(String)
 }
 // 定义一个类以实现日志处理
 class SdkUtil: NSObject {
@@ -41,14 +43,11 @@ class SdkUtil: NSObject {
         }
         
         // MARK: - 方法
-        func initializeSDK(logLevel: LogLevel) {
-                // 调用 Go 库中的 InitSDK 方法
-                
+        func initializeSDK(logLevel: LogLevel)throws{
                 var err:NSError? = nil
                 LockLibInitSDK(self,server_url, server_token, logLevel.rawValue, &err)
-                
                 if let error = err {
-                        print("Failed to initialize SDK: \(error.localizedDescription)")
+                        throw SdkError.sdk("Failed to initialize SDK: \(error.localizedDescription)")
                 }
         }
         
@@ -57,19 +56,19 @@ class SdkUtil: NSObject {
                 return LockLibInitWalletPath(dbPath)
         }
         
-        func generateMnemonic() -> String? {
+        func generateMnemonic()throws -> String {
                 var err: NSError? = nil
                 
                 // 调用 Go 侧 API 生成助记词数据
                 guard let mnemonicData = LockLibGenerateMnemonic(&err) else {
                         print("Error generating mnemonic: \(err?.localizedDescription ?? "Unknown error").")
-                        return nil
+                        throw SdkError.sdk("Error generating mnemonic: \(err?.localizedDescription ?? "Unknown error").")
                 }
                 
                 // 将助记词数据解码为字符串
                 guard let mnemonicString = String(data: mnemonicData as Data, encoding: .utf8) else {
                         print("Failed to decode mnemonic data.")
-                        return nil
+                        throw SdkError.sdk("Failed to decode mnemonic data.")
                 }
                 
                 return mnemonicString
@@ -136,7 +135,7 @@ class SdkUtil: NSObject {
                 
                 // 如果有错误，抛出异常
                 if let error = err {
-                        throw SdkError.accountSaveFailed(error.localizedDescription)
+                        throw SdkError.account(error.localizedDescription)
                 }
                 
                 // 如果没有返回任何错误，默认返回 false
@@ -149,7 +148,6 @@ class SdkUtil: NSObject {
                         return accountsMap
                 }
                 
-                // 将返回的 JSON 数据解析为 [UUID: Account]
                 do {
                         let decoder = JSONDecoder()
                         let decodedAccounts = try decoder.decode([String: Account].self, from: jsonData)
@@ -166,17 +164,17 @@ class SdkUtil: NSObject {
                 return accountsMap
         }
         
-        func removeAccount(uuid: UUID) -> Bool {
+        func removeAccount(uuid: UUID)throws {
+                
                 var err: NSError? = nil
                 LockLibRemoveAccount(uuid.uuidString, &err)
                 
                 if let e = err {
                         print("Failed to remove account: \(e.localizedDescription)")
-                        return false
+                        throw SdkError.account("Failed to remove account: \(e.localizedDescription)")
                 }
                 
                 print("Account successfully removed: \(uuid.uuidString)")
-                return true
         }
         
         func getVersion() -> String {
@@ -189,16 +187,17 @@ class SdkUtil: NSObject {
                 return LockLibKeyExpireTime()
         }
         
-        func setAutoCloseDuration(_ clockTime:Int)->Bool{
+        func setAutoCloseDuration(_ clockTime:Int)throws{
+                
                 var err: NSError? = nil
                 LockLibSaveExpireTime(clockTime, &err)
+                
                 if let e = err {
                         print("Failed to Saved Wallet Clock Time: \(e.localizedDescription)")
-                        return false
+                        throw SdkError.setting("Failed to Saved Wallet Clock Time: \(e.localizedDescription)")
                 }
                 
                 print("Wallet Clock Time Saved Success: \(clockTime)")
-                return true
         }
         
         func loadAuthAccounts() -> [String: AuthAccount] {

@@ -118,18 +118,20 @@ struct AccountDetailView: View {
         }
         
         private func deleteAccount() {
+                
                 showAlert = false
+                
                 LoadingManager.shared.show(message: "Deleting Account...")
                 DispatchQueue.global().async {
-                        let success = SdkUtil.shared.removeAccount(uuid: account.id)
-                        DispatchQueue.main.async {
+                        do{
+                                try SdkUtil.shared.removeAccount(uuid: account.id)
                                 LoadingManager.shared.hide()
-                                if success {
-                                        onAccountDeleted?()
-                                        presentationMode.wrappedValue.dismiss()
-                                } else {
-                                        print("Failed to delete account")
-                                }
+                                onAccountDeleted?()
+                                SdkUtil.shared.toastManager?.showToast(message: "Delete Success!", isSuccess: true)
+                                presentationMode.wrappedValue.dismiss()
+                        }catch{
+                                LoadingManager.shared.hide()
+                                SdkUtil.shared.toastManager?.showToast(message: error.localizedDescription, isSuccess: false)
                         }
                 }
         }
