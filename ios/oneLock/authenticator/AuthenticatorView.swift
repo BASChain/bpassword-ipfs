@@ -96,7 +96,8 @@ struct CodeCardView: View {
         
         private let cardBackgroundColor = Color(red: 243/255, green: 249/255, blue: 250/255) // 修改背景颜色为 rgba(243, 249, 250, 1)
         private let circleStrokeColor = Color(red: 0.0, green: 0.7, blue: 0.8)
-        
+        private let warningColor = Color(red: 255/255, green: 161/255, blue: 54/255)
+
         var body: some View {
                 HStack {
                         VStack(alignment: .leading, spacing: 8) {
@@ -116,12 +117,17 @@ struct CodeCardView: View {
                         // 倒计时图标
                         ZStack {
                                 Circle()
-                                        .stroke(circleStrokeColor, lineWidth: 4)
+                                        .stroke(
+                                                authAccount.timeLeft <= 10 ? warningColor : circleStrokeColor,
+                                                lineWidth: 4
+                                        )
                                         .frame(width: 30, height: 30)
                                 // 倒计时文本
                                 Text("\(authAccount.timeLeft)")
                                         .font(.caption)
-                                        .foregroundColor(circleStrokeColor)
+                                        .foregroundColor(
+                                                authAccount.timeLeft <= 10 ? warningColor : circleStrokeColor
+                                        )
                         }
                 }
                 .padding()
