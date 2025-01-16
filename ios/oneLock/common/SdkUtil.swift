@@ -99,6 +99,15 @@ class SdkUtil: NSObject {
                 throw SdkError.wallet("Failed to open wallet:\(e.localizedDescription).")
         }
         
+        
+        func changePassword(oldPassword:String, newPassword:String)throws{
+                var err: NSError? = nil
+                LockLibChangePassword(oldPassword,newPassword, &err)
+                if let e = err {
+                        throw SdkError.wallet("Failed to change password:\(e.localizedDescription).")
+                }
+        }
+        
         func syncLocalData(){
                 LockLibInitLocalData()
         }
@@ -168,16 +177,6 @@ class SdkUtil: NSObject {
                 
                 print("Account successfully removed: \(uuid.uuidString)")
                 return true
-        }
-        
-        func changePassword(oldPassword:String, newPassword:String)->String?{
-                var err: NSError? = nil
-                LockLibChangePassword(oldPassword,newPassword, &err)
-                
-                if let e = err {
-                        return e.localizedDescription
-                }
-                return nil
         }
         
         func getVersion() -> String {

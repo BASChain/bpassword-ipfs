@@ -1,8 +1,7 @@
 import SwiftUI
 
 struct MainView: View {
-        @State private var selectedTab: Int = 0 // 用于跟踪选中的 Tab
-        
+        @State private var selectedTab: Int = 0
         init() {
                 // 创建 UITabBarAppearance 实例
                 let appearance = UITabBarAppearance()

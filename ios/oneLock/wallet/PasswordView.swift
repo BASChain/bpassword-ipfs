@@ -109,7 +109,7 @@ struct PasswordView: View {
                         do {
                                 try SdkUtil.shared.openWallet(password: password)
                                 LoadingManager.shared.hide()
-                                DispatchQueue.main.async { // 隐藏加载提示
+                                DispatchQueue.main.async { 
                                         appState.isPasswordValidated = true
                                 }
                                 

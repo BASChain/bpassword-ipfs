@@ -28,7 +28,7 @@ struct OneLockApp: App {
         var body: some Scene {
                 WindowGroup {
                         RootView()
-                                .environmentObject(AppStateManager.shared.appState) // 注入全局的 AppState
+                                .environmentObject(AppStateManager.shared.appState)
                                 .toast(
                                         isVisible: $toastManager.isVisible,
                                         message: toastManager.message,

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct PasswordChangeView: View {
         @Environment(\.presentationMode) var presentationMode
+        @EnvironmentObject var appState: AppState
         
         @State private var oldPassword: String = ""
         @State private var newPassword: String = ""
@@ -161,17 +162,19 @@ struct PasswordChangeView: View {
                 
                 errorMessage = nil
                 LoadingManager.shared.show(message: "Changing Password...")
-                
                 DispatchQueue.global().async {
-                        let errorStr = SdkUtil.shared.changePassword(oldPassword: oldPassword, newPassword: newPassword)
-                        DispatchQueue.main.async {
-                                LoadingManager.shared.hide() // 隐藏加载提示
-                                if errorStr == nil {
-                                        SdkUtil.shared.toastManager?.showToast(message: "Operation Success", isSuccess: true)
+                        do{
+                                try SdkUtil.shared.changePassword(oldPassword: oldPassword, newPassword: newPassword)
+                                LoadingManager.shared.hide()
+                                SdkUtil.shared.toastManager?.showToast(message: "Operation Success", isSuccess: true)
+                                DispatchQueue.main.async {
                                         presentationMode.wrappedValue.dismiss()
-                                } else {
-                                        errorMessage = errorStr
+                                        appState.isPasswordValidated = false
                                 }
+                                
+                        }catch{
+                                LoadingManager.shared.hide()
+                                DispatchQueue.main.async {errorMessage = error.localizedDescription}
                         }
                 }
         }

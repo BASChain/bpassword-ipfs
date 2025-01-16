@@ -13,24 +13,19 @@ class LoadingManager: ObservableObject {
         
         static let shared = LoadingManager() // 单例模式
         
-        private var showCount = 0 // 显示计数
         
         private init() {}
         
         func show(message: String) {
                 DispatchQueue.main.async {
                         self.message = message
-                        self.showCount += 1
                         self.isVisible = true
                 }
         }
         
         func hide() {
                 DispatchQueue.main.async {
-                        self.showCount = max(self.showCount - 1, 0)
-                        if self.showCount == 0 {
-                                self.isVisible = false
-                        }
+                        self.isVisible = false
                 }
         }
 }
