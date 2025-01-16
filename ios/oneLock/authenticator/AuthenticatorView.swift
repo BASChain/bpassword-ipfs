@@ -49,7 +49,7 @@ struct AuthenticatorView: View {
                                                                         Image("scan_icon")
                                                                                 .resizable()
                                                                                 .scaledToFit()
-                                                                                .frame(width: 22, height: 22) 
+                                                                                .frame(width: 22, height: 22)
                                                                 )
                                                 }
                                         }

@@ -153,14 +153,16 @@ struct MnemonicView: View {
                 LoadingManager.shared.show(message: "Creating Wallet...")
                 
                 DispatchQueue.global().async {
-                        let success = SdkUtil.shared.createWallet(mnemonic: mnemonic, password: password)
-                        
-                        DispatchQueue.main.async {
+                        do {
+                                try SdkUtil.shared.createWallet(mnemonic: mnemonic, password: password)
                                 LoadingManager.shared.hide()
-                                
-                                if success {
+                                DispatchQueue.main.async { // 隐藏加载提示
                                         appState.hasWallet = true
-                                } else {
+                                }
+                                
+                        } catch {
+                                LoadingManager.shared.hide()
+                                DispatchQueue.main.async {
                                         errorMessage = "Failed to create wallet. Please try again."
                                 }
                         }

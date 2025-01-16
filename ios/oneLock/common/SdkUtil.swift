@@ -18,6 +18,7 @@ enum SdkError: Error {
         case serializationFailed
         case accountSaveFailed(String)
         case authSaveFailed(String)
+        case wallet(String)
 }
 // 定义一个类以实现日志处理
 class SdkUtil: NSObject {
@@ -74,26 +75,28 @@ class SdkUtil: NSObject {
                 return mnemonicString
         }
         
-        func createWallet(mnemonic: String,password:String)->Bool {
+        func createWallet(mnemonic: String,password:String)throws {
                 var err: NSError? = nil
                 LockLibGenerateWallet(mnemonic,password, &err)
                 guard let e = err else{
-                        return true
+                        return
                 }
+                
                 print("Failed to create wallet\(e.localizedDescription).")
-                return false
+                throw SdkError.wallet("Failed to create wallet:\(e.localizedDescription).")
         }
         
-        func openWallet(password:String)->Bool{
+        
+        func openWallet(password:String)throws{
                 var err: NSError? = nil
                 LockLibOpenWallet(password,&err)
                 guard let e = err else{
                         syncLocalData()
-                        return true
+                        return
                 }
-                print("Failed to open wallet\(e.localizedDescription).")
                 
-                return false
+                print("Failed to open wallet\(e.localizedDescription).")
+                throw SdkError.wallet("Failed to open wallet:\(e.localizedDescription).")
         }
         
         func syncLocalData(){

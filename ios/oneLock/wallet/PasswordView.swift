@@ -25,7 +25,7 @@ struct PasswordView: View {
                                                                 .font(.system(size: 28, weight: .bold))
                                                                 .foregroundColor(Color(red: 20/255, green: 36/255, blue: 54/255))
                                                                 .lineSpacing(6)
-                                                } 
+                                                }
                                                 .padding(.top, geometry.size.height / 9)
                                                 .padding(.leading, 24)
                                         }
@@ -106,13 +106,16 @@ struct PasswordView: View {
                 LoadingManager.shared.show(message: "Decoding Wallet...")
                 
                 DispatchQueue.global().async {
-                        let success = SdkUtil.shared.openWallet(password: password)
-                        
-                        DispatchQueue.main.async {
-                                LoadingManager.shared.hide() // 隐藏加载提示
-                                if success {
+                        do {
+                                try SdkUtil.shared.openWallet(password: password)
+                                LoadingManager.shared.hide()
+                                DispatchQueue.main.async { // 隐藏加载提示
                                         appState.isPasswordValidated = true
-                                } else {
+                                }
+                                
+                        } catch {
+                                LoadingManager.shared.hide()
+                                DispatchQueue.main.async {
                                         errorMessage = "Invalid Password. Please try again."
                                 }
                         }
