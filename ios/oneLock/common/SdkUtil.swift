@@ -209,9 +209,9 @@ class SdkUtil: NSObject {
                         let decoder = JSONDecoder()
                         let decodedAccounts = try decoder.decode([String: AuthAccount].self, from: jsonData)
                         for (key, account) in decodedAccounts {
-                                print("key:\(key) account \(account) ")
                                 accountsMap[key] = account
                         }
+                        
                 } catch {
                         print("Failed to decode accounts JSON: \(error.localizedDescription)")
                 }
@@ -236,17 +236,37 @@ class SdkUtil: NSObject {
                 return false
         }
         
-        func NewAuthScanned(code:String) throws -> Bool{
+        func NewAuthScanned(code:String) throws{
+                
                 var err: NSError? = nil
                 LockLibNewScanAuth(code,&err)
+                
                 if err == nil {
-                        print("Account successfully saved.")
-                        return true
+                        print("Auth successfully saved.")
+                        return
                 }
+                
                 if let error = err {
                         throw SdkError.authSaveFailed(error.localizedDescription)
                 }
-                return false
+                return
+        }
+        
+        func DelAuth(key:String) throws{
+                var err: NSError? = nil
+                
+                LockLibRemoveAuth(key,&err)
+                
+                if err == nil {
+                        print("Auth successfully saved.")
+                        return
+                }
+                
+                if let error = err {
+                        throw SdkError.authSaveFailed(error.localizedDescription)
+                }
+                return
+                
         }
 }
 
@@ -258,7 +278,7 @@ extension SdkUtil: LockLibAppIProtocol {
                         return
                 }
                 
-                print("--->>key \(k) code \(c) time left:\(timeleft)")
+                //                print("--->>key \(k) code \(c) time left:\(timeleft)")
                 
                 DispatchQueue.main.async {
                         if let manager = SdkUtil.shared.authManager {

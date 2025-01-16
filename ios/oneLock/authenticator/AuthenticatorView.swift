@@ -14,8 +14,7 @@ struct AuthenticatorView: View {
                                                         .swipeActions {
                                                                 Button(role: .destructive) {
                                                                         // 删除逻辑，这里可以调用删除操作
-                                                                        print("\(key) deleted")
-                                                                        
+                                                                        removeByKey(key:key)
                                                                 } label: {
                                                                         Label("Delete", systemImage: "trash")
                                                                 }
@@ -32,25 +31,25 @@ struct AuthenticatorView: View {
                         .navigationBarTitle("Authenticator", displayMode: .inline)
                         .toolbar {
                                 ToolbarItem(placement: .navigationBarTrailing) {
-                                        HStack(spacing: 2) { // 修改按钮间距为 8pt
+                                        HStack(spacing: 2) {
                                                 NavigationLink(destination: NewAuthAccountView(onSave: authManager.reloadAccounts)) {
-                                                        Color.clear // 透明背景
-                                                                .frame(width: 24, height: 24) // 设置Button的尺寸为24pt × 24pt
+                                                        Color.clear
+                                                                .frame(width: 24, height: 24)
                                                                 .overlay(
                                                                         Image("add_icon")
                                                                                 .resizable()
                                                                                 .scaledToFit()
-                                                                                .frame(width: 22, height: 22) // 设置Image的尺寸
+                                                                                .frame(width: 22, height: 22)
                                                                 )
                                                 }
                                                 NavigationLink(destination: AuthScanView(onScanComplete: procScanedCode)) {
-                                                        Color.clear // 使用透明背景
-                                                                .frame(width: 24, height: 24) // 设置按钮的尺寸为 24pt
+                                                        Color.clear
+                                                                .frame(width: 24, height: 24)
                                                                 .overlay(
                                                                         Image("scan_icon")
                                                                                 .resizable()
                                                                                 .scaledToFit()
-                                                                                .frame(width: 22, height: 22) // 设置图标的尺寸
+                                                                                .frame(width: 22, height: 22) 
                                                                 )
                                                 }
                                         }
@@ -62,30 +61,39 @@ struct AuthenticatorView: View {
                 }
         }
         
+        private func removeByKey(key:String){
+                LoadingManager.shared.show(message: "processing scanned code......")
+                
+                DispatchQueue.global().async {
+                        do {
+                                try SdkUtil.shared.DelAuth(key: key)
+                                LoadingManager.shared.hide()
+                                authManager.reloadAccounts()
+                                
+                        } catch {
+                                LoadingManager.shared.hide()
+                                print("Error saving account: \(error.localizedDescription)")
+                                SdkUtil.shared.toastManager?.showToast(message: "An error occurred: \(error.localizedDescription)", isSuccess: false)
+                                
+                        }
+                }
+        }
+        
         private func procScanedCode(scannedCode:String?){
                 guard let code = scannedCode else{
                         return
                 }
-                
+                LoadingManager.shared.show(message: "processing scanned code......")
                 DispatchQueue.global().async {
                         do {
-                                let success = try SdkUtil.shared.NewAuthScanned(code: code)
+                                try SdkUtil.shared.NewAuthScanned(code: code)
+                                authManager.reloadAccounts()
+                                LoadingManager.shared.hide()
                                 
-                                DispatchQueue.main.async {
-                                        LoadingManager.shared.hide()
-                                        if success {
-                                                authManager.reloadAccounts()
-                                        } else {
-                                                print("Failed to save account")
-                                                SdkUtil.shared.toastManager?.showToast(message: "Operation failed", isSuccess: false)
-                                        }
-                                }
                         } catch {
-                                DispatchQueue.main.async {
-                                        LoadingManager.shared.hide()
-                                        print("Error saving account: \(error.localizedDescription)")
-                                        SdkUtil.shared.toastManager?.showToast(message: "An error occurred: \(error.localizedDescription)", isSuccess: false)
-                                }
+                                LoadingManager.shared.hide()
+                                print("Error saving account: \(error.localizedDescription)")
+                                SdkUtil.shared.toastManager?.showToast(message: "An error occurred: \(error.localizedDescription)", isSuccess: false)
                         }
                 }
         }
@@ -97,7 +105,7 @@ struct CodeCardView: View {
         private let cardBackgroundColor = Color(red: 243/255, green: 249/255, blue: 250/255) // 修改背景颜色为 rgba(243, 249, 250, 1)
         private let circleStrokeColor = Color(red: 0.0, green: 0.7, blue: 0.8)
         private let warningColor = Color(red: 255/255, green: 161/255, blue: 54/255)
-
+        
         var body: some View {
                 HStack {
                         VStack(alignment: .leading, spacing: 8) {

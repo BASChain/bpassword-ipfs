@@ -447,8 +447,7 @@ func LocalCachedAuth() []byte {
 	return __authManager.authData()
 }
 
-func RemoveAuth(is, ac string) error {
-	key := cfgKey(is, ac)
+func RemoveAuth(key string) error {
 	needUpdate := __authManager.delAuth(key)
 	if !needUpdate {
 		return nil
