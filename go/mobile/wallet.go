@@ -51,6 +51,8 @@ func InitWalletPath(dbPath string) bool {
 	if err != nil {
 		return false
 	}
+	__walletMng.db = db
+	utils.LogInst().Debugf("------>>> init dtabase path success:%s", dbPath)
 
 	// 尝试读取钱包数据
 	_, err = db.Get([]byte(__db_key_wallet_), nil)
@@ -58,9 +60,6 @@ func InitWalletPath(dbPath string) bool {
 		fmt.Println("----->>> failed load data from local database:", err)
 		return false
 	}
-
-	__walletMng.db = db
-
 	return true
 }
 
