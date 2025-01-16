@@ -13,7 +13,9 @@ struct AuthAccount: Codable {
         let account: String
         var code: String
         var timeLeft: Int
-        
+        var id: String {
+                return issuer + ":" + account
+            }
         // 自定义 CodingKeys
         enum CodingKeys: String, CodingKey {
                 case issuer

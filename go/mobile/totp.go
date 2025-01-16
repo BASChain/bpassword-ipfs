@@ -465,12 +465,12 @@ func AsyncAuthVerCheck() {
 	utils.LogInst().Debugf("------>>>start pushing auth to server")
 	__authManager.mu.RLock()
 	if __authManager.LocalVersion == __authManager.SrvVersion || __authManager.LocalVersion == 0 {
-		utils.LogInst().Debugf("[Auth] local version and server version are same")
+		utils.LogInst().Debugf("------>>>[Auth] local version and server version are same")
 		__authManager.mu.RUnlock()
 		return
 	}
 	__authManager.mu.RUnlock()
-	utils.LogInst().Debugf("[Auth]  local version and server version are not save ,prepare to push data")
+	utils.LogInst().Debugf("------>>>[Auth]  local version and server version are not save ,prepare to push data")
 	var err = writeEncodedAuthDataToSrv()
 	if err != nil {
 		__api.callback.AuthDataUpdated(nil, err)
@@ -512,12 +512,12 @@ func AsyncAuthSyncing() {
 	}
 
 	if onlineVer == __authManager.SrvVersion {
-		utils.LogInst().Infof("[Auth] proc sync result:local srvDataWithVer is same as server's")
+		utils.LogInst().Infof("------>>>[Auth] proc sync result:local srvDataWithVer is same as server's")
 		return
 	}
 
 	if onlineVer < __authManager.SrvVersion {
-		utils.LogInst().Debugf("[Auth] proc sync result:local srvDataWithVer is newer than server's")
+		utils.LogInst().Debugf("------>>>[Auth] proc sync result:local srvDataWithVer is newer than server's")
 		err = writeEncodedAuthDataToSrv()
 		if err != nil {
 			__api.callback.AuthDataUpdated(nil, err)
@@ -571,10 +571,10 @@ func authCodeTimerStart() {
 	// 创建ticker
 	__authTimer.ticker = time.NewTicker(AuthCodeTimer)
 
-	utils.LogInst().Debugf("auther code timer start.....")
+	utils.LogInst().Debugf("------>>>auther code timer start.....")
 	go func() {
 		defer __authTimer.ticker.Stop()
-		defer utils.LogInst().Debugf("auther code timer ending.....")
+		defer utils.LogInst().Debugf("------>>>auther code timer ending.....")
 
 		for {
 			select {
@@ -585,14 +585,14 @@ func authCodeTimerStart() {
 
 			case <-__authTimer.pauseChan:
 				__authTimer.paused = true
-				fmt.Println("[Scheduler] 已暂停")
+				fmt.Println("------>>>[Scheduler] 已暂停")
 
 			case <-__authTimer.resumeChan:
 				__authTimer.paused = false
-				fmt.Println("[Scheduler] 已恢复")
+				fmt.Println("------>>>[Scheduler] 已恢复")
 
 			case <-__authTimer.quitChan:
-				fmt.Println("[Scheduler] 已停止")
+				fmt.Println("------>>>[Scheduler] 已停止")
 				return
 			}
 		}
@@ -600,12 +600,13 @@ func authCodeTimerStart() {
 }
 
 func authCodeCalculate() {
+
 	__authManager.mu.RLock()
 	defer __authManager.mu.RUnlock()
 	for key, config := range __authManager.Auth {
 		code, timeLeft, err := generateTOTPCodeWithCountdown(config)
 		if err != nil {
-			utils.LogInst().Errorf("auth code generate failed:%v", err)
+			utils.LogInst().Errorf("------>>>auth code generate failed:%v", err)
 			continue
 		}
 		__api.callback.AuthCodeUpdate(key, code, timeLeft)

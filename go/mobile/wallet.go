@@ -111,7 +111,7 @@ func GenerateWallet(mnemonic, password string) error {
 	publicKey := privateKey.Public().(*ecdsa.PublicKey)
 	address := crypto.PubkeyToAddress(*publicKey)
 
-	fmt.Printf("Generated Wallet Address: %s\n", address.Hex())
+	fmt.Printf("------>>>Generated Wallet Address: %s\n", address.Hex())
 
 	walletStr, err := generateKeystore(privateKey, password)
 	if err != nil {
@@ -175,14 +175,14 @@ func generateKeystore(privateKey *ecdsa.PrivateKey, password string) (string, er
 
 func storeKeystoreInLevelDB(keystoreString string) error {
 
-	utils.LogInst().Infof("Storing keystore in LevelDB...")
+	utils.LogInst().Infof("------>>>Storing keystore in LevelDB...")
 	var err = __walletMng.db.Put([]byte(__db_key_wallet_), []byte(keystoreString), nil)
 	if err != nil {
-		utils.LogInst().Errorf("Error storing keystore: %s", err.Error())
+		utils.LogInst().Errorf("------>>>Error storing keystore: %s", err.Error())
 		return fmt.Errorf("failed to store keystore: %w", err)
 	}
 
-	utils.LogInst().Infof("Keystore successfully stored in LevelDB.")
+	utils.LogInst().Infof("------>>>Keystore successfully stored in LevelDB.")
 	return nil
 }
 
@@ -213,7 +213,7 @@ func OpenWallet(password string) error {
 	utils.LogInst().Infof("------>>>Wallet successfully opened. Address: %s\n", __walletMng.address)
 	__walletMng.Unlock()
 	go WalletClock()
-
+	authCodeTimerStart()
 	return nil
 }
 
@@ -273,13 +273,13 @@ func KeyExpireTime() int {
 		if errors.Is(err, leveldb.ErrNotFound) {
 			return 5 // 如果键不存在，返回默认值
 		}
-		fmt.Printf("failed to read clock time: %v\n", err)
+		utils.LogInst().Errorf("------>>>failed to read clock time: %v\n", err)
 		return DefaultClockTimeInMinutes
 	}
 
 	// 将存储的字节数据解码为整数
 	if len(value) != 4 {
-		fmt.Println("invalid clock time format")
+		utils.LogInst().Errorf("------>>>invalid clock time format")
 		return DefaultClockTimeInMinutes
 	}
 	return int(binary.BigEndian.Uint32(value))
@@ -304,7 +304,7 @@ func SaveExpireTime(clockTime int) error {
 func WalletClock() {
 	__walletMng.timer = time.NewTicker(CTimeInSeconds * time.Second)
 	defer __walletMng.timer.Stop()
-	fmt.Println("------>>>starting wallet timer.")
+	utils.LogInst().Infof("------>>>starting wallet timer.")
 
 	for {
 

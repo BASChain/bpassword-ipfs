@@ -7,6 +7,8 @@ struct NewAuthAccountView: View {
         
         @Environment(\.presentationMode) var presentationMode
         
+        var onSave: (() -> Void)? // 回调通知 HomeView 刷新
+        
         var body: some View {
                 ZStack {
                         // 主要内容容器
@@ -74,7 +76,7 @@ struct NewAuthAccountView: View {
                                 
                                 // Save 按钮
                                 Button(action: {
-                                        print("Save tapped with service: \(service), account: \(account), key: \(key)")
+                                        saveNewAuth()
                                 }) {
                                         Text("Save")
                                                 .font(.system(size: 19, weight: .bold))
@@ -112,5 +114,37 @@ struct NewAuthAccountView: View {
                                 }
                         }
                 })
+        }
+        
+        private func saveNewAuth(){
+                
+                guard !service.isEmpty, !account.isEmpty, !key.isEmpty else {
+                        PopupManager.shared.showPopup(title: "Tips", message: "All fields are required", isSuccess: false)
+                        return
+                }
+                LoadingManager.shared.show(message: "Saving Account...")
+                
+                DispatchQueue.global().async {
+                        do {
+                                let success = try SdkUtil.shared.NewAuthManual(issuer: service, account: account, secret: key)
+                                
+                                DispatchQueue.main.async {
+                                        LoadingManager.shared.hide()
+                                        if success {
+                                                onSave?() 
+                                                presentationMode.wrappedValue.dismiss()
+                                        } else {
+                                                print("Failed to save account")
+                                                SdkUtil.shared.toastManager?.showToast(message: "Operation failed", isSuccess: false)
+                                        }
+                                }
+                        } catch {
+                                DispatchQueue.main.async {
+                                        LoadingManager.shared.hide()
+                                        print("Error saving account: \(error.localizedDescription)")
+                                        SdkUtil.shared.toastManager?.showToast(message: "An error occurred: \(error.localizedDescription)", isSuccess: false)
+                                }
+                        }
+                }
         }
 }

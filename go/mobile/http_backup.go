@@ -20,10 +20,10 @@ const (
 
 func signMessage(message []byte, privateKey *ecdsa.PrivateKey) (string, error) {
 	if privateKey == nil {
-		return "", fmt.Errorf("private key is nil")
+		return "", fmt.Errorf("------>>>private key is nil")
 	}
 	if message == nil {
-		return "", fmt.Errorf("message is nil")
+		return "", fmt.Errorf("------>>>message is nil")
 	}
 	// 计算消息哈希
 	messageHash := crypto.Keccak256(message)
@@ -31,7 +31,7 @@ func signMessage(message []byte, privateKey *ecdsa.PrivateKey) (string, error) {
 	// 使用私钥签名消息
 	signature, err := crypto.Sign(messageHash, privateKey)
 	if err != nil {
-		return "", fmt.Errorf("failed to sign message: %v", err)
+		return "", fmt.Errorf("------>>>failed to sign message: %v", err)
 	}
 
 	// 返回签名的十六进制字符串
@@ -70,7 +70,7 @@ func syncDataFromSrv(api string) (*service.EncodedData, error) {
 func uploadLocalData(api string, encodedData []byte, srvVer int64) (*service.UpdateResult, error) {
 
 	if encodedData == nil {
-		return nil, fmt.Errorf("invalid data")
+		return nil, fmt.Errorf("------>>>invalid data")
 	}
 
 	var updateReq = &service.UpdateRequest{
@@ -86,7 +86,7 @@ func uploadLocalData(api string, encodedData []byte, srvVer int64) (*service.Upd
 
 	sig, err := signMessage(dataToSign, __walletMng.getPriKey(true))
 	if err != nil {
-		utils.LogInst().Errorf("sign message error %s", err.Error())
+		utils.LogInst().Errorf("------>>>sign message error %s", err.Error())
 		return nil, err
 	}
 	updateReq.Signature = sig
@@ -94,7 +94,7 @@ func uploadLocalData(api string, encodedData []byte, srvVer int64) (*service.Upd
 	var url = __api.srvUrl + api
 	data, err := utils.SendPostRequest(url, __api.token, updateReq)
 	if err != nil {
-		utils.LogInst().Errorf("SyncLatestData error %s", err.Error())
+		utils.LogInst().Errorf("------>>>SyncLatestData error %s", err.Error())
 		return nil, err
 	}
 

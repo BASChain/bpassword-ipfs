@@ -27,7 +27,7 @@ class SdkUtil: NSObject {
         //        private let server_url = "http://192.168.18.51:5004"
         private let server_token = "ac8ad031c9905e3ead2454d1a1f6c110"
         static let AppUrl = "https://apps.apple.com/us/app/onelock/id6739830100"
-        
+        weak var authManager: AuthManager? = nil
         var toastManager: ToastManager? // 引用 ToastManager
         private override init() {
                 super.init()
@@ -207,9 +207,9 @@ class SdkUtil: NSObject {
                 }
                 do {
                         let decoder = JSONDecoder()
-                        print("current auth raw data:\(jsonData) \(String(data:jsonData, encoding: .utf8) ?? "---")")
                         let decodedAccounts = try decoder.decode([String: AuthAccount].self, from: jsonData)
                         for (key, account) in decodedAccounts {
+                                print("key:\(key) account \(account) ")
                                 accountsMap[key] = account
                         }
                 } catch {
@@ -225,7 +225,7 @@ class SdkUtil: NSObject {
                 LockLibNewManualAuth(issuer,account,secret, &err)
                 
                 if err == nil {
-                        print("Account successfully saved.")
+                        print("Auth mannual successfully saved.")
                         return true
                 }
                 
@@ -235,12 +235,36 @@ class SdkUtil: NSObject {
                 
                 return false
         }
+        
+        func NewAuthScanned(code:String) throws -> Bool{
+                var err: NSError? = nil
+                LockLibNewScanAuth(code,&err)
+                if err == nil {
+                        print("Account successfully saved.")
+                        return true
+                }
+                if let error = err {
+                        throw SdkError.authSaveFailed(error.localizedDescription)
+                }
+                return false
+        }
 }
 
 // MARK: - 实现 Go 的 APPI 接口
 extension SdkUtil: LockLibAppIProtocol {
+        
         func authCodeUpdate(_ key: String?, code: String?, timeleft: Int) {
+                guard let k = key, let c = code else{
+                        return
+                }
                 
+                print("--->>key \(k) code \(c) time left:\(timeleft)")
+                
+                DispatchQueue.main.async {
+                        if let manager = SdkUtil.shared.authManager {
+                                manager.updateAuthCode(for: k, code: c, timeLeft: timeleft)
+                        }
+                }
         }
         
         func authDataUpdated(_ data: Data?, err: (any Error)?) {

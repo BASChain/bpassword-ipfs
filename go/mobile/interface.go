@@ -38,7 +38,6 @@ func InitSDK(exi AppI, url, token string, logLevel int8) error {
 
 	__api = &API{srvUrl: url, token: token, callback: exi}
 
-	authCodeTimerStart()
 	utils.LogInst().Debugf("------>>>init sdk success")
 
 	return nil
@@ -112,7 +111,7 @@ func AsyncAccountSyncing() {
 	}
 
 	if onlineVer < __accountManager.SrvVersion {
-		utils.LogInst().Debugf("proc sync result:local srvDataWithVer is newer than server's")
+		utils.LogInst().Debugf("------>>>proc sync result:local srvDataWithVer is newer than server's")
 		err = writeEncodedAccountDataToSrv()
 		if err != nil {
 			__api.callback.DataUpdated(nil, err)
@@ -121,7 +120,7 @@ func AsyncAccountSyncing() {
 		return
 	}
 
-	utils.LogInst().Debugf("proc sync result: server srvDataWithVer is newer than local's")
+	utils.LogInst().Debugf("------>>>proc sync result: server srvDataWithVer is newer than local's")
 	err = mergeSrvData(onlineData, onlineVer)
 	if err != nil {
 		__api.callback.DataUpdated(nil, err)
@@ -151,12 +150,12 @@ func AsyncAccountVerCheck() {
 	utils.LogInst().Debugf("------>>>start pushing data to server")
 	__accountManager.mu.RLock()
 	if __accountManager.LocalVersion == __accountManager.SrvVersion || __accountManager.LocalVersion == 0 {
-		utils.LogInst().Debugf("local version and server version are same")
+		utils.LogInst().Debugf("------>>>local version and server version are same")
 		__accountManager.mu.RUnlock()
 		return
 	}
 	__accountManager.mu.RUnlock()
-	utils.LogInst().Debugf("local version and server version are not save ,prepare to push data")
+	utils.LogInst().Debugf("------>>>local version and server version are not save ,prepare to push data")
 	var err = writeEncodedAccountDataToSrv()
 	if err != nil {
 		__api.callback.DataUpdated(nil, err)

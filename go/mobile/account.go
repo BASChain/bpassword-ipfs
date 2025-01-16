@@ -105,7 +105,7 @@ func (am *AccountManager) delAccount(uuid string) bool {
 	}
 	delete(am.Accounts, uuid)
 	am.LocalVersion += 1
-	utils.LogInst().Debugf("Account with UUID %s removed from memory.\n", uuid)
+	utils.LogInst().Debugf("------>>>Account with UUID %s removed from memory.\n", uuid)
 	return true
 }
 
