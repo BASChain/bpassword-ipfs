@@ -128,7 +128,9 @@ struct AccountDetailView: View {
                                 LoadingManager.shared.hide()
                                 onAccountDeleted?()
                                 SdkUtil.shared.toastManager?.showToast(message: "Delete Success!", isSuccess: true)
-                                presentationMode.wrappedValue.dismiss()
+                                DispatchQueue.main.async {
+                                        presentationMode.wrappedValue.dismiss()
+                                }
                         }catch{
                                 LoadingManager.shared.hide()
                                 SdkUtil.shared.toastManager?.showToast(message: error.localizedDescription, isSuccess: false)
