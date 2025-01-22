@@ -9,7 +9,7 @@ struct SettingView: View {
         var body: some View {
                 NavigationView {
                         ScrollView {
-                                VStack(spacing: 0) {
+                                VStack(spacing: 16) {
                                         // 区块链地址部分
                                         ZStack(alignment: .topLeading) {
                                                 Image("blockchain_background")
@@ -35,7 +35,7 @@ struct SettingView: View {
                                                                         Image(isCopySuccess ? "copy-success" : "copy-Mnemonic")
                                                                                 .resizable()
                                                                                 .scaledToFit()
-                                                                                .frame(width: 20, height: 20)
+                                                                                .frame(width: 30, height: 30)
                                                                 }
                                                                 .padding(.leading, 8)
                                                         }
@@ -48,7 +48,7 @@ struct SettingView: View {
                                         .padding(.horizontal, 22)
                                         .padding(.top, 20) // 距离顶部间距
                                         
-                                        // Auto Close Wallet Duration
+                                        // Group 1: Auto Close Wallet Duration and Change Password
                                         VStack(spacing: 0) {
                                                 HStack {
                                                         Text("Auto Close Wallet Duration")
@@ -70,13 +70,8 @@ struct SettingView: View {
                                                 .padding(.vertical, 12)
                                                 .padding(.horizontal, 22)
                                                 
-                                                Divider()
-                                                        .background(Color(red: 243/255, green: 243/255, blue: 243/255))
-                                                        .padding(.horizontal, 22)
-                                        }
-                                        
-                                        // Change Password
-                                        VStack(spacing: 0) {
+                                                Divider().background(Color.gray.opacity(0.05))
+                                                
                                                 NavigationLink(destination: PasswordChangeView()) {
                                                         HStack {
                                                                 Text("Change Password")
@@ -92,14 +87,11 @@ struct SettingView: View {
                                                 }
                                                 .padding(.vertical, 12)
                                                 .padding(.horizontal, 22)
-                                                
-                                                // 自定义分隔线
-                                                Rectangle()
-                                                        .fill(Color(red: 243/255, green: 244/255, blue: 247/255))
-                                                        .frame(height: 12)
                                         }
+                                        .background(Rectangle().fill(Color.gray.opacity(0.05)))
+                                        .cornerRadius(10)
                                         
-                                        // Current Version
+                                        // Group 2: Current Version and Share This App
                                         VStack(spacing: 0) {
                                                 HStack {
                                                         Text("Current Version")
@@ -117,13 +109,8 @@ struct SettingView: View {
                                                 .padding(.vertical, 12)
                                                 .padding(.horizontal, 22)
                                                 
-                                                Divider()
-                                                        .background(Color(red: 243/255, green: 243/255, blue: 243/255))
-                                                        .padding(.horizontal, 22)
-                                        }
-                                        
-                                        // Share This App
-                                        VStack(spacing: 0) {
+                                                Divider().background(Color.gray.opacity(0.05))
+                                                
                                                 Button(action: {
                                                         shareApp()
                                                 }) {
@@ -135,12 +122,52 @@ struct SettingView: View {
                                                                 Image("share_icon")
                                                                         .resizable()
                                                                         .scaledToFit()
-                                                                        .frame(width: 30, height: 30)
+                                                                        .frame(width: 16, height: 16)
                                                         }
                                                 }
                                                 .padding(.vertical, 12)
                                                 .padding(.horizontal, 22)
                                         }
+                                        .background(Rectangle().fill(Color.gray.opacity(0.05)))
+                                        .cornerRadius(10)
+                                        
+                                        // Group 3: Delete Account and Log Out
+                                        VStack(spacing: 12) {
+                                                Button(action: {
+                                                        deleteAccount()
+                                                }) {
+                                                        HStack {
+                                                                Text("Delete Account")
+                                                                        .font(.custom("SFProText-Medium", size: 15))
+                                                                        .foregroundColor(.red)
+                                                                Spacer()
+                                                                Image(systemName: "trash")
+                                                                        .resizable()
+                                                                        .scaledToFit()
+                                                                        .frame(width: 16, height: 16)
+                                                                        .foregroundColor(.red)
+                                                        }
+                                                }
+                                                .padding(.vertical, 12)
+                                                .padding(.horizontal, 22)
+                                                
+                                                Divider().background(Color.gray.opacity(0.05))
+                                                
+                                                Button(action: {
+                                                        logOut()
+                                                }) {
+                                                        Text("Log Out")
+                                                                .font(.custom("SFProText-Medium", size: 16))
+                                                                .foregroundColor(Color(red: 0, green: 188/255, blue: 212/255))
+                                                                .padding()
+                                                                .frame(maxWidth: .infinity)
+                                                                .background(Color(red: 0, green: 188/255, blue: 212/255, opacity: 0.15))
+                                                                .cornerRadius(10)
+                                                }
+                                                .padding(.horizontal, 22)
+                                        }
+                                        .background(Rectangle().fill(Color.gray.opacity(0.05)))
+                                        .cornerRadius(10)
                                 }
                         }
                         .background(Color.white.edgesIgnoringSafeArea(.all))
@@ -173,6 +200,16 @@ struct SettingView: View {
                 } else {
                         SdkUtil.shared.toastManager?.showToast(message: "Share Failed!", isSuccess: false)
                 }
+        }
+        
+        private func deleteAccount() {
+                // Add account deletion logic here
+                SdkUtil.shared.toastManager?.showToast(message: "Account Deleted", isSuccess: true)
+        }
+        
+        private func logOut() {
+                // Add logout logic here
+                SdkUtil.shared.toastManager?.showToast(message: "Logged Out", isSuccess: true)
         }
 }
 
