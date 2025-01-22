@@ -269,6 +269,18 @@ class SdkUtil: NSObject {
                 return
                 
         }
+        
+        func logout(){
+                
+                DispatchQueue.global().async {
+                        
+                        LockLibCloseWallet()
+                        
+                        DispatchQueue.main.async {
+                                AppStateManager.shared.appState.isPasswordValidated = false
+                        }
+                }
+        }
 }
 
 // MARK: - 实现 Go 的 APPI 接口

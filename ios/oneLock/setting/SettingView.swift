@@ -154,7 +154,7 @@ struct SettingView: View {
                                                 Divider().background(Color.gray.opacity(0.05))
                                                 
                                                 Button(action: {
-                                                        logOut()
+                                                        SdkUtil.shared.logout()
                                                 }) {
                                                         Text("Log Out")
                                                                 .font(.custom("SFProText-Medium", size: 16))
@@ -205,11 +205,6 @@ struct SettingView: View {
         private func deleteAccount() {
                 // Add account deletion logic here
                 SdkUtil.shared.toastManager?.showToast(message: "Account Deleted", isSuccess: true)
-        }
-        
-        private func logOut() {
-                // Add logout logic here
-                SdkUtil.shared.toastManager?.showToast(message: "Logged Out", isSuccess: true)
         }
 }
 
