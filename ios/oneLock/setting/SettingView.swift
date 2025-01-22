@@ -135,7 +135,7 @@ struct SettingView: View {
                                                                 Image("share_icon")
                                                                         .resizable()
                                                                         .scaledToFit()
-                                                                        .frame(width: 16, height: 16)
+                                                                        .frame(width: 30, height: 30)
                                                         }
                                                 }
                                                 .padding(.vertical, 12)
