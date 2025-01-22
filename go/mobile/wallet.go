@@ -325,3 +325,7 @@ func WalletClock() {
 		}
 	}
 }
+
+func CompleteRemoveWallet() {
+
+}
