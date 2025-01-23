@@ -32,6 +32,7 @@ class SdkUtil: NSObject {
         static let AppUrl = "https://apps.apple.com/us/app/onelock/id6739830100"
         weak var authManager: AuthManager? = nil
         var toastManager: ToastManager? // 引用 ToastManager
+        @Published var shouldRefreshAccounts: Bool = false
         private override init() {
                 super.init()
         }
@@ -116,30 +117,22 @@ class SdkUtil: NSObject {
         }
         
         
-        func addAccount(account: Account) throws -> Bool {
+        func addAccount(account: Account) throws {
                 // 将 Account 实例转换为 JSON 字符串
                 guard let jsonStr = account.jsonString() else {
                         throw SdkError.serializationFailed
                 }
                 
                 var err: NSError? = nil
-                
                 // 调用 C 函数进行添加或更新
                 LockLibAddOrUpdateAccount(jsonStr, &err)
                 
-                // 如果没有错误
-                if err == nil {
-                        print("Account successfully saved.")
-                        return true
-                }
-                
                 // 如果有错误，抛出异常
-                if let error = err {
-                        throw SdkError.account(error.localizedDescription)
+                guard let error = err  else {
+                        return;
                 }
                 
-                // 如果没有返回任何错误，默认返回 false
-                return false
+                throw SdkError.account(error.localizedDescription)
         }
         func loadAccounts() -> [UUID: Account] {
                 var accountsMap = [UUID: Account]()
@@ -271,14 +264,19 @@ class SdkUtil: NSObject {
         }
         
         func logout(){
-                
                 DispatchQueue.global().async {
-                        
                         LockLibCloseWallet()
-                        
                         DispatchQueue.main.async {
                                 AppStateManager.shared.appState.isPasswordValidated = false
                         }
+                }
+        }
+        
+        func deleteAccount(){
+                LockLibCompleteRemoveWallet()
+                DispatchQueue.main.async {
+                        AppStateManager.shared.appState.hasWallet = false
+                        AppStateManager.shared.appState.isPasswordValidated = false
                 }
         }
 }
@@ -320,6 +318,9 @@ extension SdkUtil: LockLibAppIProtocol {
                                 self.toastManager?.showToast(message: "Data update failed: \(error.localizedDescription)", isSuccess: false)
                         } else {
                                 self.toastManager?.showToast(message: "Data updated successfully!", isSuccess: true)
+                                DispatchQueue.main.async {
+                                        self.shouldRefreshAccounts = true
+                                }
                         }
                 }
         }

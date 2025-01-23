@@ -120,27 +120,21 @@ struct AddAccountView: View {
                 }
                 let account = Account(platform: platform, username: username,
                                       password: password, lastUpdated: Int64(Date().timeIntervalSince1970))
+                
                 LoadingManager.shared.show(message: "Saving Account...")
                 
                 DispatchQueue.global().async {
-                        do {  let success = try SdkUtil.shared.addAccount(account: account)
-                                
+                        do {
+                                try SdkUtil.shared.addAccount(account: account)
+                                LoadingManager.shared.hide()
                                 DispatchQueue.main.async {
-                                        LoadingManager.shared.hide()
-                                        if success {
-                                                onSave?() // 通知 HomeView 刷新
-                                                presentationMode.wrappedValue.dismiss()
-                                        } else {
-                                                print("Failed to save account")
-                                                SdkUtil.shared.toastManager?.showToast(message: "Operation failed", isSuccess: false)
-                                        }
+                                        onSave?() // 通知 HomeView 刷新
+                                        presentationMode.wrappedValue.dismiss()
                                 }
                         } catch {
-                                DispatchQueue.main.async {
-                                        LoadingManager.shared.hide()
-                                        print("Error saving account: \(error.localizedDescription)")
-                                        SdkUtil.shared.toastManager?.showToast(message: "An error occurred: \(error.localizedDescription)", isSuccess: false)
-                                }
+                                LoadingManager.shared.hide()
+                                print("Error saving account: \(error.localizedDescription)")
+                                SdkUtil.shared.toastManager?.showToast(message: "An error occurred: \(error.localizedDescription)", isSuccess: false)
                         }
                 }
         }

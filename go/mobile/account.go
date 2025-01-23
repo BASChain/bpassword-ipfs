@@ -28,7 +28,7 @@ type AccountManager struct {
 	mu           sync.RWMutex
 }
 
-var __accountManager = &AccountManager{
+var __accManager = &AccountManager{
 	Accounts: make(map[string]*Account),
 }
 
@@ -54,25 +54,27 @@ func initCachedAccountData() {
 		return
 	}
 
-	err = json.Unmarshal(rawData, &__accountManager)
+	err = json.Unmarshal(rawData, &__accManager)
 	if err != nil {
 		utils.LogInst().Errorf("----->>>unmarshal local data failed:%s", err.Error())
 		return
 	}
 
-	if __accountManager.Accounts == nil {
-		__accountManager.Accounts = make(map[string]*Account)
-		__accountManager.LocalVersion = 0
-		__accountManager.SrvVersion = -1
+	if __accManager.Accounts == nil {
+		__accManager.Accounts = make(map[string]*Account)
+		__accManager.LocalVersion = 0
+		__accManager.SrvVersion = -1
 	}
+
 	utils.LogInst().Infof("------>>> init local data success")
 }
 
-func (am *AccountManager) addOrUpdateAccount(acc *Account) {
+func (am *AccountManager) addOrUpdate(acc *Account) {
 	am.mu.Lock()
+	defer am.mu.Unlock()
+
 	am.Accounts[acc.ID.String()] = acc
 	am.LocalVersion += 1
-	am.mu.Unlock()
 }
 
 func (am *AccountManager) fullData() []byte {
@@ -109,6 +111,13 @@ func (am *AccountManager) delAccount(uuid string) bool {
 	return true
 }
 
+func (am *AccountManager) clear() {
+	am.mu.Lock()
+	defer am.mu.Unlock()
+	am.LocalVersion += 1
+	am.Accounts = make(map[string]*Account)
+}
+
 // parseAccount 解析 JSON 字符串为 Account
 func parseAccount(jsonStr string) (*Account, error) {
 	var account Account
@@ -135,13 +144,12 @@ func parseAccount(jsonStr string) (*Account, error) {
 
 // localDbSave 将账号列表保存到 LevelDB
 func localDbSave() error {
-
 	priKey := __walletMng.getPriKey(true)
 	if priKey == nil {
 		return fmt.Errorf("private key is required")
 	}
 
-	data := __accountManager.fullData()
+	data := __accManager.fullData()
 	encodeData, err := Encode(data, &priKey.PublicKey)
 	if err != nil {
 		return fmt.Errorf("failed to encode Accounts: %w", err)
@@ -160,25 +168,24 @@ func AddOrUpdateAccount(accJsonStr string) error {
 	if err != nil {
 		return err
 	}
-	__accountManager.addOrUpdateAccount(account)
+	__accManager.addOrUpdate(account)
 	err = localDbSave()
 	if err != nil {
 		return err
 	}
-
-	go AsyncAccountVerCheck()
+	go AccountVerCheck()
 	return nil
 }
 
 // LocalCachedData sync data from local or server
 func LocalCachedData() []byte {
-	return __accountManager.accountData()
+	return __accManager.accountData()
 }
 
 // RemoveAccount 从内存和 LevelDB 中移除指定的账号
 func RemoveAccount(uuid string) error {
 	uuid = strings.ToLower(uuid)
-	needUpdate := __accountManager.delAccount(uuid)
+	needUpdate := __accManager.delAccount(uuid)
 	if !needUpdate {
 		return nil
 	}
@@ -186,6 +193,6 @@ func RemoveAccount(uuid string) error {
 	if err != nil {
 		return err
 	}
-	go AsyncAccountVerCheck()
+	go AccountVerCheck()
 	return nil
 }

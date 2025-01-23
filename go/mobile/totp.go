@@ -70,6 +70,13 @@ func (am *AuthManager) delAuth(key string) bool {
 	return true
 }
 
+func (am *AuthManager) clear() {
+	am.mu.Lock()
+	defer am.mu.Unlock()
+	am.LocalVersion += 1
+	am.Auth = make(map[string]*TOTPConfig)
+}
+
 func (am *AuthManager) UpdateLatestVersion(srvVer int64) {
 	am.mu.RLock()
 	defer am.mu.RUnlock()
@@ -385,7 +392,7 @@ func NewScanAuth(url string) error {
 	}
 
 	__authManager.newAuth(config)
-	go AsyncAuthVerCheck()
+	go AuthVerCheck()
 
 	return _saveNewAuth(config)
 }
@@ -394,7 +401,7 @@ func NewManualAuth(issuer, account, secret string) error {
 	config := newDefaultTOTPConfig(issuer, account, secret)
 
 	__authManager.newAuth(config)
-	go AsyncAuthVerCheck()
+	go AuthVerCheck()
 
 	return _saveNewAuth(config)
 }
@@ -456,12 +463,13 @@ func RemoveAuth(key string) error {
 	if err != nil {
 		return err
 	}
-	go AsyncAuthVerCheck()
+	go AuthVerCheck()
 	return nil
 }
 
-func AsyncAuthVerCheck() {
-	utils.LogInst().Debugf("------>>>start pushing auth to server")
+func AuthVerCheck() {
+	utils.LogInst().Debugf("------>>>start pushing auth to server local=%d server=%d", __authManager.LocalVersion, __authManager.SrvVersion)
+
 	__authManager.mu.RLock()
 	if __authManager.LocalVersion == __authManager.SrvVersion || __authManager.LocalVersion == 0 {
 		utils.LogInst().Debugf("------>>>[Auth] local version and server version are same")
@@ -498,7 +506,7 @@ func writeEncodedAuthDataToSrv() error {
 }
 
 func AsyncAuthSyncing() {
-	utils.LogInst().Debugf("------>>>[Auth] start syncing data from server")
+	utils.LogInst().Debugf("------>>>[Auth] start syncing auth from server")
 	var onlineData = make(map[string]*TOTPConfig)
 
 	onlineVer, err := queryAndDecodeSrvData(queryAuthDataAPi, &onlineData)
@@ -511,12 +519,12 @@ func AsyncAuthSyncing() {
 	}
 
 	if onlineVer == __authManager.SrvVersion {
-		utils.LogInst().Infof("------>>>[Auth] proc sync result:local srvDataWithVer is same as server's")
+		utils.LogInst().Infof("------>>>[Auth] proc sync result:local srvDataWithVer[%d] is same as server's", onlineVer)
 		return
 	}
 
 	if onlineVer < __authManager.SrvVersion {
-		utils.LogInst().Debugf("------>>>[Auth] proc sync result:local srvDataWithVer is newer than server's")
+		utils.LogInst().Debugf("------>>>[Auth] proc sync result:local srvDataWithVer[%d] is newer than server's[%d]", onlineVer, __authManager.SrvVersion)
 		err = writeEncodedAuthDataToSrv()
 		if err != nil {
 			__api.callback.AuthDataUpdated(nil, err)
@@ -525,8 +533,8 @@ func AsyncAuthSyncing() {
 		return
 	}
 
-	utils.LogInst().Debugf("[Auth] proc sync result: server srvDataWithVer is newer than local's")
-	err = mergeSrvDataAuth(onlineData, onlineVer)
+	utils.LogInst().Debugf("------>>>[Auth] proc sync result: server srvDataWithVer[%d]  is newer than local's[%d]", onlineVer, __authManager.SrvVersion)
+	err = replaceBySrvDataAuth(onlineData, onlineVer)
 	if err != nil {
 		__api.callback.AuthDataUpdated(nil, err)
 		return
@@ -547,6 +555,15 @@ func mergeSrvDataAuth(onlineData map[string]*TOTPConfig, onlineVer int64) error 
 	}
 
 	__authManager.SrvVersion = onlineVer
+
+	return saveAuthLocalDb()
+}
+
+func replaceBySrvDataAuth(onlineData map[string]*TOTPConfig, onlineVer int64) error {
+	__authManager.mu.Lock()
+	__authManager.Auth = onlineData
+	__authManager.SrvVersion = onlineVer
+	__authManager.mu.Unlock()
 
 	return saveAuthLocalDb()
 }

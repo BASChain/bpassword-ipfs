@@ -82,18 +82,6 @@ struct PasswordView: View {
                                 }
                                 .background(Color.white)
                                 .navigationBarBackButtonHidden(true)
-                                .toolbar {
-                                        ToolbarItem(placement: .navigationBarLeading) {
-                                                Button(action: {
-                                                        dismiss()
-                                                }) {
-                                                        Image("back_icon")
-                                                                .resizable()
-                                                                .scaledToFit()
-                                                                .frame(width: 24, height: 24)
-                                                }
-                                        }
-                                }
                                 .onTapGesture {
                                         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                                 }

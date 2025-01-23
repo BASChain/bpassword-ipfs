@@ -74,7 +74,7 @@ func queryAndDecodeSrvData(api string, onlineData any) (int64, error) {
 }
 
 func writeEncodedAccountDataToSrv() error {
-	rawData := __accountManager.accountData()
+	rawData := __accManager.accountData()
 	priKey := __walletMng.getPriKey(true)
 	if priKey == nil {
 		return fmt.Errorf("invalid private key")
@@ -84,16 +84,16 @@ func writeEncodedAccountDataToSrv() error {
 		utils.LogInst().Errorf("------>>>encode rawData failed:%s", err.Error())
 		return err
 	}
-	result, err := uploadLocalData(updateAccountDataAPi, data, __accountManager.SrvVersion)
+	result, err := uploadLocalData(updateAccountDataAPi, data, __accManager.SrvVersion)
 	if err != nil {
 		utils.LogInst().Errorf("------>>>upload data failed:%s", err.Error())
 		return err
 	}
-	__accountManager.UpdateLatestVersion(result.LatestVer)
+	__accManager.UpdateLatestVersion(result.LatestVer)
 	return localDbSave()
 }
 
-func AsyncAccountSyncing() {
+func AsyncAccSyncing() {
 	utils.LogInst().Debugf("------>>>start syncing data from server")
 	var onlineData = make(map[string]*Account)
 	onlineVer, err := queryAndDecodeSrvData(queryAccountDataAPi, &onlineData)
@@ -105,13 +105,13 @@ func AsyncAccountSyncing() {
 		return
 	}
 
-	if onlineVer == __accountManager.SrvVersion {
-		utils.LogInst().Infof("proc sync result:local srvDataWithVer is same as server's")
+	if onlineVer == __accManager.SrvVersion {
+		utils.LogInst().Infof("-------->>> proc sync result:local srvDataWithVer[%d] is same as server's", onlineVer)
 		return
 	}
 
-	if onlineVer < __accountManager.SrvVersion {
-		utils.LogInst().Debugf("------>>>proc sync result:local srvDataWithVer is newer than server's")
+	if onlineVer < __accManager.SrvVersion {
+		utils.LogInst().Debugf("------>>>proc sync result:local srvDataWithVer[%d] is newer than server's[%d]", onlineVer, __accManager.SrvVersion)
 		err = writeEncodedAccountDataToSrv()
 		if err != nil {
 			__api.callback.DataUpdated(nil, err)
@@ -120,41 +120,48 @@ func AsyncAccountSyncing() {
 		return
 	}
 
-	utils.LogInst().Debugf("------>>>proc sync result: server srvDataWithVer is newer than local's")
-	err = mergeSrvData(onlineData, onlineVer)
+	utils.LogInst().Debugf("------>>>proc sync result: server srvDataWithVer[%d] is newer than local's[%d]", onlineVer, __accManager.SrvVersion)
+	err = replaceBySrvData(onlineData, onlineVer)
 	if err != nil {
 		__api.callback.DataUpdated(nil, err)
 		return
 	}
-	__api.callback.DataUpdated(__accountManager.accountData(), nil)
+	__api.callback.DataUpdated(__accManager.accountData(), nil)
 	return
 }
 
 func mergeSrvData(onlineData map[string]*Account, onlineVer int64) error {
-	__accountManager.mu.Lock()
-	defer __accountManager.mu.Unlock()
+	__accManager.mu.Lock()
 
 	for id, account := range onlineData {
-		localAccData, exist := __accountManager.Accounts[id]
+		localAccData, exist := __accManager.Accounts[id]
 		if !exist || localAccData.LastUpdated < account.LastUpdated {
-			__accountManager.Accounts[id] = account
+			__accManager.Accounts[id] = account
 		}
 	}
-
-	__accountManager.SrvVersion = onlineVer
+	__accManager.SrvVersion = onlineVer
+	__accManager.mu.Unlock()
 
 	return localDbSave()
 }
 
-func AsyncAccountVerCheck() {
-	utils.LogInst().Debugf("------>>>start pushing data to server")
-	__accountManager.mu.RLock()
-	if __accountManager.LocalVersion == __accountManager.SrvVersion || __accountManager.LocalVersion == 0 {
+func replaceBySrvData(onlineData map[string]*Account, onlineVer int64) error {
+	__accManager.mu.Lock()
+	__accManager.Accounts = onlineData
+	__accManager.SrvVersion = onlineVer
+	__accManager.mu.Unlock()
+	return localDbSave()
+}
+
+func AccountVerCheck() {
+	utils.LogInst().Debugf("------>>>start pushing data to server local=%d srv=%d", __accManager.LocalVersion, __accManager.SrvVersion)
+	__accManager.mu.RLock()
+	if __accManager.LocalVersion == __accManager.SrvVersion || __accManager.LocalVersion == 0 {
 		utils.LogInst().Debugf("------>>>local version and server version are same")
-		__accountManager.mu.RUnlock()
+		__accManager.mu.RUnlock()
 		return
 	}
-	__accountManager.mu.RUnlock()
+	__accManager.mu.RUnlock()
 	utils.LogInst().Debugf("------>>>local version and server version are not save ,prepare to push data")
 	var err = writeEncodedAccountDataToSrv()
 	if err != nil {
@@ -170,8 +177,8 @@ func InitLocalData() {
 	initCachedAccountData()
 	initAuthList()
 
-	go AsyncAccountSyncing()
-	go AsyncAccountVerCheck()
+	go AsyncAccSyncing()
+	go AccountVerCheck()
 	go AsyncAuthSyncing()
-	go AsyncAuthVerCheck()
+	go AuthVerCheck()
 }

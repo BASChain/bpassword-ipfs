@@ -306,14 +306,13 @@ func WalletClock() {
 	utils.LogInst().Infof("------>>>starting wallet timer.")
 
 	for {
-
 		select {
 		case <-__walletMng.timer.C:
 			if __walletMng.getPriKey(false) == nil {
 				continue
 			}
 			timeOutInMinutes := KeyExpireTime()
-			utils.LogInst().Debugf("------>>>Timer Wallet checking expire at:%d", timeOutInMinutes)
+			//utils.LogInst().Debugf("------>>>Timer Wallet checking expire at:%d", timeOutInMinutes)
 			if (time.Now().Unix() - __walletMng.lastTouchTime) < int64(timeOutInMinutes*60) {
 				continue
 			}
@@ -326,6 +325,21 @@ func WalletClock() {
 	}
 }
 
-func CompleteRemoveWallet() {
+func removeWallet() {
+	__walletMng.Lock()
+	defer __walletMng.Unlock()
+	__walletMng.address = ""
+	__walletMng.priKey = nil
+	__walletMng.timer.Stop()
+	_ = __walletMng.db.Delete([]byte(__db_key_wallet_), nil)
+}
 
+func CompleteRemoveWallet() {
+	__accManager.clear()
+	AccountVerCheck()
+
+	__authManager.clear()
+	AuthVerCheck()
+
+	removeWallet()
 }

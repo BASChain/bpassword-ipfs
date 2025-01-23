@@ -10,7 +10,6 @@ import SwiftUI
 class AppStateManager {
         static let shared = AppStateManager()
         var appState = AppState() // 这里是全局的 AppState
-        
         private init() {}
 }
 

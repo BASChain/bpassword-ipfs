@@ -1,8 +1,10 @@
 import SwiftUI
+import Combine
 
 struct HomeView: View {
         @State private var accounts: [UUID: Account] = [:]
-        @State private var hasLoaded = false // 防止重复加载
+        @State private var hasLoaded = false
+        @State private var cancellables = Set<AnyCancellable>()
         
         var body: some View {
                 NavigationView {
@@ -11,11 +13,11 @@ struct HomeView: View {
                                         Text("No accounts found.")
                                                 .foregroundColor(.gray)
                                                 .padding()
-                                } else  {
+                                } else {
                                         ScrollView {
                                                 VStack(spacing: 12) {
                                                         ForEach(sortedAccounts(), id: \.id) { account in
-                                                                NavigationLink(destination: AccountDetailView(account: bindingForAccount(account)){
+                                                                NavigationLink(destination: AccountDetailView(account: bindingForAccount(account)) {
                                                                         hasLoaded = false
                                                                 }) {
                                                                         HStack {
@@ -32,15 +34,15 @@ struct HomeView: View {
                                                                                         .resizable()
                                                                                         .frame(width: 16, height: 16)
                                                                         }
-                                                                        .frame(height: 52) // 设置条目高度
-                                                                        .padding(8) // 设置元素的内部间距
+                                                                        .frame(height: 52)
+                                                                        .padding(8)
                                                                         .background(Color(red: 243/255, green: 249/255, blue: 250/255))
-                                                                        .cornerRadius(13) // 设置圆角背景
+                                                                        .cornerRadius(13)
                                                                 }
-                                                                .buttonStyle(PlainButtonStyle()) // 确保没有默认样式
+                                                                .buttonStyle(PlainButtonStyle())
                                                         }
                                                 }
-                                                .padding(.horizontal, 16) // 设置列表整体左右间距
+                                                .padding(.horizontal, 16)
                                         }
                                 }
                         }
@@ -54,6 +56,7 @@ struct HomeView: View {
                         }
                         .onAppear {
                                 loadAccountsIfNeeded()
+                                observeAccountRefresh()
                         }
                 }
         }
@@ -69,11 +72,19 @@ struct HomeView: View {
                 hasLoaded = true
         }
         
+        private func observeAccountRefresh() {
+                SdkUtil.shared.$shouldRefreshAccounts
+                        .filter { $0 }
+                        .sink { _ in
+                                loadAccounts()
+                        }
+                        .store(in: &cancellables)
+        }
+        
         private func sortedAccounts() -> [Account] {
                 return accounts.values.sorted { $0.lastUpdated > $1.lastUpdated }
         }
         
-        /// 根据 `Account` 获取绑定
         private func bindingForAccount(_ account: Account) -> Binding<Account> {
                 guard let uuid = accounts.first(where: { $0.value.id == account.id })?.key else {
                         fatalError("Account not found")

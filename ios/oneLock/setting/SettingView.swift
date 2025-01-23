@@ -4,6 +4,7 @@ struct SettingView: View {
         @State private var autoCloseDuration: Int = SdkUtil.shared.getAutoCloseDuration()
         @State private var isCopySuccess: Bool = false // 状态控制图标变化
         @State private var showBottomSheet: Bool = false // 用于控制底部弹出视图
+        @State private var showAlert: Bool = false // 用于控制删除确认弹窗
         let blockchainAddress: String = SdkUtil.shared.walletAddress()
         
         var body: some View {
@@ -122,7 +123,7 @@ struct SettingView: View {
                                                                 Image("share_icon")
                                                                         .resizable()
                                                                         .scaledToFit()
-                                                                        .frame(width: 16, height: 16)
+                                                                        .frame(width: 24, height: 24)
                                                         }
                                                 }
                                                 .padding(.vertical, 12)
@@ -134,18 +135,18 @@ struct SettingView: View {
                                         // Group 3: Delete Account and Log Out
                                         VStack(spacing: 12) {
                                                 Button(action: {
-                                                        deleteAccount()
+                                                        showAlert = true
                                                 }) {
                                                         HStack {
                                                                 Text("Delete Account")
                                                                         .font(.custom("SFProText-Medium", size: 15))
-                                                                        .foregroundColor(.red)
+                                                                        .foregroundColor(Color(red: 255/255, green: 161/255, blue: 54/255))
                                                                 Spacer()
-                                                                Image(systemName: "trash")
+                                                                Image(systemName: "chevron.right")
                                                                         .resizable()
                                                                         .scaledToFit()
-                                                                        .frame(width: 16, height: 16)
-                                                                        .foregroundColor(.red)
+                                                                        .frame(width: 11, height: 11)
+                                                                        .foregroundColor(.gray)
                                                         }
                                                 }
                                                 .padding(.vertical, 12)
@@ -176,6 +177,17 @@ struct SettingView: View {
                 .overlay(
                         BottomSheet(show: $showBottomSheet, autoCloseDuration: $autoCloseDuration)
                 )
+                .overlay(
+                        GenericAlertView(
+                                isPresented: $showAlert,
+                                title: "Confirm Deletion",
+                                message: "Are you sure you want to delete this account?",
+                                onConfirm: deleteAccount,
+                                onCancel: {
+                                        showAlert = false
+                                }
+                        )
+                )
         }
         
         private func copyToClipboard() {
@@ -203,8 +215,11 @@ struct SettingView: View {
         }
         
         private func deleteAccount() {
-                // Add account deletion logic here
-                SdkUtil.shared.toastManager?.showToast(message: "Account Deleted", isSuccess: true)
+                LoadingManager.shared.show(message: "Deleting Account......")
+                DispatchQueue.global().async {
+                        SdkUtil.shared.deleteAccount()
+                        LoadingManager.shared.hide()
+                }
         }
 }
 
@@ -260,7 +275,6 @@ struct BottomSheet: View {
         }
         
         private func changeCloseDuration(value:Int){
-                
                 
                 autoCloseDuration = value
                 do{
