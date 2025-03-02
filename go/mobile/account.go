@@ -38,7 +38,7 @@ func initCachedAccountData() {
 		return
 	}
 
-	data, err := __walletMng.db.Get([]byte(__db_key_accounts), nil)
+	data, err := __walletMng.db.Get([]byte(dbKeyAccounts), nil)
 	if err != nil {
 		if errors.Is(err, leveldb.ErrNotFound) {
 			utils.LogInst().Infof("----->>>no local data found")
@@ -155,7 +155,7 @@ func localDbSave() error {
 		return fmt.Errorf("failed to encode Accounts: %w", err)
 	}
 
-	err = __walletMng.db.Put([]byte(__db_key_accounts), encodeData, nil)
+	err = __walletMng.db.Put([]byte(dbKeyAccounts), encodeData, nil)
 	if err != nil {
 		return fmt.Errorf("failed to save Accounts to database: %w", err)
 	}

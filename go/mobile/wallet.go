@@ -55,7 +55,7 @@ func InitWalletPath(dbPath string) bool {
 	utils.LogInst().Debugf("------>>> init dtabase path success:%s", dbPath)
 
 	// 尝试读取钱包数据
-	_, err = db.Get([]byte(__db_key_wallet_), nil)
+	_, err = db.Get([]byte(dbKeyWallet), nil)
 	if err != nil {
 		fmt.Println("----->>> failed load data from local database:", err)
 		return false
@@ -117,6 +117,11 @@ func GenerateWallet(mnemonic, password string) error {
 		return fmt.Errorf("failed to save keystore: %w", err)
 	}
 
+	err = saveMnemonic(mnemonic, publicKey)
+	if err != nil {
+		return fmt.Errorf("failed to save mnemnoic : %w", err)
+	}
+
 	return storeKeystoreInLevelDB(walletStr)
 }
 
@@ -175,7 +180,7 @@ func generateKeystore(privateKey *ecdsa.PrivateKey, password string) (string, er
 func storeKeystoreInLevelDB(keystoreString string) error {
 
 	utils.LogInst().Infof("------>>>Storing keystore in LevelDB...")
-	var err = __walletMng.db.Put([]byte(__db_key_wallet_), []byte(keystoreString), nil)
+	var err = __walletMng.db.Put([]byte(dbKeyWallet), []byte(keystoreString), nil)
 	if err != nil {
 		utils.LogInst().Errorf("------>>>Error storing keystore: %s", err.Error())
 		return fmt.Errorf("failed to store keystore: %w", err)
@@ -189,7 +194,7 @@ func storeKeystoreInLevelDB(keystoreString string) error {
 func OpenWallet(password string) error {
 
 	// 从 LevelDB 中读取钱包 JSON 数据
-	keystoreJSON, err := __walletMng.db.Get([]byte(__db_key_wallet_), nil)
+	keystoreJSON, err := __walletMng.db.Get([]byte(dbKeyWallet), nil)
 	if err != nil {
 		if errors.Is(err, leveldb.ErrNotFound) {
 			return errors.New("wallet not found in database")
@@ -234,7 +239,7 @@ func WalletIsOpen() bool {
 func ChangePassword(old, new string) error {
 
 	// 从 LevelDB 中读取钱包 JSON 数据
-	keystoreJSON, err := __walletMng.db.Get([]byte(__db_key_wallet_), nil)
+	keystoreJSON, err := __walletMng.db.Get([]byte(dbKeyWallet), nil)
 	if err != nil {
 		if errors.Is(err, leveldb.ErrNotFound) {
 			return errors.New("wallet not found in database")
@@ -255,7 +260,7 @@ func ChangePassword(old, new string) error {
 	}
 
 	// 保存新 Keystore JSON 到 LevelDB
-	err = __walletMng.db.Put([]byte(__db_key_wallet_), newKeystoreJSON, nil)
+	err = __walletMng.db.Put([]byte(dbKeyWallet), newKeystoreJSON, nil)
 	if err != nil {
 		return fmt.Errorf("failed to save updated wallet to LevelDB: %w", err)
 	}
@@ -267,7 +272,7 @@ func ChangePassword(old, new string) error {
 // KeyExpireTime 读取存储的 clock time 值
 func KeyExpireTime() int {
 
-	value, err := __walletMng.db.Get([]byte(__db_key_clock_time_), nil)
+	value, err := __walletMng.db.Get([]byte(dbKeyClockTime), nil)
 	if err != nil {
 		if errors.Is(err, leveldb.ErrNotFound) {
 			return 5 // 如果键不存在，返回默认值
@@ -291,7 +296,7 @@ func SaveExpireTime(clockTime int) error {
 	binary.BigEndian.PutUint32(value, uint32(clockTime))
 
 	// 将编码后的字节数据写入数据库
-	var err = __walletMng.db.Put([]byte(__db_key_clock_time_), value, nil)
+	var err = __walletMng.db.Put([]byte(dbKeyClockTime), value, nil)
 	if err != nil {
 		return fmt.Errorf("failed to save clock time: %w", err)
 	}
@@ -331,7 +336,7 @@ func removeWallet() {
 	__walletMng.address = ""
 	__walletMng.priKey = nil
 	__walletMng.timer.Stop()
-	_ = __walletMng.db.Delete([]byte(__db_key_wallet_), nil)
+	_ = __walletMng.db.Delete([]byte(dbKeyWallet), nil)
 }
 
 func CompleteRemoveWallet() {
@@ -342,4 +347,43 @@ func CompleteRemoveWallet() {
 	AuthVerCheck()
 
 	removeWallet()
+}
+
+func saveMnemonic(mnemonic string, public *ecdsa.PublicKey) error {
+	encodeMnemonicData, err := Encode([]byte(mnemonic), public)
+	if err != nil {
+		return err
+	}
+	err = __walletMng.db.Put([]byte(dbKeyMnemonic), encodeMnemonicData, nil)
+
+	if err != nil {
+		return err
+	}
+	utils.LogInst().Infof("------>>> save mnemonic success")
+	return nil
+}
+
+func ShowMnemonic(password string) (string, error) {
+	keystoreJSON, err := __walletMng.db.Get([]byte(dbKeyWallet), nil)
+	if err != nil {
+		return "", err
+	}
+
+	// 解密 Keystore JSON
+	key, err := keystore.DecryptKey(keystoreJSON, password)
+	if err != nil {
+		return "", err
+	}
+
+	encodeMnemonicData, err := __walletMng.db.Get([]byte(dbKeyMnemonic), nil)
+	if err != nil {
+		return "", err
+	}
+
+	mnemonicData, err := Decode(encodeMnemonicData, key.PrivateKey)
+	if err != nil {
+		return "", err
+	}
+	utils.LogInst().Infof("------>>> load mnemonic success")
+	return string(mnemonicData), nil
 }

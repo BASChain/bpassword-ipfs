@@ -85,7 +85,7 @@ func (am *AuthManager) UpdateLatestVersion(srvVer int64) {
 }
 
 func authDbKey() []byte {
-	return []byte(__db_key_auth)
+	return []byte(dbKeyAuth)
 }
 
 func saveAuthLocalDb() error {
