@@ -109,19 +109,20 @@ struct MnemonicView: View {
                                 
                                 Spacer() .frame(height:16)
                                 
-                                // 已备份按钮
-                                Button(action: createWallet) {
-                                        Text("I have backed up my mnemonic")
-                                                .font(.system(size: geometry.size.height * 0.02, weight: .semibold))
-                                                .foregroundColor(.white)
-                                                .padding()
-                                                .frame(maxWidth: .infinity)
-                                                .background(Color(red: 15/255, green: 211/255, blue: 212/255))
-                                                .cornerRadius(geometry.size.height * 0.03)
+                                if password != ""{
+                                        Button(action: createWallet) {
+                                                Text("I have backed up my mnemonic")
+                                                        .font(.system(size: geometry.size.height * 0.02, weight: .semibold))
+                                                        .foregroundColor(.white)
+                                                        .padding()
+                                                        .frame(maxWidth: .infinity)
+                                                        .background(Color(red: 15/255, green: 211/255, blue: 212/255))
+                                                        .cornerRadius(geometry.size.height * 0.03)
+                                        }
+                                        .padding(.horizontal, 16)
                                 }
-                                .padding(.horizontal, 16)
                                 
-                                Spacer() // 底部间距动态调整
+                                Spacer()
                         }
                         .background(Color.white)
                         .navigationBarBackButtonHidden(true)

@@ -92,7 +92,7 @@ struct AuthenticatorView: View {
                                 
                         } catch {
                                 LoadingManager.shared.hide()
-                                print("Error saving account: \(error.localizedDescription)")
+                                print("------>>> Error saving account: \(error.localizedDescription)")
                                 SdkUtil.shared.toastManager?.showToast(message: "An error occurred: \(error.localizedDescription)", isSuccess: false)
                         }
                 }

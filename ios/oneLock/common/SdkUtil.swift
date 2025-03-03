@@ -236,7 +236,7 @@ class SdkUtil: NSObject {
                 LockLibNewScanAuth(code,&err)
                 
                 if err == nil {
-                        print("Auth successfully saved.")
+                        print("------>>> Auth successfully saved.")
                         return
                 }
                 
@@ -278,6 +278,21 @@ class SdkUtil: NSObject {
                         AppStateManager.shared.appState.hasWallet = false
                         AppStateManager.shared.appState.isPasswordValidated = false
                 }
+        }
+        
+        func showMnemonic(password:String)throws->String{
+                var err: NSError? = nil
+                let mnemonic = LockLibShowMnemonic(password, &err)
+                
+                if let error = err {
+                        throw SdkError.setting(error.localizedDescription)
+                }
+                
+                if mnemonic.lengthOfBytes(using: .utf8) < 20{
+                        throw SdkError.setting("Invalid mnemonic length")
+                }
+                
+                return mnemonic
         }
 }
 

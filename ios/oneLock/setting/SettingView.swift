@@ -46,16 +46,15 @@ struct SettingView: View {
                                         onConfirm: deleteAccount,
                                         onCancel: { showAlert = false }
                                 )
-                        )
-                        .sheet(isPresented: $showPasswordPrompt) {
-                                PasswordPromptView(isPresented: $showPasswordPrompt, onPasswordSubmit: { password in
-                                        if validatePassword(password) {
-                                                navigateToMnemonic = true
-                                        } else {
-                                                SdkUtil.shared.toastManager?.showToast(message: "Password Incorrect", isSuccess: false)
+                        ).overlay(
+                                Group {
+                                        if showPasswordPrompt {
+                                                PasswordPromptView(isPresented: $showPasswordPrompt, onPasswordSubmit: { password in
+                                                        validatePassword(password)
+                                                })
                                         }
-                                })
-                        }
+                                }
+                        )
                 }
         }
         
@@ -75,9 +74,20 @@ struct SettingView: View {
                 }
         }
         
-        private func validatePassword(_ password: String) -> Bool {
-                // 示例验证逻辑，请根据实际情况修改
-                return password == "123456"
+        private func validatePassword(_ password: String) {
+                LoadingManager.shared.show(message: "Decrypting......")
+                DispatchQueue.global().async {
+                        do{
+                                mnemonicVal = try SdkUtil.shared.showMnemonic(password: password)
+                                LoadingManager.shared.hide()
+                                navigateToMnemonic = true
+                        }catch{
+                                LoadingManager.shared.hide()
+                                SdkUtil.shared.toastManager?.showToast(message: "Failed:\(error.localizedDescription)", isSuccess: false)
+                                print("------>>>Show mnemonic error: \(error.localizedDescription)")
+                                navigateToMnemonic = false
+                        }
+                }
         }
 }
 
@@ -212,7 +222,6 @@ struct VersionAndShareView: View {
                         Divider().background(Color.gray.opacity(0.05))
                         
                         Button(action: {
-                                // 调用 SettingView 中的 shareApp 逻辑，可以通过闭包传递或其他方式实现
                                 SdkUtil.shared.toastManager?.showToast(message: "Share App", isSuccess: true)
                         }) {
                                 HStack {
